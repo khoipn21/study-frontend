@@ -1,0 +1,40 @@
+---
+description: Fix for route path conflicts in TanStack Router
+---
+
+# Route Conflict Resolution
+
+## Current Issue
+
+Both `demo.form.simple.tsx` and `demo.form.address.tsx` are using the same route path `/demo/form`, causing TypeScript errors.
+
+## Solution
+
+Update the route paths to be unique:
+
+### For demo.form.simple.tsx
+
+```typescript
+export const Route = createFileRoute('/demo/form/simple')({
+  component: SimpleForm,
+})
+```
+
+### For demo.form.address.tsx
+
+```typescript
+export const Route = createFileRoute('/demo/form/address')({
+  component: AddressForm,
+})
+```
+
+## Navigation Updates
+
+Update the navigation links in [src/components/Header.tsx](mdc:src/components/Header.tsx):
+
+```typescript
+<Link to="/demo/form/simple">Simple Form</Link>
+<Link to="/demo/form/address">Address Form</Link>
+```
+
+This ensures each route has a unique path and resolves the TypeScript conflict error.

@@ -1,0 +1,356 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+
+@custom-variant dark (&:is(.dark *));
+@custom-variant academic (&:is(.academic *));
+@custom-variant corporate (&:is(.corporate *));
+
+body {
+  @apply m-0 font-sans antialiased;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@utility font-academic {
+  font-family: 'Crimson Text', 'Times New Roman', serif;
+}
+
+@utility font-corporate {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+code {
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+}
+
+:root {
+  /* Academic Theme Variables */
+  --academic-background: oklch(0.99 0.005 90);
+  --academic-foreground: oklch(0.15 0.01 270);
+  --academic-primary: oklch(0.25 0.06 230);
+  --academic-secondary: oklch(0.88 0.02 85);
+  --academic-accent: oklch(0.45 0.15 25);
+  --academic-muted: oklch(0.94 0.01 85);
+  --academic-border: oklch(0.86 0.01 85);
+  
+  /* Corporate Theme Variables */
+  --corporate-background: oklch(0.98 0.002 270);
+  --corporate-foreground: oklch(0.12 0.004 270);
+  --corporate-primary: oklch(0.35 0.12 265);
+  --corporate-secondary: oklch(0.92 0.005 270);
+  --corporate-accent: oklch(0.55 0.18 200);
+  --corporate-muted: oklch(0.95 0.002 270);
+  --corporate-border: oklch(0.88 0.004 270);
+  
+  /* Default Theme (Academic) */
+  --background: var(--academic-background);
+  --foreground: var(--academic-foreground);
+  --card: oklch(1 0 0);
+  --card-foreground: var(--academic-foreground);
+  --popover: oklch(1 0 0);
+  --popover-foreground: var(--academic-foreground);
+  --primary: var(--academic-primary);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: var(--academic-secondary);
+  --secondary-foreground: var(--academic-foreground);
+  --muted: var(--academic-muted);
+  --muted-foreground: oklch(0.55 0.02 270);
+  --accent: var(--academic-accent);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: var(--academic-border);
+  --input: var(--academic-border);
+  --ring: var(--academic-primary);
+  
+  /* Learning Platform Specific Colors */
+  --success: oklch(0.55 0.15 140);
+  --success-foreground: oklch(0.98 0 0);
+  --warning: oklch(0.75 0.15 65);
+  --warning-foreground: oklch(0.15 0 0);
+  --info: oklch(0.60 0.15 225);
+  --info-foreground: oklch(0.98 0 0);
+  
+  /* Progress & Analytics Colors */
+  --progress-beginner: oklch(0.72 0.15 120);
+  --progress-intermediate: oklch(0.65 0.18 60);
+  --progress-advanced: oklch(0.58 0.20 15);
+  --progress-expert: oklch(0.45 0.15 300);
+  
+  --chart-1: var(--progress-beginner);
+  --chart-2: var(--progress-intermediate);
+  --chart-3: var(--progress-advanced);
+  --chart-4: var(--progress-expert);
+  --chart-5: var(--accent);
+  
+  --radius: 0.75rem;
+  --radius-sm: 0.375rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  
+  --sidebar: var(--card);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+}
+
+.dark {
+  --background: oklch(0.08 0.01 270);
+  --foreground: oklch(0.95 0.005 85);
+  --card: oklch(0.12 0.015 270);
+  --card-foreground: oklch(0.95 0.005 85);
+  --popover: oklch(0.12 0.015 270);
+  --popover-foreground: oklch(0.95 0.005 85);
+  --primary: oklch(0.75 0.12 230);
+  --primary-foreground: oklch(0.08 0.01 270);
+  --secondary: oklch(0.20 0.02 270);
+  --secondary-foreground: oklch(0.95 0.005 85);
+  --muted: oklch(0.18 0.015 270);
+  --muted-foreground: oklch(0.65 0.01 270);
+  --accent: oklch(0.65 0.18 25);
+  --accent-foreground: oklch(0.95 0.005 85);
+  --destructive: oklch(0.60 0.20 27);
+  --destructive-foreground: oklch(0.95 0 0);
+  --border: oklch(0.22 0.02 270);
+  --input: oklch(0.22 0.02 270);
+  --ring: oklch(0.75 0.12 230);
+  
+  --success: oklch(0.65 0.15 140);
+  --warning: oklch(0.70 0.15 65);
+  --info: oklch(0.70 0.15 225);
+  
+  --chart-1: oklch(0.65 0.15 140);
+  --chart-2: oklch(0.70 0.15 65);
+  --chart-3: oklch(0.60 0.20 15);
+  --chart-4: oklch(0.65 0.15 300);
+  --chart-5: var(--accent);
+  
+  --sidebar: oklch(0.15 0.02 270);
+  --sidebar-foreground: oklch(0.95 0.005 85);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+}
+
+.academic {
+  --background: var(--academic-background);
+  --foreground: var(--academic-foreground);
+  --primary: var(--academic-primary);
+  --secondary: var(--academic-secondary);
+  --accent: var(--academic-accent);
+  --muted: var(--academic-muted);
+  --border: var(--academic-border);
+}
+
+.corporate {
+  --background: var(--corporate-background);
+  --foreground: var(--corporate-foreground);
+  --primary: var(--corporate-primary);
+  --secondary: var(--corporate-secondary);
+  --accent: var(--corporate-accent);
+  --muted: var(--corporate-muted);
+  --border: var(--corporate-border);
+}
+
+@theme inline {
+  /* Base Colors */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  
+  /* Brand Colors */
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  
+  /* UI Colors */
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  
+  /* Status Colors */
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  
+  /* Learning Platform Colors */
+  --color-progress-beginner: var(--progress-beginner);
+  --color-progress-intermediate: var(--progress-intermediate);
+  --color-progress-advanced: var(--progress-advanced);
+  --color-progress-expert: var(--progress-expert);
+  
+  /* Chart Colors */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  
+  /* Border Radius */
+  --radius-xs: 0.25rem;
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-full: 9999px;
+  
+  /* Sidebar */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+  
+  html {
+    @apply scroll-smooth;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+  
+  /* Academic-specific typography */
+  .academic body {
+    @apply font-academic leading-relaxed;
+  }
+  
+  .academic h1, .academic h2, .academic h3, .academic h4, .academic h5, .academic h6 {
+    @apply font-academic font-semibold;
+  }
+  
+  .academic .prose :is(h1, h2, h3, h4, h5, h6) {
+    @apply font-academic font-semibold;
+  }
+  
+  /* Corporate-specific typography */
+  .corporate body {
+    @apply font-corporate;
+  }
+  
+  .corporate h1, .corporate h2, .corporate h3, .corporate h4, .corporate h5, .corporate h6 {
+    @apply font-corporate font-semibold;
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/30;
+  }
+}
+
+/* Learning platform specific utilities */
+@layer utilities {
+  .progress-bar {
+    @apply relative overflow-hidden bg-muted rounded-full;
+  }
+  
+  .progress-fill {
+    @apply h-full bg-gradient-to-r transition-all duration-500 ease-out;
+  }
+  
+  .progress-beginner {
+    @apply from-progress-beginner to-progress-beginner/80;
+  }
+  
+  .progress-intermediate {
+    @apply from-progress-intermediate to-progress-intermediate/80;
+  }
+  
+  .progress-advanced {
+    @apply from-progress-advanced to-progress-advanced/80;
+  }
+  
+  .progress-expert {
+    @apply from-progress-expert to-progress-expert/80;
+  }
+  
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-sm border border-border/50;
+  }
+  
+  .academic-card {
+    @apply bg-card border border-border shadow-sm rounded-lg transition-all duration-200;
+  }
+  
+  .academic-card:hover {
+    @apply shadow-md border-primary/20;
+  }
+  
+  .status-indicator {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  
+  .status-active {
+    @apply bg-success/10 text-success;
+  }
+  
+  .status-pending {
+    @apply bg-warning/10 text-warning;
+  }
+  
+  .status-inactive {
+    @apply bg-muted text-muted-foreground;
+  }
+  
+  .course-level-beginner {
+    @apply bg-progress-beginner/10 text-progress-beginner border-progress-beginner/20;
+  }
+  
+  .course-level-intermediate {
+    @apply bg-progress-intermediate/10 text-progress-intermediate border-progress-intermediate/20;
+  }
+  
+  .course-level-advanced {
+    @apply bg-progress-advanced/10 text-progress-advanced border-progress-advanced/20;
+  }
+  
+  .course-level-expert {
+    @apply bg-progress-expert/10 text-progress-expert border-progress-expert/20;
+  }
+}

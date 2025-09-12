@@ -1,0 +1,55 @@
+---
+alwaysApply: true
+---
+
+# Study Frontend Project Architecture
+
+## Project Overview
+
+This is a TanStack Start + React frontend application with the following key features:
+
+- File-based routing with TanStack Router
+- TanStack Query for data fetching
+- TanStack Form for form handling
+- Shadcn/UI components with Tailwind CSS
+- MCP (Model Context Protocol) integration
+- TypeScript throughout
+
+## Key Files and Structure
+
+### Core Configuration
+
+- [vite.config.ts](mdc:vite.config.ts) - Vite build configuration
+- [package.json](mdc:package.json) - Dependencies and scripts
+- [tsconfig.json](mdc:tsconfig.json) - TypeScript configuration
+- [components.json](mdc:components.json) - Shadcn/UI configuration
+
+### Router Setup
+
+- [src/router.tsx](mdc:src/router.tsx) - Main router configuration with TanStack Query integration
+- [src/routes/\_\_root.tsx](mdc:src/routes/__root.tsx) - Root layout with devtools
+
+### Integrations
+
+- [src/integrations/tanstack-query/](mdc:src/integrations/tanstack-query/) - TanStack Query setup
+- [src/mcp-todos.ts](mdc:src/mcp-todos.ts) - MCP todo functionality
+- [src/utils/mcp-handler.ts](mdc:src/utils/mcp-handler.ts) - MCP request handling
+
+### Components and UI
+
+- [src/components/ui/](mdc:src/components/ui/) - Shadcn/UI components
+- [src/components/demo.FormComponents.tsx](mdc:src/components/demo.FormComponents.tsx) - Custom form components
+- [src/components/Header.tsx](mdc:src/components/Header.tsx) - Navigation header
+
+### Forms and Hooks
+
+- [src/hooks/demo.form.ts](mdc:src/hooks/demo.form.ts) - TanStack Form hook setup
+- [src/hooks/demo.form-context.ts](mdc:src/hooks/demo.form-context.ts) - Form context providers
+
+## Development Patterns
+
+- Use TypeScript for all new files
+- Follow TanStack Router file-based routing conventions
+- Use Shadcn/UI components for consistent styling
+- Leverage TanStack Query for server state management
+- Use TanStack Form for complex form validation and handling

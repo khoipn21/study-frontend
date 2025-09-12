@@ -1,0 +1,59 @@
+---
+alwaysApply: true
+---
+
+# TanStack Router File-Based Routing Conventions
+
+## File Naming and Route Paths
+
+- Route files should follow TanStack Router's file-based routing conventions
+- File names determine the route paths automatically
+- Use dot notation for nested routes: `demo.form.simple.tsx` = `/demo/form/simple`
+- Use underscores for dynamic routes: `posts._postId.tsx` = `/posts/:postId`
+
+## Common Patterns
+
+- **Index routes**: `index.tsx` = `/`
+- **Nested routes**: `demo.form.simple.tsx` = `/demo/form/simple`
+- **Layout routes**: `_layout.tsx` or `__root.tsx`
+- **Dynamic routes**: `posts._postId.tsx` = `/posts/:postId`
+
+## Route Path Conflicts
+
+⚠️ **CRITICAL**: Never have multiple files with the same route path. Each route must be unique.
+
+Example conflict to avoid:
+
+```typescript
+// ❌ BAD - Both files create the same route
+// demo.form.simple.tsx
+export const Route = createFileRoute('/demo/form')({ ... })
+
+// demo.form.address.tsx
+export const Route = createFileRoute('/demo/form')({ ... })
+```
+
+## Correct File Structure
+
+```
+src/routes/
+├── index.tsx              → /
+├── demo/
+│   ├── index.tsx          → /demo
+│   ├── form/
+│   │   ├── index.tsx      → /demo/form
+│   │   ├── simple.tsx     → /demo/form/simple
+│   │   └── address.tsx    → /demo/form/address
+│   └── tanstack-query.tsx → /demo/tanstack-query
+```
+
+## Route Definition Pattern
+
+```typescript
+import { createFileRoute } from '@tanstack/react-router'
+
+export const Route = createFileRoute('/exact/path/here')({
+  component: ComponentName,
+  // loader, beforeLoad, etc.
+})
+```

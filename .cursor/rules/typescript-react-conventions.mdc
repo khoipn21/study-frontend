@@ -1,0 +1,48 @@
+---
+globs: *.ts,*.tsx
+---
+
+# TypeScript and React Conventions
+
+## Component Patterns
+
+- Use function declarations for React components: `function ComponentName() {}`
+- Export components as the default export when they're the main component of a file
+- Use TypeScript interfaces for component props
+- Prefer destructuring props in function parameters
+
+## Import/Export Conventions
+
+```typescript
+// ✅ Good - Named imports for utilities
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+
+// ✅ Good - Type imports
+import type { QueryClient } from '@tanstack/react-query'
+
+// ✅ Good - Default export for main component
+export default function ComponentName() {}
+
+// ✅ Good - Named export for route definition
+export const Route = createFileRoute('/path')({})
+```
+
+## Form Handling
+
+- Use TanStack Form with the custom `useAppForm` hook from [src/hooks/demo.form.ts](mdc:src/hooks/demo.form.ts)
+- Use Zod for form validation schemas
+- Leverage the custom form components from [src/components/demo.FormComponents.tsx](mdc:src/components/demo.FormComponents.tsx)
+
+## State Management
+
+- Use TanStack Query for server state with the setup from [src/integrations/tanstack-query/](mdc:src/integrations/tanstack-query/)
+- Use React's built-in state (useState, useReducer) for local component state
+- Access TanStack Query context through the router configuration
+
+## Styling
+
+- Use Tailwind CSS classes for styling
+- Use the `cn()` utility from [src/lib/utils.ts](mdc:src/lib/utils.ts) for conditional classes
+- Prefer Shadcn/UI components over custom styled components
+- Use CSS variables defined in [src/styles.css](mdc:src/styles.css) for theming

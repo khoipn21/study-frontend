@@ -1,0 +1,21 @@
+# Project Overview
+
+- Name: study-frontend
+- Purpose: A learning/demo front-end built with TanStack React Start to explore TanStack Router, Query, forms, SSR, and UI patterns (with shadcn/tailwind). Includes demo routes like form examples, Query, and MCP todos.
+- Runtime: Bun for scripts, Node runtime for built server output.
+- Entry points:
+  - Dev: Vite dev server on http://localhost:3000
+  - Build: `vite build` (TanStack Start SSR + client) outputs to `.output/`
+  - Start (preview built server): `node .output/server/index.mjs`
+- Repo structure:
+  - `src/` app code
+    - `routes/` page routes (`*.tsx`) and API routes (`api.*.ts`)
+    - `components/` reusable UI (PascalCase)
+    - `integrations/` providers (e.g., tanstack-query)
+    - `hooks/` custom hooks
+    - `utils/` helpers, `lib/` misc
+    - `styles.css` global styles
+  - `public/` static assets
+  - Config: `vite.config.ts`, `tsconfig.json`, `eslint.config.js`, `prettier.config.js`
+- Path alias: `@/*` → `src/*` (see `tsconfig.json`).
+- Notable routes/demos (at time of onboarding): `demo.tanstack-query.tsx`, `demo.form.*.tsx`, `demo.mcp-todos.tsx`, server routes `api.*.ts`.

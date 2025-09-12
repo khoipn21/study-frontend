@@ -1,0 +1,11 @@
+{
+  "projectName": "study-frontend",
+  "mode": "file-router",
+  "typescript": true,
+  "tailwind": true,
+  "packageManager": "bun",
+  "git": true,
+  "version": 1,
+  "framework": "react-cra",
+  "chosenAddOns": ["eslint", "mcp", "shadcn", "tanstack-query", "form", "start"]
+}

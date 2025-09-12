@@ -1,0 +1,42 @@
+---
+description: TanStack Router route tree generation and TypeScript issues
+---
+
+# Route Tree Generation
+
+## Common Issue
+
+When adding new routes or changing route paths in TanStack Router, you may see TypeScript errors like:
+
+```
+Argument of type '"/path/here"' is not assignable to parameter of type 'undefined'.
+```
+
+## Solution
+
+This happens because the route tree needs to be regenerated. TanStack Router uses code generation to create type-safe routes.
+
+### Steps to Fix:
+
+1. **Development server**: If running `npm run dev` or `bun dev`, the route tree should auto-regenerate
+2. **Manual generation**: Run the build process or restart the dev server
+3. **Check routeTree.gen.ts**: This generated file should include your new routes
+
+### Route Tree File
+
+The generated route tree is typically at:
+
+- `src/routeTree.gen.ts` (auto-generated, should not be edited manually)
+
+### Development Workflow
+
+1. Create/modify route files in `src/routes/`
+2. Ensure the development server is running (it will auto-generate the route tree)
+3. If TypeScript errors persist, restart the dev server
+4. The route tree will include your new routes and TypeScript errors should resolve
+
+### Important Notes
+
+- Never manually edit `routeTree.gen.ts`
+- The file should be in `.gitignore` if it's generated at build time
+- Route paths in `createFileRoute()` must match the actual file-based route structure
