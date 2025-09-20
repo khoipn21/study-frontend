@@ -1,19 +1,21 @@
 import {
-  lemonSqueezySetup,
+  cancelSubscription,
   createCheckout,
   getCheckout,
-  type NewCheckout,
-  type Checkout,
-  type Variant,
-  type Product,
+  getCustomer,
+  getSubscription,
+  lemonSqueezySetup,
   listProducts,
   listVariants,
-  getSubscription,
-  cancelSubscription,
   updateSubscription,
-  type Subscription,
-  getCustomer,
-  type Customer,
+} from '@lemonsqueezy/lemonsqueezy.js'
+import type {
+  Checkout,
+  Customer,
+  NewCheckout,
+  Product,
+  Subscription,
+  Variant,
 } from '@lemonsqueezy/lemonsqueezy.js'
 
 // Initialize Lemon Squeezy
@@ -47,7 +49,7 @@ export interface SubscriptionCheckoutData {
 
 export class LemonSqueezyService {
   private static instance: LemonSqueezyService
-  
+
   public static getInstance(): LemonSqueezyService {
     if (!LemonSqueezyService.instance) {
       LemonSqueezyService.instance = new LemonSqueezyService()
@@ -57,7 +59,9 @@ export class LemonSqueezyService {
 
   private constructor() {
     if (!LEMON_SQUEEZY_API_KEY) {
-      console.warn('Lemon Squeezy API key not found. Payment functionality will be limited.')
+      console.warn(
+        'Lemon Squeezy API key not found. Payment functionality will be limited.',
+      )
     }
   }
 
@@ -100,20 +104,23 @@ export class LemonSqueezyService {
             variant: {
               data: {
                 type: 'variants',
-                id: await this.getOrCreateCourseVariant(data),
+                id: this.getOrCreateCourseVariant(data),
               },
             },
           },
         },
       }
 
-      const checkout = await createCheckout(LEMON_SQUEEZY_STORE_ID || '', checkoutData)
-      
+      const checkout = await createCheckout(
+        LEMON_SQUEEZY_STORE_ID || '',
+        checkoutData,
+      )
+
       if (checkout.error) {
         throw new Error(checkout.error.message)
       }
 
-      return checkout.data?.data.attributes.url || ''
+      return checkout.data.data.attributes.url || ''
     } catch (error) {
       console.error('Error creating course checkout:', error)
       throw new Error('Failed to create checkout session')
@@ -123,7 +130,9 @@ export class LemonSqueezyService {
   /**
    * Create a checkout session for subscription
    */
-  async createSubscriptionCheckout(data: SubscriptionCheckoutData): Promise<string> {
+  async createSubscriptionCheckout(
+    data: SubscriptionCheckoutData,
+  ): Promise<string> {
     try {
       const checkoutData: NewCheckout = {
         data: {
@@ -166,13 +175,16 @@ export class LemonSqueezyService {
         },
       }
 
-      const checkout = await createCheckout(LEMON_SQUEEZY_STORE_ID || '', checkoutData)
-      
+      const checkout = await createCheckout(
+        LEMON_SQUEEZY_STORE_ID || '',
+        checkoutData,
+      )
+
       if (checkout.error) {
         throw new Error(checkout.error.message)
       }
 
-      return checkout.data?.data.attributes.url || ''
+      return checkout.data.data.attributes.url || ''
     } catch (error) {
       console.error('Error creating subscription checkout:', error)
       throw new Error('Failed to create checkout session')
@@ -185,12 +197,12 @@ export class LemonSqueezyService {
   async getCheckoutById(checkoutId: string): Promise<Checkout | null> {
     try {
       const checkout = await getCheckout(checkoutId)
-      
+
       if (checkout.error) {
         throw new Error(checkout.error.message)
       }
 
-      return checkout.data?.data || null
+      return checkout.data.data ?? null
     } catch (error) {
       console.error('Error fetching checkout:', error)
       return null
@@ -200,17 +212,17 @@ export class LemonSqueezyService {
   /**
    * Get all available products
    */
-  async getProducts(): Promise<Product[]> {
+  async getProducts(): Promise<Array<Product>> {
     try {
       const products = await listProducts({
         filter: { storeId: LEMON_SQUEEZY_STORE_ID },
       })
-      
+
       if (products.error) {
         throw new Error(products.error.message)
       }
 
-      return products.data?.data || []
+      return products.data.data ?? []
     } catch (error) {
       console.error('Error fetching products:', error)
       return []
@@ -220,17 +232,17 @@ export class LemonSqueezyService {
   /**
    * Get variants for a product
    */
-  async getProductVariants(productId: string): Promise<Variant[]> {
+  async getProductVariants(productId: string): Promise<Array<Variant>> {
     try {
       const variants = await listVariants({
         filter: { productId },
       })
-      
+
       if (variants.error) {
         throw new Error(variants.error.message)
       }
 
-      return variants.data?.data || []
+      return variants.data.data ?? []
     } catch (error) {
       console.error('Error fetching variants:', error)
       return []
@@ -240,15 +252,17 @@ export class LemonSqueezyService {
   /**
    * Get subscription details
    */
-  async getSubscriptionById(subscriptionId: string): Promise<Subscription | null> {
+  async getSubscriptionById(
+    subscriptionId: string,
+  ): Promise<Subscription | null> {
     try {
       const subscription = await getSubscription(subscriptionId)
-      
+
       if (subscription.error) {
         throw new Error(subscription.error.message)
       }
 
-      return subscription.data?.data || null
+      return subscription.data.data ?? null
     } catch (error) {
       console.error('Error fetching subscription:', error)
       return null
@@ -261,7 +275,7 @@ export class LemonSqueezyService {
   async cancelSubscriptionById(subscriptionId: string): Promise<boolean> {
     try {
       const result = await cancelSubscription(subscriptionId)
-      
+
       if (result.error) {
         throw new Error(result.error.message)
       }
@@ -282,7 +296,7 @@ export class LemonSqueezyService {
       pause?: { mode: 'void' | 'free' }
       cancelled?: boolean
       billingAddress?: any
-    }
+    },
   ): Promise<Subscription | null> {
     try {
       const result = await updateSubscription(subscriptionId, {
@@ -292,12 +306,12 @@ export class LemonSqueezyService {
           attributes: updates,
         },
       })
-      
+
       if (result.error) {
         throw new Error(result.error.message)
       }
 
-      return result.data?.data || null
+      return result.data.data ?? null
     } catch (error) {
       console.error('Error updating subscription:', error)
       return null
@@ -310,12 +324,12 @@ export class LemonSqueezyService {
   async getCustomerById(customerId: string): Promise<Customer | null> {
     try {
       const customer = await getCustomer(customerId)
-      
+
       if (customer.error) {
         throw new Error(customer.error.message)
       }
 
-      return customer.data?.data || null
+      return customer.data.data ?? null
     } catch (error) {
       console.error('Error fetching customer:', error)
       return null
@@ -326,12 +340,12 @@ export class LemonSqueezyService {
    * Create or get existing variant for a course
    * This is a helper method that would integrate with your backend
    */
-  private async getOrCreateCourseVariant(data: CourseCheckoutData): Promise<string> {
+  private getOrCreateCourseVariant(data: CourseCheckoutData): string {
     // In a real implementation, you would:
     // 1. Check if a variant exists for this course
     // 2. If not, create one via your backend
     // 3. Return the variant ID
-    
+
     // For now, return a placeholder that should be configured per course
     return `variant_${data.courseId}`
   }
@@ -342,7 +356,7 @@ export class LemonSqueezyService {
   static validateWebhookSignature(
     payload: string,
     signature: string,
-    secret: string
+    secret: string,
   ): boolean {
     // This should be implemented on your backend for security
     // Using crypto.createHmac('sha256', secret).update(payload).digest('hex')

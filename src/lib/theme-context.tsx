@@ -18,30 +18,34 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [themeStyle, setThemeStyleState] = useState<ThemeStyle>('academic')
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('study-theme') as Theme
-    const savedStyle = localStorage.getItem('study-theme-style') as ThemeStyle
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    const savedTheme = localStorage.getItem('study-theme') as Theme | null
+    const savedStyle = localStorage.getItem(
+      'study-theme-style',
+    ) as ThemeStyle | null
+    const prefersDark = window.matchMedia(
+      '(prefers-color-scheme: dark)',
+    ).matches
 
-    if (savedTheme) {
+    if (savedTheme !== null) {
       setThemeState(savedTheme)
     } else if (prefersDark) {
       setThemeState('dark')
     }
 
-    if (savedStyle) {
+    if (savedStyle !== null) {
       setThemeStyleState(savedStyle)
     }
   }, [])
 
   useEffect(() => {
     const root = window.document.documentElement
-    
+
     // Remove existing theme classes
     root.classList.remove('light', 'dark', 'academic', 'corporate')
-    
+
     // Add current theme classes
     root.classList.add(theme, themeStyle)
-    
+
     // Save to localStorage
     localStorage.setItem('study-theme', theme)
     localStorage.setItem('study-theme-style', themeStyle)

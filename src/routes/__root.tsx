@@ -6,15 +6,16 @@ import {
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanstackDevtools } from '@tanstack/react-devtools'
 
+import { config } from '@/lib/config'
 import Header from '../components/Header'
 import { ThemeProvider } from '../lib/theme-context'
+import { GlobalErrorBoundary } from '../components/GlobalErrorBoundary'
 
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
 
 import appCss from '../styles.css?url'
 
 import type { QueryClient } from '@tanstack/react-query'
-import { config } from '@/lib/config'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -33,8 +34,9 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       { title: config.appName },
       {
         name: 'description',
-        content: 'Professional online learning platform with interactive courses, video lectures, and AI-powered tutoring'
-      }
+        content:
+          'Professional online learning platform with interactive courses, video lectures, and AI-powered tutoring',
+      },
     ],
     links: [
       {
@@ -44,8 +46,8 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       {
         rel: 'icon',
         type: 'image/svg+xml',
-        href: '/favicon.svg'
-      }
+        href: '/favicon.svg',
+      },
     ],
   }),
 
@@ -59,26 +61,26 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <ThemeProvider>
-          <div className="min-h-screen bg-background font-sans antialiased">
-            <Header />
-            <main className="relative">
-              {children}
-            </main>
-          </div>
-          <TanstackDevtools
-            config={{
-              position: 'bottom-left',
-            }}
-            plugins={[
-              {
-                name: 'Tanstack Router',
-                render: <TanStackRouterDevtoolsPanel />,
-              },
-              TanStackQueryDevtools,
-            ]}
-          />
-        </ThemeProvider>
+        <GlobalErrorBoundary>
+          <ThemeProvider>
+            <div className="min-h-screen bg-background font-sans antialiased">
+              <Header />
+              <main className="relative">{children}</main>
+            </div>
+            <TanstackDevtools
+              config={{
+                position: 'bottom-left',
+              }}
+              plugins={[
+                {
+                  name: 'Tanstack Router',
+                  render: <TanStackRouterDevtoolsPanel />,
+                },
+                TanStackQueryDevtools,
+              ]}
+            />
+          </ThemeProvider>
+        </GlobalErrorBoundary>
         <Scripts />
       </body>
     </html>

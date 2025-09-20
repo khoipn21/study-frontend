@@ -1,30 +1,37 @@
 import React from 'react'
 import { Link } from '@tanstack/react-router'
 import {
-  Play,
-  Clock,
-  BookOpen,
-  User,
-  TrendingUp,
   ArrowRight,
+  BookOpen,
+  Clock,
+  Play,
+  TrendingUp,
+  User,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { LearningProgress as LearningProgressType } from '@/lib/dashboard'
 import { cn } from '@/lib/utils'
+import type { LearningProgress as LearningProgressType } from '@/lib/dashboard'
 
 interface LearningProgressProps {
-  courses: LearningProgressType[]
+  courses: Array<LearningProgressType>
   className?: string
 }
 
-export function LearningProgress({ courses, className }: LearningProgressProps) {
+export function LearningProgress({
+  courses,
+  className,
+}: LearningProgressProps) {
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'beginner': return 'text-green-600 bg-green-100'
-      case 'intermediate': return 'text-yellow-600 bg-yellow-100'
-      case 'advanced': return 'text-red-600 bg-red-100'
-      default: return 'text-gray-600 bg-gray-100'
+      case 'beginner':
+        return 'text-green-600 bg-green-100'
+      case 'intermediate':
+        return 'text-yellow-600 bg-yellow-100'
+      case 'advanced':
+        return 'text-red-600 bg-red-100'
+      default:
+        return 'text-gray-600 bg-gray-100'
     }
   }
 
@@ -41,7 +48,7 @@ export function LearningProgress({ courses, className }: LearningProgressProps) 
     const now = new Date()
     const diffMs = now.getTime() - date.getTime()
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-    
+
     if (diffDays === 0) return 'Today'
     if (diffDays === 1) return 'Yesterday'
     if (diffDays < 7) return `${diffDays} days ago`
@@ -57,9 +64,7 @@ export function LearningProgress({ courses, className }: LearningProgressProps) 
           Start learning something new today!
         </p>
         <Button asChild>
-          <Link to="/courses">
-            Browse Courses
-          </Link>
+          <Link to="/courses">Browse Courses</Link>
         </Button>
       </div>
     )
@@ -71,7 +76,7 @@ export function LearningProgress({ courses, className }: LearningProgressProps) 
         <div key={course.courseId} className="academic-card p-6">
           <div className="flex gap-4">
             {/* Course Thumbnail */}
-            <div className="flex-shrink-0">
+            <div className="shrink-0">
               {course.courseThumbnail ? (
                 <img
                   src={course.courseThumbnail}
@@ -110,21 +115,19 @@ export function LearningProgress({ courses, className }: LearningProgressProps) 
                     <span
                       className={cn(
                         'px-2 py-1 rounded text-xs font-medium',
-                        getDifficultyColor(course.difficulty)
+                        getDifficultyColor(course.difficulty),
                       )}
                     >
                       {course.difficulty}
                     </span>
                   </div>
                 </div>
-                
+
                 <div className="text-right ml-4">
                   <div className="text-lg font-bold text-primary">
                     {course.progress}%
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    Complete
-                  </div>
+                  <div className="text-xs text-muted-foreground">Complete</div>
                 </div>
               </div>
 
@@ -138,11 +141,15 @@ export function LearningProgress({ courses, className }: LearningProgressProps) 
                 <div className="flex items-center gap-4 text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-                    <span>{formatTime(course.estimatedTimeToComplete)} remaining</span>
+                    <span>
+                      {formatTime(course.estimatedTimeToComplete)} remaining
+                    </span>
                   </div>
                   <div className="flex items-center gap-1">
                     <TrendingUp className="h-3 w-3" />
-                    <span>Last watched {formatLastWatched(course.lastWatched)}</span>
+                    <span>
+                      Last watched {formatLastWatched(course.lastWatched)}
+                    </span>
                   </div>
                 </div>
 
@@ -163,7 +170,7 @@ export function LearningProgress({ courses, className }: LearningProgressProps) 
                       </Link>
                     </Button>
                   )}
-                  
+
                   <Button size="sm" variant="ghost" asChild>
                     <Link
                       to="/courses/$courseId"
@@ -189,7 +196,7 @@ export function LearningProgress({ courses, className }: LearningProgressProps) 
                         {course.nextLecture.duration} minutes
                       </div>
                     </div>
-                    
+
                     <Button size="sm" asChild>
                       <Link
                         to="/learn/$courseId/$lectureId"

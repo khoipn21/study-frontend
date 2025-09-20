@@ -1,5 +1,5 @@
 import React from 'react'
-import { CreditCard, BookOpen, CheckCircle } from 'lucide-react'
+import { BookOpen, CheckCircle, CreditCard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PaymentModal } from '@/components/payment/PaymentModal'
 import { useAuth } from '@/lib/auth-context'
@@ -25,15 +25,15 @@ export function EnrollmentButton({
 }: EnrollmentButtonProps) {
   const { user } = useAuth()
 
-  const formatPrice = (price: number, currency: string) => {
-    if (price === 0) return 'Free'
-    return new Intl.NumberFormat('en-US', { 
-      style: 'currency', 
-      currency 
-    }).format(price)
+  const formatPrice = (priceValue: number, currencyCode: string) => {
+    if (priceValue === 0) return 'Free'
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currencyCode,
+    }).format(priceValue)
   }
 
-  const handleFreeEnrollment = async () => {
+  const handleFreeEnrollment = () => {
     if (!user) {
       alert('Please login first')
       return
@@ -68,8 +68,8 @@ export function EnrollmentButton({
   if (price === 0) {
     // Free course
     return (
-      <Button 
-        className={className} 
+      <Button
+        className={className}
         onClick={handleFreeEnrollment}
         disabled={!user}
       >
@@ -94,7 +94,9 @@ export function EnrollmentButton({
     >
       <Button className={className} disabled={!user}>
         <CreditCard className="h-4 w-4 mr-2" />
-        {user ? `Purchase for ${formatPrice(price, currency)}` : 'Login to Purchase'}
+        {user
+          ? `Purchase for ${formatPrice(price, currency)}`
+          : 'Login to Purchase'}
       </Button>
     </PaymentModal>
   )

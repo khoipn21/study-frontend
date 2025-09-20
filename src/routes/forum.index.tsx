@@ -1,7 +1,42 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { useState, useEffect } from 'react'
+import { Link, createFileRoute } from '@tanstack/react-router'
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import {
+  ArrowUp,
+  Award,
+  BookOpen,
+  Calendar,
+  CheckCircle,
+  Clock,
+  Code,
+  Eye,
+  Filter,
+  HelpCircle,
+  Lightbulb,
+  Lock,
+  MessageCircle,
+  MessageSquare,
+  Pin,
+  PlusCircle,
+  Search,
+  Shield,
+  Star,
+  Tag,
+  TrendingUp,
+  Users,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Select,
   SelectContent,
@@ -9,328 +44,594 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Search,
-  Plus,
-  TrendingUp,
-  MessageSquare,
-  Users,
-  Clock,
-  Filter,
-  SortDesc,
-} from 'lucide-react'
-import { ForumPostCard } from '@/components/forum/ForumPostCard'
-import { CreatePostModal } from '@/components/forum/CreatePostModal'
-import {
-  forumService,
-  type ForumPost,
-  type ForumCategory,
-  type ForumStats,
-} from '@/lib/forum'
-import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/forum/')({
-  component: ForumIndex,
+  component: ForumPage,
 })
 
-function ForumIndex() {
-  const [posts, setPosts] = useState<ForumPost[]>([])
-  const [categories, setCategories] = useState<ForumCategory[]>([])
-  const [stats, setStats] = useState<ForumStats | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+interface ForumCategory {
+  id: string
+  name: string
+  description: string
+  icon: React.ComponentType<{ className?: string }>
+  topicsCount: number
+  postsCount: number
+  lastActivity: string
+  color: string
+}
+
+interface ForumTopic {
+  id: string
+  title: string
+  content: string
+  categoryId: string
+  categoryName: string
+  author: {
+    id: string
+    name: string
+    avatar?: string
+    role: 'student' | 'instructor' | 'admin'
+  }
+  createdAt: string
+  updatedAt: string
+  viewsCount: number
+  repliesCount: number
+  isPinned: boolean
+  isLocked: boolean
+  isSolved: boolean
+  tags: Array<string>
+  lastReply?: {
+    author: string
+    timestamp: string
+  }
+}
+
+function ForumPage() {
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<string>('all')
-  const [sortBy, setSortBy] = useState<'recent' | 'popular' | 'unanswered' | 'solved'>('recent')
-  const [currentPage, setCurrentPage] = useState(1)
+  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [sortBy, setSortBy] = useState('latest')
 
-  useEffect(() => {
-    loadForumData()
-  }, [selectedCategory, sortBy, searchQuery, currentPage])
+  // Mock data - replace with actual API calls
+  const categories: Array<ForumCategory> = [
+    {
+      id: 'programming',
+      name: 'Lập trình',
+      description: 'Thảo luận về các ngôn ngữ lập trình và công nghệ',
+      icon: Code,
+      topicsCount: 1234,
+      postsCount: 5678,
+      lastActivity: '2 phút trước',
+      color: 'bg-blue-500/10 text-blue-600 border-blue-200',
+    },
+    {
+      id: 'general',
+      name: 'Thảo luận chung',
+      description: 'Chia sẻ kinh nghiệm học tập và giao lưu',
+      icon: MessageSquare,
+      topicsCount: 856,
+      postsCount: 3421,
+      lastActivity: '5 phút trước',
+      color: 'bg-green-500/10 text-green-600 border-green-200',
+    },
+    {
+      id: 'help',
+      name: 'Hỗ trợ kỹ thuật',
+      description: 'Giải đáp thắc mắc về platform và khóa học',
+      icon: HelpCircle,
+      topicsCount: 432,
+      postsCount: 1876,
+      lastActivity: '10 phút trước',
+      color: 'bg-orange-500/10 text-orange-600 border-orange-200',
+    },
+    {
+      id: 'tips',
+      name: 'Mẹo học tập',
+      description: 'Chia sẻ phương pháp và kinh nghiệm học hiệu quả',
+      icon: Lightbulb,
+      topicsCount: 234,
+      postsCount: 987,
+      lastActivity: '15 phút trước',
+      color: 'bg-yellow-500/10 text-yellow-600 border-yellow-200',
+    },
+    {
+      id: 'showcase',
+      name: 'Showcase dự án',
+      description: 'Khoe dự án và nhận feedback từ cộng đồng',
+      icon: Award,
+      topicsCount: 345,
+      postsCount: 1543,
+      lastActivity: '30 phút trước',
+      color: 'bg-purple-500/10 text-purple-600 border-purple-200',
+    },
+  ]
 
-  const loadForumData = async () => {
-    setIsLoading(true)
-    try {
-      const [postsData, categoriesData, statsData] = await Promise.all([
-        forumService.getPosts({
-          categoryId: selectedCategory === 'all' ? undefined : selectedCategory,
-          search: searchQuery || undefined,
-          sortBy,
-          page: currentPage,
-          limit: 20,
-        }),
-        forumService.getCategories(),
-        forumService.getForumStats(),
-      ])
+  const topics: Array<ForumTopic> = [
+    {
+      id: '1',
+      title: 'Làm thế nào để học React hiệu quả cho người mới bắt đầu?',
+      content:
+        'Mình mới bắt đầu học React và cảm thấy khá khó khăn. Có ai có kinh nghiệm chia sẻ không?',
+      categoryId: 'programming',
+      categoryName: 'Lập trình',
+      author: {
+        id: '1',
+        name: 'Nguyễn Văn A',
+        avatar: '/api/placeholder/32/32',
+        role: 'student',
+      },
+      createdAt: '2024-01-20T10:30:00Z',
+      updatedAt: '2024-01-20T14:15:00Z',
+      viewsCount: 256,
+      repliesCount: 18,
+      isPinned: true,
+      isLocked: false,
+      isSolved: false,
+      tags: ['react', 'javascript', 'beginner'],
+      lastReply: {
+        author: 'Trần Thị B',
+        timestamp: '2 giờ trước',
+      },
+    },
+    {
+      id: '2',
+      title: 'Chia sẻ dự án Todo App với React và TypeScript',
+      content:
+        'Vừa hoàn thành dự án Todo App sử dụng React và TypeScript. Mọi người góp ý nhé!',
+      categoryId: 'showcase',
+      categoryName: 'Showcase dự án',
+      author: {
+        id: '2',
+        name: 'Lê Văn C',
+        role: 'student',
+      },
+      createdAt: '2024-01-20T09:00:00Z',
+      updatedAt: '2024-01-20T13:45:00Z',
+      viewsCount: 142,
+      repliesCount: 7,
+      isPinned: false,
+      isLocked: false,
+      isSolved: true,
+      tags: ['react', 'typescript', 'project'],
+      lastReply: {
+        author: 'Phạm Thị D',
+        timestamp: '3 giờ trước',
+      },
+    },
+    {
+      id: '3',
+      title: 'Video bài giảng không phát được trên Chrome',
+      content:
+        'Mình đang gặp vấn đề không thể phát video trên trình duyệt Chrome. Firefox thì bình thường.',
+      categoryId: 'help',
+      categoryName: 'Hỗ trợ kỹ thuật',
+      author: {
+        id: '3',
+        name: 'Hoàng Văn E',
+        role: 'student',
+      },
+      createdAt: '2024-01-20T08:15:00Z',
+      updatedAt: '2024-01-20T12:30:00Z',
+      viewsCount: 89,
+      repliesCount: 12,
+      isPinned: false,
+      isLocked: false,
+      isSolved: true,
+      tags: ['technical', 'video', 'chrome'],
+      lastReply: {
+        author: 'Support Team',
+        timestamp: '4 giờ trước',
+      },
+    },
+  ]
 
-      setPosts(postsData.posts)
-      setCategories(categoriesData)
-      setStats(statsData)
-    } catch (error) {
-      console.error('Error loading forum data:', error)
-    } finally {
-      setIsLoading(false)
+  const filteredTopics = topics.filter((topic) => {
+    const matchesSearch =
+      topic.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      topic.content.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesCategory =
+      selectedCategory === 'all' || topic.categoryId === selectedCategory
+    return matchesSearch && matchesCategory
+  })
+
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'instructor':
+        return <Star className="h-3 w-3 text-yellow-500" />
+      case 'admin':
+        return <Shield className="h-3 w-3 text-red-500" />
+      default:
+        return null
     }
   }
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    setCurrentPage(1)
-    loadForumData()
-  }
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInHours = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60 * 60),
+    )
 
-  const handlePostCreated = (postId: string) => {
-    loadForumData()
+    if (diffInHours < 1) return 'Vừa xong'
+    if (diffInHours < 24) return `${diffInHours} giờ trước`
+    return `${Math.floor(diffInHours / 24)} ngày trước`
   }
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-card">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-between mb-6">
+      <div className="container py-8">
+        {/* Header */}
+        <div className="flex flex-col gap-6 mb-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">Community Forum</h1>
+              <h1 className="text-3xl font-bold text-foreground mb-2">
+                Diễn đàn học tập
+              </h1>
               <p className="text-muted-foreground">
-                Connect with fellow learners, ask questions, and share knowledge
+                Kết nối, thảo luận và học hỏi cùng cộng đồng{' '}
+                {topics.length.toLocaleString()} thành viên
               </p>
             </div>
-            
-            <CreatePostModal onSuccess={handlePostCreated}>
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                New Post
-              </Button>
-            </CreatePostModal>
+            <Button className="whitespace-nowrap">
+              <PlusCircle className="h-4 w-4 mr-2" />
+              Tạo chủ đề mới
+            </Button>
           </div>
 
-          {/* Stats */}
-          {stats && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="academic-card p-4 text-center">
-                <div className="text-2xl font-bold text-primary mb-1">{stats.totalPosts}</div>
-                <div className="text-sm text-muted-foreground">Total Posts</div>
-              </div>
-              <div className="academic-card p-4 text-center">
-                <div className="text-2xl font-bold text-primary mb-1">{stats.totalReplies}</div>
-                <div className="text-sm text-muted-foreground">Total Replies</div>
-              </div>
-              <div className="academic-card p-4 text-center">
-                <div className="text-2xl font-bold text-primary mb-1">{stats.totalUsers}</div>
-                <div className="text-sm text-muted-foreground">Active Members</div>
-              </div>
-              <div className="academic-card p-4 text-center">
-                <div className="text-2xl font-bold text-primary mb-1">
-                  {categories.reduce((sum, cat) => sum + cat.postCount, 0)}
-                </div>
-                <div className="text-sm text-muted-foreground">All Discussions</div>
-              </div>
+          {/* Search and Filters */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Tìm kiếm chủ đề, nội dung..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
             </div>
-          )}
+            <Select
+              value={selectedCategory}
+              onValueChange={setSelectedCategory}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Danh mục" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả danh mục</SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Sắp xếp" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="latest">Mới nhất</SelectItem>
+                <SelectItem value="popular">Phổ biến</SelectItem>
+                <SelectItem value="mostReplies">Nhiều trả lời</SelectItem>
+                <SelectItem value="mostViews">Nhiều lượt xem</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-      </div>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid lg:grid-cols-4 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-3 space-y-6">
+            {/* Forum Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <MessageSquare className="h-8 w-8 text-primary mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-foreground">
+                    {topics.reduce((sum, topic) => sum + topic.repliesCount, 0)}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Bài viết</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <Users className="h-8 w-8 text-blue-500 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-foreground">2.1K</div>
+                  <p className="text-xs text-muted-foreground">Thành viên</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <TrendingUp className="h-8 w-8 text-green-500 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-foreground">156</div>
+                  <p className="text-xs text-muted-foreground">
+                    Hoạt động hôm nay
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <CheckCircle className="h-8 w-8 text-yellow-500 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-foreground">89%</div>
+                  <p className="text-xs text-muted-foreground">Giải quyết</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Topics List */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5 text-primary" />
+                    Chủ đề thảo luận
+                  </CardTitle>
+                  <Badge variant="secondary">
+                    {filteredTopics.length} chủ đề
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {filteredTopics.map((topic) => (
+                    <div
+                      key={topic.id}
+                      className="flex items-start gap-4 p-4 rounded-lg border border-border/50 hover:border-primary/20 hover:bg-muted/30 transition-colors cursor-pointer"
+                    >
+                      {/* Topic Status Icons */}
+                      <div className="flex flex-col gap-1 mt-1">
+                        {topic.isPinned && (
+                          <Pin className="h-4 w-4 text-primary" />
+                        )}
+                        {topic.isLocked && (
+                          <Lock className="h-4 w-4 text-muted-foreground" />
+                        )}
+                        {topic.isSolved && (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        )}
+                      </div>
+
+                      {/* Author Avatar */}
+                      <Avatar className="h-10 w-10 border-2 border-border/50">
+                        <AvatarImage src={topic.author.avatar} />
+                        <AvatarFallback className="text-xs">
+                          {topic.author.name.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+
+                      {/* Topic Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-foreground hover:text-primary transition-colors line-clamp-2">
+                              <Link
+                                to="/forum/topics/$topicId"
+                                params={{ topicId: topic.id }}
+                                className="hover:underline"
+                              >
+                                {topic.title}
+                              </Link>
+                            </h3>
+                            <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                {topic.author.name}
+                                {getRoleIcon(topic.author.role)}
+                              </span>
+                              <span>•</span>
+                              <Badge
+                                variant="outline"
+                                className={`text-xs ${categories.find((c) => c.id === topic.categoryId)?.color}`}
+                              >
+                                {topic.categoryName}
+                              </Badge>
+                              <span>•</span>
+                              <span className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                {formatTimeAgo(topic.createdAt)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Tags */}
+                        {topic.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            {topic.tags.map((tag) => (
+                              <Badge
+                                key={tag}
+                                variant="secondary"
+                                className="text-xs"
+                              >
+                                <Tag className="h-2 w-2 mr-1" />
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Topic Stats */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <Eye className="h-3 w-3" />
+                              {topic.viewsCount.toLocaleString()} lượt xem
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <MessageCircle className="h-3 w-3" />
+                              {topic.repliesCount} trả lời
+                            </span>
+                          </div>
+
+                          {topic.lastReply && (
+                            <div className="text-xs text-muted-foreground">
+                              <span className="hidden sm:inline">
+                                Trả lời cuối:{' '}
+                              </span>
+                              <span className="font-medium">
+                                {topic.lastReply.author}
+                              </span>
+                              <span className="hidden sm:inline">
+                                {' '}
+                                • {topic.lastReply.timestamp}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Quick Action */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <ArrowUp className="h-4 w-4 rotate-45" />
+                      </Button>
+                    </div>
+                  ))}
+
+                  {filteredTopics.length === 0 && (
+                    <div className="text-center py-12">
+                      <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="font-semibold text-foreground mb-2">
+                        Không tìm thấy chủ đề nào
+                      </h3>
+                      <p className="text-muted-foreground mb-4">
+                        Thử thay đổi từ khóa tìm kiếm hoặc tạo chủ đề mới
+                      </p>
+                      <Button>
+                        <PlusCircle className="h-4 w-4 mr-2" />
+                        Tạo chủ đề đầu tiên
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Categories */}
-            <div className="academic-card p-4">
-              <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                <Filter className="h-4 w-4" />
-                Categories
-              </h3>
-              <div className="space-y-2">
-                <button
-                  onClick={() => {
-                    setSelectedCategory('all')
-                    setCurrentPage(1)
-                  }}
-                  className={cn(
-                    'w-full text-left px-3 py-2 rounded-lg text-sm transition-colors',
-                    selectedCategory === 'all'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'hover:bg-muted text-muted-foreground'
-                  )}
-                >
-                  All Categories
-                </button>
-                {categories.map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => {
-                      setSelectedCategory(category.id)
-                      setCurrentPage(1)
-                    }}
-                    className={cn(
-                      'w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between',
-                      selectedCategory === category.id
-                        ? 'bg-primary text-primary-foreground'
-                        : 'hover:bg-muted text-muted-foreground'
-                    )}
-                  >
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: `var(--color-${category.color}-500)` }}
-                      />
-                      <span>{category.name}</span>
-                    </div>
-                    <span className="text-xs">{category.postCount}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Most Active Users */}
-            {stats?.mostActiveUsers && stats.mostActiveUsers.length > 0 && (
-              <div className="academic-card p-4">
-                <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  Top Contributors
-                </h3>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Danh mục thảo luận</CardTitle>
+                <CardDescription>Khám phá các chủ đề đa dạng</CardDescription>
+              </CardHeader>
+              <CardContent>
                 <div className="space-y-3">
-                  {stats.mostActiveUsers.map((user, index) => (
-                    <div key={user.id} className="flex items-center gap-3">
-                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary">
-                        {index + 1}
-                      </div>
-                      {user.avatar ? (
-                        <img
-                          src={user.avatar}
-                          alt={user.username}
-                          className="w-6 h-6 rounded-full"
-                        />
-                      ) : (
-                        <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
-                          <Users className="h-3 w-3 text-muted-foreground" />
+                  {categories.map((category) => {
+                    const IconComponent = category.icon
+                    return (
+                      <div
+                        key={category.id}
+                        className="flex items-center gap-3 p-3 rounded-lg border border-border/50 hover:border-primary/20 hover:bg-muted/30 transition-colors cursor-pointer"
+                        onClick={() => setSelectedCategory(category.id)}
+                      >
+                        <div className={`p-2 rounded-lg ${category.color}`}>
+                          <IconComponent className="h-4 w-4" />
                         </div>
-                      )}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm text-foreground">
+                            {category.name}
+                          </h4>
+                          <p className="text-xs text-muted-foreground line-clamp-2">
+                            {category.description}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                            <span>{category.topicsCount} chủ đề</span>
+                            <span>•</span>
+                            <span>{category.lastActivity}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Online Users */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Users className="h-5 w-5 text-primary" />
+                  Đang hoạt động
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {[
+                    { name: 'Nguyễn Văn A', role: 'student', status: 'online' },
+                    {
+                      name: 'Trần Thị B',
+                      role: 'instructor',
+                      status: 'online',
+                    },
+                    { name: 'Lê Văn C', role: 'student', status: 'online' },
+                  ].map((user, index) => (
+                    <div key={index} className="flex items-center gap-3">
+                      <div className="relative">
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback className="text-xs">
+                            {user.name.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
+                      </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate">{user.username}</div>
-                        <div className="text-xs text-muted-foreground">{user.reputation} rep</div>
+                        <p className="text-sm font-medium text-foreground">
+                          {user.name}
+                        </p>
+                        <div className="flex items-center gap-1">
+                          {getRoleIcon(user.role)}
+                          <span className="text-xs text-muted-foreground capitalize">
+                            {user.role === 'student'
+                              ? 'Học viên'
+                              : 'Giảng viên'}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
-          </div>
-
-          {/* Main Content */}
-          <div className="lg:col-span-3 space-y-6">
-            {/* Search and Filters */}
-            <div className="academic-card p-4">
-              <form onSubmit={handleSearch} className="flex gap-4 mb-4">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search posts..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                <Button type="submit" variant="outline">
-                  Search
-                </Button>
-              </form>
-
-              <div className="flex items-center justify-between">
-                <Tabs
-                  value={sortBy}
-                  onValueChange={(value) => {
-                    setSortBy(value as typeof sortBy)
-                    setCurrentPage(1)
-                  }}
-                >
-                  <TabsList>
-                    <TabsTrigger value="recent" className="gap-2">
-                      <Clock className="h-3 w-3" />
-                      Recent
-                    </TabsTrigger>
-                    <TabsTrigger value="popular" className="gap-2">
-                      <TrendingUp className="h-3 w-3" />
-                      Popular
-                    </TabsTrigger>
-                    <TabsTrigger value="unanswered" className="gap-2">
-                      <MessageSquare className="h-3 w-3" />
-                      Unanswered
-                    </TabsTrigger>
-                    <TabsTrigger value="solved" className="gap-2">
-                      <MessageSquare className="h-3 w-3" />
-                      Solved
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <SortDesc className="h-4 w-4" />
-                  <span>{posts.length} posts</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Posts */}
-            <div className="space-y-4">
-              {isLoading ? (
-                <div className="space-y-4">
-                  {[...Array(5)].map((_, i) => (
-                    <div key={i} className="academic-card p-4 animate-pulse">
-                      <div className="h-6 bg-muted rounded mb-2"></div>
-                      <div className="h-4 bg-muted rounded mb-2 w-3/4"></div>
-                      <div className="h-4 bg-muted rounded w-1/2"></div>
-                    </div>
-                  ))}
-                </div>
-              ) : posts.length > 0 ? (
-                posts.map((post) => (
-                  <ForumPostCard key={post.id} post={post} showCategory={selectedCategory === 'all'} />
-                ))
-              ) : (
-                <div className="academic-card p-8 text-center">
-                  <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">No posts found</h3>
-                  <p className="text-muted-foreground mb-4">
-                    {searchQuery
-                      ? "Try adjusting your search terms or filters"
-                      : "Be the first to start a discussion in this category!"}
+                <div className="mt-4 pt-3 border-t border-border/50 text-center">
+                  <p className="text-xs text-muted-foreground">
+                    <span className="font-medium text-green-600">42</span> thành
+                    viên đang online
                   </p>
-                  <CreatePostModal
-                    categoryId={selectedCategory === 'all' ? undefined : selectedCategory}
-                    onSuccess={handlePostCreated}
-                  >
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create First Post
-                    </Button>
-                  </CreatePostModal>
                 </div>
-              )}
-            </div>
+              </CardContent>
+            </Card>
 
-            {/* Pagination */}
-            {posts.length > 0 && (
-              <div className="flex justify-center gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </Button>
-                <span className="flex items-center px-4 text-sm text-muted-foreground">
-                  Page {currentPage}
-                </span>
-                <Button
-                  variant="outline"
-                  onClick={() => setCurrentPage(prev => prev + 1)}
-                  disabled={posts.length < 20}
-                >
-                  Next
-                </Button>
-              </div>
-            )}
+            {/* Forum Rules */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <BookOpen className="h-5 w-5 text-primary" />
+                  Quy tắc diễn đàn
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                    <span>Tôn trọng và lịch sự với mọi thành viên</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                    <span>Không spam hoặc quảng cáo không liên quan</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                    <span>Sử dụng tiêu đề mô tả rõ ràng</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                    <span>Tìm kiếm trước khi tạo chủ đề mới</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

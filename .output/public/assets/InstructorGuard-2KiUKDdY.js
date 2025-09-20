@@ -1,1 +1,0 @@
-import{u as e,j as s}from"./main-amE6mPDm.js";function u({children:t}){const{user:r}=e();return r&&(r.role==="instructor"||r.role==="admin")?s.jsx(s.Fragment,{children:t}):s.jsx("div",{className:"p-4",children:"Instructor access required."})}export{u as I};

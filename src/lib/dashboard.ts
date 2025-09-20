@@ -28,7 +28,13 @@ export interface LearningProgress {
 
 export interface RecentActivity {
   id: string
-  type: 'course_started' | 'lecture_completed' | 'certificate_earned' | 'forum_post' | 'chat_session' | 'achievement_unlocked'
+  type:
+    | 'course_started'
+    | 'lecture_completed'
+    | 'certificate_earned'
+    | 'forum_post'
+    | 'chat_session'
+    | 'achievement_unlocked'
   title: string
   description: string
   timestamp: string
@@ -88,11 +94,11 @@ export interface LearningPath {
 
 export interface DashboardData {
   stats: DashboardStats
-  recentProgress: LearningProgress[]
-  recentActivity: RecentActivity[]
-  achievements: Achievement[]
-  studyGoals: StudyGoal[]
-  learningPaths: LearningPath[]
+  recentProgress: Array<LearningProgress>
+  recentActivity: Array<RecentActivity>
+  achievements: Array<Achievement>
+  studyGoals: Array<StudyGoal>
+  learningPaths: Array<LearningPath>
   upcomingDeadlines: Array<{
     id: string
     title: string
@@ -113,7 +119,7 @@ export interface DashboardData {
 
 export class DashboardService {
   private static instance: DashboardService
-  
+
   public static getInstance(): DashboardService {
     if (!DashboardService.instance) {
       DashboardService.instance = new DashboardService()
@@ -123,64 +129,75 @@ export class DashboardService {
 
   private constructor() {}
 
-  async getDashboardData(userId: string): Promise<DashboardData> {
+  async getDashboardData(
+    userId: string,
+    token?: string,
+  ): Promise<DashboardData> {
     try {
-      const response = await fetch(`/api/v1/dashboard/user/${userId}`)
-      if (!response.ok) throw new Error('Failed to fetch dashboard data')
-      
-      return await response.json()
+      const { apiClient } = await import('./api-client')
+      const response = await apiClient.get(`/dashboard/user/${userId}`, {
+        token,
+      })
+      return response.data
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
       return this.getMockDashboardData()
     }
   }
 
-  async updateStudyGoal(goalId: string, progress: number): Promise<void> {
+  async updateStudyGoal(
+    goalId: string,
+    progress: number,
+    token?: string,
+  ): Promise<void> {
     try {
-      const response = await fetch(`/api/v1/dashboard/goals/${goalId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ progress }),
-      })
-      
-      if (!response.ok) throw new Error('Failed to update study goal')
+      const { apiClient } = await import('./api-client')
+      await apiClient.patch(
+        `/dashboard/goals/${goalId}`,
+        { progress },
+        { token },
+      )
     } catch (error) {
       console.error('Error updating study goal:', error)
     }
   }
 
-  async createStudyGoal(goal: Omit<StudyGoal, 'id' | 'current' | 'isCompleted' | 'createdAt'>): Promise<StudyGoal> {
+  async createStudyGoal(
+    goal: Omit<StudyGoal, 'id' | 'current' | 'isCompleted' | 'createdAt'>,
+    token?: string,
+  ): Promise<StudyGoal> {
     try {
-      const response = await fetch('/api/v1/dashboard/goals', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(goal),
+      const { apiClient } = await import('./api-client')
+      const response = await apiClient.post('/dashboard/goals', goal, {
+        token,
       })
-      
-      if (!response.ok) throw new Error('Failed to create study goal')
-      
-      return await response.json()
+      return response.data
     } catch (error) {
       console.error('Error creating study goal:', error)
       throw error
     }
   }
 
-  async getWeeklyStats(userId: string): Promise<Array<{
-    date: string
-    minutes: number
-    lecturesCompleted: number
-    coursesStarted: number
-  }>> {
+  async getWeeklyStats(
+    userId: string,
+    token?: string,
+  ): Promise<
+    Array<{
+      date: string
+      minutes: number
+      lecturesCompleted: number
+      coursesStarted: number
+    }>
+  > {
     try {
-      const response = await fetch(`/api/v1/dashboard/stats/weekly/${userId}`)
-      if (!response.ok) throw new Error('Failed to fetch weekly stats')
-      
-      return await response.json()
+      const { apiClient } = await import('./api-client')
+      const response = await apiClient.get(
+        `/dashboard/stats/weekly/${userId}`,
+        {
+          token,
+        },
+      )
+      return response.data
     } catch (error) {
       console.error('Error fetching weekly stats:', error)
       return this.getMockWeeklyStats()
@@ -238,7 +255,8 @@ export class DashboardService {
           id: 'activity_1',
           type: 'lecture_completed',
           title: 'Completed: React State Management',
-          description: 'You finished the lecture on advanced state management patterns',
+          description:
+            'You finished the lecture on advanced state management patterns',
           timestamp: '2024-01-15T14:30:00Z',
           courseId: 'react-mastery',
           lectureId: 'state-management',
@@ -340,14 +358,51 @@ export class DashboardService {
         {
           id: 'frontend_developer',
           title: 'Frontend Developer Path',
-          description: 'Master modern frontend development with React, TypeScript, and modern tools',
+          description:
+            'Master modern frontend development with React, TypeScript, and modern tools',
           courses: [
-            { id: 'html-css-basics', title: 'HTML & CSS Fundamentals', isCompleted: true, isUnlocked: true, order: 1 },
-            { id: 'javascript-essentials', title: 'JavaScript Essentials', isCompleted: true, isUnlocked: true, order: 2 },
-            { id: 'react-fundamentals', title: 'React Fundamentals', isCompleted: true, isUnlocked: true, order: 3 },
-            { id: 'react-mastery', title: 'React Mastery', isCompleted: false, isUnlocked: true, order: 4 },
-            { id: 'typescript-fundamentals', title: 'TypeScript Fundamentals', isCompleted: false, isUnlocked: true, order: 5 },
-            { id: 'next-js-complete', title: 'Next.js Complete Guide', isCompleted: false, isUnlocked: false, order: 6 },
+            {
+              id: 'html-css-basics',
+              title: 'HTML & CSS Fundamentals',
+              isCompleted: true,
+              isUnlocked: true,
+              order: 1,
+            },
+            {
+              id: 'javascript-essentials',
+              title: 'JavaScript Essentials',
+              isCompleted: true,
+              isUnlocked: true,
+              order: 2,
+            },
+            {
+              id: 'react-fundamentals',
+              title: 'React Fundamentals',
+              isCompleted: true,
+              isUnlocked: true,
+              order: 3,
+            },
+            {
+              id: 'react-mastery',
+              title: 'React Mastery',
+              isCompleted: false,
+              isUnlocked: true,
+              order: 4,
+            },
+            {
+              id: 'typescript-fundamentals',
+              title: 'TypeScript Fundamentals',
+              isCompleted: false,
+              isUnlocked: true,
+              order: 5,
+            },
+            {
+              id: 'next-js-complete',
+              title: 'Next.js Complete Guide',
+              isCompleted: false,
+              isUnlocked: false,
+              order: 6,
+            },
           ],
           progress: 60,
           estimatedTime: 45,
@@ -405,11 +460,11 @@ export class DashboardService {
   private getMockWeeklyStats() {
     const today = new Date()
     const stats = []
-    
+
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today)
       date.setDate(date.getDate() - i)
-      
+
       stats.push({
         date: date.toISOString().split('T')[0],
         minutes: Math.floor(Math.random() * 90) + 10,
@@ -417,7 +472,7 @@ export class DashboardService {
         coursesStarted: i === 6 ? 1 : Math.floor(Math.random() * 2),
       })
     }
-    
+
     return stats
   }
 }

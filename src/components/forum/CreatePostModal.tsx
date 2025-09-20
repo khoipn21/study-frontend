@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
+import { AlertCircle, Loader2, Plus, X } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -19,14 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Plus,
-  X,
-  Loader2,
-  AlertCircle,
-} from 'lucide-react'
-import { forumService, type ForumCategory, type CreatePostData } from '@/lib/forum'
+import { forumService } from '@/lib/forum'
 import { cn } from '@/lib/utils'
+import type { CreatePostData, ForumCategory } from '@/lib/forum'
 
 interface CreatePostModalProps {
   children: React.ReactNode
@@ -44,13 +40,13 @@ export function CreatePostModal({
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const [categories, setCategories] = useState<ForumCategory[]>([])
-  
+  const [categories, setCategories] = useState<Array<ForumCategory>>([])
+
   const [formData, setFormData] = useState({
     title: '',
     content: '',
     categoryId: defaultCategoryId || '',
-    tags: [] as string[],
+    tags: [] as Array<string>,
     newTag: '',
   })
 
@@ -64,9 +60,9 @@ export function CreatePostModal({
     try {
       const categoriesData = await forumService.getCategories()
       setCategories(categoriesData)
-      
+
       if (!formData.categoryId && categoriesData.length > 0) {
-        setFormData(prev => ({ ...prev, categoryId: categoriesData[0].id }))
+        setFormData((prev) => ({ ...prev, categoryId: categoriesData[0].id }))
       }
     } catch (err) {
       console.error('Failed to load categories:', err)
@@ -76,7 +72,7 @@ export function CreatePostModal({
   const handleAddTag = () => {
     const tag = formData.newTag.trim().toLowerCase()
     if (tag && !formData.tags.includes(tag) && formData.tags.length < 5) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         tags: [...prev.tags, tag],
         newTag: '',
@@ -85,25 +81,25 @@ export function CreatePostModal({
   }
 
   const handleRemoveTag = (tagToRemove: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove),
+      tags: prev.tags.filter((tag) => tag !== tagToRemove),
     }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!formData.title.trim()) {
       setError('Title is required')
       return
     }
-    
+
     if (!formData.content.trim()) {
       setError('Content is required')
       return
     }
-    
+
     if (!formData.categoryId) {
       setError('Category is required')
       return
@@ -122,7 +118,7 @@ export function CreatePostModal({
       }
 
       const post = await forumService.createPost(postData)
-      
+
       setIsOpen(false)
       setFormData({
         title: '',
@@ -131,11 +127,15 @@ export function CreatePostModal({
         tags: [],
         newTag: '',
       })
-      
+
       onSuccess?.(post.id)
     } catch (err) {
       console.error('Error creating post:', err)
-      setError(err instanceof Error ? err.message : 'Failed to create post. Please try again.')
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Failed to create post. Please try again.',
+      )
     } finally {
       setIsLoading(false)
     }
@@ -177,7 +177,9 @@ export function CreatePostModal({
               id="title"
               placeholder="What's your question or topic?"
               value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, title: e.target.value }))
+              }
               maxLength={200}
               required
             />
@@ -191,7 +193,9 @@ export function CreatePostModal({
             <Label>Category *</Label>
             <Select
               value={formData.categoryId}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, categoryId: value }))}
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, categoryId: value }))
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select a category" />
@@ -202,7 +206,9 @@ export function CreatePostModal({
                     <div className="flex items-center gap-2">
                       <div
                         className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: `var(--color-${category.color}-500)` }}
+                        style={{
+                          backgroundColor: `var(--color-${category.color}-500)`,
+                        }}
                       />
                       <span>{category.name}</span>
                     </div>
@@ -219,7 +225,9 @@ export function CreatePostModal({
               id="content"
               placeholder="Describe your question or topic in detail..."
               value={formData.content}
-              onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, content: e.target.value }))
+              }
               rows={8}
               maxLength={5000}
               required
@@ -236,7 +244,9 @@ export function CreatePostModal({
               <Input
                 placeholder="Add a tag..."
                 value={formData.newTag}
-                onChange={(e) => setFormData(prev => ({ ...prev, newTag: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, newTag: e.target.value }))
+                }
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault()
@@ -254,7 +264,7 @@ export function CreatePostModal({
                 Add
               </Button>
             </div>
-            
+
             {formData.tags.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {formData.tags.map((tag) => (
@@ -274,9 +284,10 @@ export function CreatePostModal({
                 ))}
               </div>
             )}
-            
+
             <div className="text-xs text-muted-foreground">
-              Add up to 5 tags to help others find your post. Press Enter or click Add to add each tag.
+              Add up to 5 tags to help others find your post. Press Enter or
+              click Add to add each tag.
             </div>
           </div>
 
@@ -299,7 +310,9 @@ export function CreatePostModal({
             </Button>
             <Button
               type="submit"
-              disabled={isLoading || !formData.title.trim() || !formData.content.trim()}
+              disabled={
+                isLoading || !formData.title.trim() || !formData.content.trim()
+              }
             >
               {isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />

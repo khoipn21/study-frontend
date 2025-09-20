@@ -1,70 +1,301 @@
-import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
+import { Link, createFileRoute, useRouter } from '@tanstack/react-router'
+import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import React from 'react'
+import {
+  AlertCircle,
+  Chrome,
+  Eye,
+  EyeOff,
+  Github,
+  Loader2,
+  Lock,
+  Mail,
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Separator } from '@/components/ui/separator'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Checkbox } from '@/components/ui/checkbox'
 import { api } from '@/lib/api-client'
 import { useAuth } from '@/lib/auth-context'
+import type { Role } from '@/lib/types'
+
+// Helper function to determine redirect URL based on user role
+function getRedirectUrlByRole(role: Role): string {
+  switch (role) {
+    case 'instructor':
+    case 'admin':
+      return '/dashboard/instructor/analytics'
+    case 'student':
+    default:
+      return '/me/dashboard'
+  }
+}
 
 export const Route = createFileRoute('/auth/login')({
   component: LoginPage,
 })
 
 function LoginPage() {
-  const navigate = useNavigate()
+  const router = useRouter()
   const { login } = useAuth()
-  const [error, setError] = React.useState<string | null>(null)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
+  const [error, setError] = useState('')
 
-  const mutation = useMutation({
-    mutationFn: (payload: { email: string; password: string }) =>
-      api.login(payload),
-    onSuccess: (res) => {
-      const data = res.data!
-      login(data.user, data.token)
-      navigate({ to: '/courses/' })
+  const loginMutation = useMutation({
+    mutationFn: async (credentials: { email: string; password: string }) => {
+      const response = await api.login(credentials)
+      return response.data
     },
-    onError: (e: any) => setError(e?.message || 'Login failed'),
+    onSuccess: (data) => {
+      if (data?.token && data?.user) {
+        login(data.user, data.token)
+
+        // Redirect based on user role
+        const redirectTo = getRedirectUrlByRole(data.user.role)
+        router.history.push(redirectTo)
+      } else {
+        setError(
+          'Đăng nhập thành công nhưng không nhận được dữ liệu người dùng',
+        )
+      }
+    },
+    onError: (error: any) => {
+      console.error('Login error:', error)
+      setError(
+        error?.response?.data?.message ||
+          error?.message ||
+          'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin đăng nhập.',
+      )
+    },
   })
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const fd = new FormData(e.currentTarget)
-    const email = String(fd.get('email') || '')
-    const password = String(fd.get('password') || '')
-    mutation.mutate({ email, password })
+    setError('')
+
+    if (!email || !password) {
+      setError('Vui lòng nhập đầy đủ email và mật khẩu')
+      return
+    }
+
+    if (!email.includes('@')) {
+      setError('Vui lòng nhập địa chỉ email hợp lệ')
+      return
+    }
+
+    if (password.length < 6) {
+      setError('Mật khẩu phải có ít nhất 6 ký tự')
+      return
+    }
+
+    loginMutation.mutate({ email, password })
+  }
+
+  const handleSocialLogin = (provider: string) => {
+    // Implementation for OAuth login
+    window.location.href = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/api/v1/auth/${provider}`
   }
 
   return (
-    <div className="p-4 max-w-md mx-auto">
-      <h1 className="text-2xl font-semibold mb-4">Login</h1>
-      <form className="flex flex-col gap-3" onSubmit={onSubmit}>
-        <input
-          name="email"
-          type="email"
-          placeholder="Email"
-          className="border rounded p-2"
-          required
-        />
-        <input
-          name="password"
-          type="password"
-          placeholder="Password"
-          className="border rounded p-2"
-          required
-        />
-        <button
-          type="submit"
-          className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
-          disabled={mutation.isPending}
-        >
-          {mutation.isPending ? 'Logging in...' : 'Login'}
-        </button>
-        {error && <p className="text-sm text-red-600">{error}</p>}
-      </form>
-      <p className="text-sm mt-3">
-        No account?{' '}
-        <Link to="/auth/register" className="text-blue-600 underline">
-          Register
-        </Link>
-      </p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4">
+      <div className="w-full max-w-md">
+        <Card className="border-0 shadow-2xl shadow-primary/5">
+          <CardHeader className="text-center space-y-2 pb-6">
+            <div className="mx-auto mb-4 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+              <Mail className="h-6 w-6 text-primary" />
+            </div>
+            <CardTitle className="text-3xl font-bold text-foreground">
+              Đăng nhập
+            </CardTitle>
+            <CardDescription className="text-muted-foreground leading-relaxed">
+              Chào mừng bạn trở lại với nền tảng học tập hàng đầu Việt Nam
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Error Alert */}
+            {error && (
+              <Alert
+                variant="destructive"
+                className="border-destructive/20 bg-destructive/5"
+              >
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {/* Social Login */}
+            <div className="space-y-3">
+              <Button
+                variant="outline"
+                className="w-full h-11 border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-colors"
+                type="button"
+                onClick={() => handleSocialLogin('google')}
+                disabled={loginMutation.isPending}
+              >
+                <Chrome className="h-4 w-4 mr-2" />
+                Đăng nhập với Google
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full h-11 border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-colors"
+                type="button"
+                onClick={() => handleSocialLogin('github')}
+                disabled={loginMutation.isPending}
+              >
+                <Github className="h-4 w-4 mr-2" />
+                Đăng nhập với GitHub
+              </Button>
+            </div>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <Separator className="bg-border/50" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-3 text-muted-foreground font-medium">
+                  Hoặc tiếp tục với email
+                </span>
+              </div>
+            </div>
+
+            {/* Email/Password Form */}
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="email"
+                  className="text-sm font-medium text-foreground"
+                >
+                  Địa chỉ email
+                </Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="your@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10 h-11 border-border/50 focus:border-primary/50 transition-colors"
+                    disabled={loginMutation.isPending}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label
+                    htmlFor="password"
+                    className="text-sm font-medium text-foreground"
+                  >
+                    Mật khẩu
+                  </Label>
+                  <Link
+                    to="/auth/forgot-password"
+                    className="text-sm text-primary hover:text-primary/80 transition-colors"
+                  >
+                    Quên mật khẩu?
+                  </Link>
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10 pr-10 h-11 border-border/50 focus:border-primary/50 transition-colors"
+                    disabled={loginMutation.isPending}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
+                    disabled={loginMutation.isPending}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="remember"
+                  checked={rememberMe}
+                  onCheckedChange={(checked) =>
+                    setRememberMe(checked as boolean)
+                  }
+                  disabled={loginMutation.isPending}
+                />
+                <Label
+                  htmlFor="remember"
+                  className="text-sm text-muted-foreground cursor-pointer"
+                >
+                  Ghi nhớ đăng nhập
+                </Label>
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition-colors"
+                disabled={loginMutation.isPending}
+              >
+                {loginMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Đang đăng nhập...
+                  </>
+                ) : (
+                  'Đăng nhập'
+                )}
+              </Button>
+            </form>
+
+            {/* Register Link */}
+            <div className="text-center text-sm border-t border-border/50 pt-6">
+              <span className="text-muted-foreground">
+                Chưa có tài khoản học tập?{' '}
+              </span>
+              <Link
+                to="/auth/register"
+                className="text-primary hover:text-primary/80 font-medium transition-colors"
+              >
+                Đăng ký ngay miễn phí
+              </Link>
+            </div>
+
+            {/* Footer */}
+            <div className="text-center text-xs text-muted-foreground">
+              Bằng cách đăng nhập, bạn đồng ý với{' '}
+              <Link to="/terms" className="text-primary hover:underline">
+                Điều khoản dịch vụ
+              </Link>{' '}
+              và{' '}
+              <Link to="/privacy" className="text-primary hover:underline">
+                Chính sách bảo mật
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

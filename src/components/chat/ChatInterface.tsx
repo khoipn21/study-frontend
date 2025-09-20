@@ -1,25 +1,25 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+import {
+  BookOpen,
+  Bot,
+  Loader2,
+  MessageSquare,
+  Play,
+  Plus,
+  Send,
+  Sparkles,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  Send,
-  Bot,
-  Loader2,
-  Sparkles,
-  MessageSquare,
-  BookOpen,
-  Play,
-  Plus,
-} from 'lucide-react'
-import { ChatMessage } from './ChatMessage'
-import {
-  aiChatService,
-  type ChatSession,
-  type ChatMessage as ChatMessageType,
-  type ChatContext,
-} from '@/lib/ai-chat'
+import { aiChatService } from '@/lib/ai-chat'
 import { cn } from '@/lib/utils'
+import { ChatMessage } from './ChatMessage'
+import type {
+  ChatContext,
+  ChatMessage as ChatMessageType,
+  ChatSession,
+} from '@/lib/ai-chat'
 
 interface ChatInterfaceProps {
   context?: ChatContext
@@ -28,17 +28,17 @@ interface ChatInterfaceProps {
   height?: string
 }
 
-export function ChatInterface({ 
-  context, 
+export function ChatInterface({
+  context,
   className,
   embedded = false,
-  height = 'h-96'
+  height = 'h-96',
 }: ChatInterfaceProps) {
   const [currentSession, setCurrentSession] = useState<ChatSession | null>(null)
-  const [messages, setMessages] = useState<ChatMessageType[]>([])
+  const [messages, setMessages] = useState<Array<ChatMessageType>>([])
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [suggestions, setSuggestions] = useState<string[]>([])
+  const [suggestions, setSuggestions] = useState<Array<string>>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -72,15 +72,19 @@ export function ChatInterface({
     if (!context) return
 
     try {
-      let suggestions: string[] = []
-      
+      let newSuggestions: Array<string> = []
+
       if (context.courseId) {
-        suggestions = await aiChatService.getCourseSuggestions(context.courseId)
+        newSuggestions = await aiChatService.getCourseSuggestions(
+          context.courseId,
+        )
       } else if (context.lectureId) {
-        suggestions = await aiChatService.getLectureSuggestions(context.lectureId)
+        newSuggestions = await aiChatService.getLectureSuggestions(
+          context.lectureId,
+        )
       }
-      
-      setSuggestions(suggestions)
+
+      setSuggestions(newSuggestions)
     } catch (error) {
       console.error('Error loading suggestions:', error)
     }
@@ -99,7 +103,7 @@ export function ChatInterface({
       lectureId: context?.lectureId,
     }
 
-    setMessages(prev => [...prev, userMessage])
+    setMessages((prev) => [...prev, userMessage])
     setInputValue('')
     setIsLoading(true)
 
@@ -110,18 +114,18 @@ export function ChatInterface({
         sessionId: currentSession.id,
       })
 
-      setMessages(prev => [...prev, aiResponse])
+      setMessages((prev) => [...prev, aiResponse])
     } catch (error) {
       console.error('Error sending message:', error)
-      
+
       const errorMessage: ChatMessageType = {
         id: `msg_${Date.now()}_error`,
         content: 'Sorry, I encountered an error. Please try again.',
         role: 'assistant',
         timestamp: new Date().toISOString(),
       }
-      
-      setMessages(prev => [...prev, errorMessage])
+
+      setMessages((prev) => [...prev, errorMessage])
     } finally {
       setIsLoading(false)
     }
@@ -158,7 +162,8 @@ export function ChatInterface({
     {
       icon: Play,
       label: 'Show examples',
-      action: () => handleSendMessage('Can you show me some practical examples?'),
+      action: () =>
+        handleSendMessage('Can you show me some practical examples?'),
     },
     {
       icon: MessageSquare,
@@ -168,11 +173,13 @@ export function ChatInterface({
   ]
 
   return (
-    <div className={cn(
-      'flex flex-col bg-background border rounded-lg',
-      embedded ? 'shadow-sm' : 'shadow-lg',
-      className
-    )}>
+    <div
+      className={cn(
+        'flex flex-col bg-background border rounded-lg',
+        embedded ? 'shadow-sm' : 'shadow-lg',
+        className,
+      )}
+    >
       {/* Header */}
       {!embedded && (
         <div className="flex items-center justify-between p-4 border-b bg-card">
@@ -183,16 +190,15 @@ export function ChatInterface({
             <div>
               <h3 className="font-semibold">AI Tutor</h3>
               <p className="text-sm text-muted-foreground">
-                {context?.courseId 
-                  ? 'Course Assistant' 
-                  : context?.lectureId 
+                {context?.courseId
+                  ? 'Course Assistant'
+                  : context?.lectureId
                     ? 'Lecture Helper'
-                    : 'General Study Assistant'
-                }
+                    : 'General Study Assistant'}
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
             <span className="text-xs text-muted-foreground">Online</span>
@@ -201,11 +207,9 @@ export function ChatInterface({
       )}
 
       {/* Messages Container */}
-      <div className={cn(
-        'flex-1 overflow-y-auto',
-        height,
-        embedded && 'min-h-0'
-      )}>
+      <div
+        className={cn('flex-1 overflow-y-auto', height, embedded && 'min-h-0')}
+      >
         {/* Welcome Message */}
         {messages.length <= 1 && (
           <div className="p-6 text-center space-y-4">
@@ -214,17 +218,16 @@ export function ChatInterface({
             </div>
             <div>
               <h4 className="font-semibold mb-2">
-                {context?.courseId 
+                {context?.courseId
                   ? 'Course AI Assistant'
-                  : 'AI Tutor Ready to Help'
-                }
+                  : 'AI Tutor Ready to Help'}
               </h4>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                I'm here to help you understand concepts, answer questions, and guide your learning journey.
-                Ask me anything!
+                I'm here to help you understand concepts, answer questions, and
+                guide your learning journey. Ask me anything!
               </p>
             </div>
-            
+
             {/* Quick Actions */}
             {!embedded && (
               <div className="flex flex-wrap gap-2 justify-center pt-4">
@@ -282,7 +285,7 @@ export function ChatInterface({
         {/* Loading Indicator */}
         {isLoading && (
           <div className="flex gap-3 p-4">
-            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center">
+            <div className="shrink-0 w-8 h-8 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center">
               <Bot className="h-4 w-4" />
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
@@ -309,12 +312,10 @@ export function ChatInterface({
               className="min-h-[40px] max-h-32 resize-none pr-12"
             />
             <div className="absolute right-2 bottom-2 text-xs text-muted-foreground">
-              {inputValue.length > 0 && (
-                <span>{inputValue.length}/2000</span>
-              )}
+              {inputValue.length > 0 && <span>{inputValue.length}/2000</span>}
             </div>
           </div>
-          
+
           <Button
             onClick={() => handleSendMessage()}
             disabled={!inputValue.trim() || isLoading}

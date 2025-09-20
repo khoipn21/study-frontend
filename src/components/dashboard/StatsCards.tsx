@@ -1,16 +1,16 @@
 import React from 'react'
 import {
+  Award,
   BookOpen,
+  Bot,
   CheckCircle,
   Clock,
   Flame,
-  Award,
   MessageSquare,
-  Bot,
   TrendingUp,
 } from 'lucide-react'
-import { DashboardStats } from '@/lib/dashboard'
 import { cn } from '@/lib/utils'
+import type { DashboardStats } from '@/lib/dashboard'
 
 interface StatsCardsProps {
   stats: DashboardStats
@@ -99,24 +99,26 @@ export function StatsCards({ stats, className }: StatsCardsProps) {
   }
 
   return (
-    <div className={cn('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4', className)}>
+    <div
+      className={cn(
+        'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4',
+        className,
+      )}
+    >
       {statsData.map((stat, index) => {
         const Icon = stat.icon
         const colorClasses = getColorClasses(stat.color)
-        
+
         return (
           <div
             key={index}
             className="academic-card p-6 hover:shadow-md transition-shadow"
           >
             <div className="flex items-center justify-between mb-4">
-              <div className={cn(
-                'p-3 rounded-lg border',
-                colorClasses
-              )}>
+              <div className={cn('p-3 rounded-lg border', colorClasses)}>
                 <Icon className="h-6 w-6" />
               </div>
-              
+
               {stat.trend && (
                 <div className="text-xs text-success font-medium bg-success/10 px-2 py-1 rounded">
                   {stat.trend}

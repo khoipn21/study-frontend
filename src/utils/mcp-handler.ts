@@ -3,7 +3,7 @@ import { getEvent } from '@tanstack/react-start/server'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 
 export async function handleMcpRequest(request: Request, server: McpServer) {
-  const body = await request.json()
+  const body = (await request.json()) as unknown
   const event = getEvent()
   const res = event.node.res
   const req = event.node.req
@@ -14,8 +14,8 @@ export async function handleMcpRequest(request: Request, server: McpServer) {
     })
 
     const cleanup = () => {
-      transport.close()
-      server.close()
+      void transport.close()
+      void server.close()
     }
 
     let settled = false
@@ -27,7 +27,7 @@ export async function handleMcpRequest(request: Request, server: McpServer) {
       }
     }
 
-    const safeReject = (error: any) => {
+    const safeReject = (error: unknown) => {
       if (!settled) {
         settled = true
         cleanup()

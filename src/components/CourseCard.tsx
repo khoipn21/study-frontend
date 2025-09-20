@@ -1,17 +1,30 @@
 import { Link } from '@tanstack/react-router'
-import { 
-  Clock, 
-  Star, 
-  Users, 
-  BookOpen, 
+import {
   Award,
-  Play,
+  BookOpen,
+  Check,
+  Clock,
+  Crown,
+  Eye,
+  Globe,
   Heart,
-  Share2
+  Lock,
+  Medal,
+  Play,
+  Share2,
+  ShoppingCart,
+  Star,
+  Subtitles,
+  Users,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { Course } from '@/lib/types'
+import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
+import { useCourseAccess } from '@/lib/course-marketplace-context'
+import { formatCoursePrice, formatVietnameseDuration } from '@/lib/currency'
+import { vietnameseTranslations } from '@/lib/vietnamese-locale'
+import type { Course } from '@/lib/types'
 
 interface CourseCardProps {
   course: Course
@@ -19,17 +32,33 @@ interface CourseCardProps {
   showInstructor?: boolean
   showProgress?: boolean
   progress?: number
+  showAccessStatus?: boolean
+  showPricing?: boolean
+  onPreview?: (course: Course) => void
+  onPurchase?: (course: Course) => void
+  onAddToWishlist?: (course: Course) => void
+  isInWishlist?: boolean
 }
 
-export function CourseCard({ 
-  course, 
+export function CourseCard({
+  course,
   variant = 'default',
   showInstructor = true,
   showProgress = false,
-  progress = 0
+  progress = 0,
+  showAccessStatus = true,
+  showPricing = true,
+  onPreview,
+  onPurchase,
+  onAddToWishlist,
+  isInWishlist = false,
 }: CourseCardProps) {
+  const { getAccessStatus, canAccessCourse, hasFullAccess } = useCourseAccess()
+  const accessStatus = getAccessStatus(course)
+  const hasAccess = canAccessCourse(course)
+  const isPurchased = hasFullAccess(course.id)
   const getLevelBadgeStyle = (level: string) => {
-    switch (level?.toLowerCase()) {
+    switch (level.toLowerCase()) {
       case 'beginner':
         return 'course-level-beginner'
       case 'intermediate':
@@ -43,33 +72,95 @@ export function CourseCard({
     }
   }
 
-  const formatPrice = (price: number, currency: string = 'USD') => {
-    if (price === 0) return 'Free'
-    return new Intl.NumberFormat('en-US', { 
-      style: 'currency', 
-      currency 
-    }).format(price)
+  const formatPrice = (
+    price: number,
+    currency: 'VND' | 'USD' | 'EUR' = 'VND',
+  ) => {
+    if (price === 0 || course.is_free === true)
+      return vietnameseTranslations.payment.free
+    const priceData = formatCoursePrice(price, currency, course.is_free)
+    return priceData.display
+  }
+
+  const getDiscountedPrice = () => {
+    if ((course.price ?? 0) === 0 || course.is_free === true) return 0
+    if ((course.discount_percentage ?? 0) === 0) return course.price
+    return course.price * (1 - course.discount_percentage / 100)
+  }
+
+  const getAccessIcon = () => {
+    switch (accessStatus) {
+      case 'free':
+        return <Check className="h-4 w-4 text-green-500" />
+      case 'purchased':
+        return <Crown className="h-4 w-4 text-yellow-500" />
+      case 'preview':
+        return <Eye className="h-4 w-4 text-blue-500" />
+      case 'locked':
+        return <Lock className="h-4 w-4 text-muted-foreground" />
+      default:
+        return <Lock className="h-4 w-4 text-muted-foreground" />
+    }
+  }
+
+  const getAccessStatusText = () => {
+    switch (accessStatus) {
+      case 'free':
+        return 'Truy cập miễn phí'
+      case 'purchased':
+        return 'Truy cập đầy đủ'
+      case 'preview':
+        return 'Có thể xem trước'
+      case 'locked':
+        return 'Cần thanh toán'
+      default:
+        return 'Cần thanh toán'
+    }
+  }
+
+  const getButtonText = () => {
+    if (showProgress && progress > 0)
+      return vietnameseTranslations.courses.continueLearning
+    if (accessStatus === 'free')
+      return vietnameseTranslations.courses.startLearning
+    if (accessStatus === 'purchased')
+      return vietnameseTranslations.courses.continueLearning
+    if (accessStatus === 'preview')
+      return vietnameseTranslations.courses.preview
+    return vietnameseTranslations.courses.enrollNow
+  }
+
+  const getButtonAction = () => {
+    if (accessStatus === 'free' || accessStatus === 'purchased') {
+      return () => {} // Navigate to course
+    }
+    if (accessStatus === 'preview' && onPreview) {
+      return () => onPreview(course)
+    }
+    if (accessStatus === 'locked' && onPurchase) {
+      return () => onPurchase(course)
+    }
+    return () => {}
   }
 
   const formatDuration = (minutes: number) => {
-    if (minutes < 60) return `${minutes}m`
-    const hours = Math.floor(minutes / 60)
-    const remainingMinutes = minutes % 60
-    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`
+    return formatVietnameseDuration(minutes)
   }
 
   const isCompact = variant === 'compact'
   const isFeatured = variant === 'featured'
 
   return (
-    <div className={cn(
-      "academic-card group overflow-hidden transition-all duration-300",
-      isFeatured && "border-primary/30 shadow-lg",
-      "hover:shadow-xl hover:-translate-y-1"
-    )}>
+    <div
+      className={cn(
+        'academic-card group overflow-hidden transition-all duration-300',
+        isFeatured && 'border-primary/30 shadow-lg',
+        'hover:shadow-xl hover:-translate-y-1',
+      )}
+    >
       {/* Course Thumbnail */}
       <div className="relative aspect-video overflow-hidden">
-        {course.thumbnail_url ? (
+        {course.thumbnail_url && course.thumbnail_url.length > 0 ? (
           <img
             src={course.thumbnail_url}
             alt={course.title}
@@ -80,43 +171,139 @@ export function CourseCard({
             <BookOpen className="h-12 w-12 text-primary/60" />
           </div>
         )}
-        
+
         {/* Overlay Controls */}
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-          <Button size="sm" variant="secondary" className="bg-background/90 backdrop-blur-sm">
+          <Button
+            size="sm"
+            variant="secondary"
+            className="bg-background/90 backdrop-blur-sm"
+          >
             <Play className="h-4 w-4 mr-2" />
-            Preview
+            {vietnameseTranslations.courses.preview}
           </Button>
         </div>
 
         {/* Top Badges */}
-        <div className="absolute top-3 left-3 flex gap-2">
-          {course.level && (
-            <div className={cn(
-              "px-2 py-1 text-xs font-medium rounded-full border",
-              getLevelBadgeStyle(course.level)
-            )}>
-              {course.level}
-            </div>
+        <div className="absolute top-3 left-3 flex flex-wrap gap-2 max-w-[70%]">
+          {/* Access Status Badge */}
+          {showAccessStatus && (
+            <Badge
+              variant={
+                accessStatus === 'free'
+                  ? 'default'
+                  : accessStatus === 'purchased'
+                    ? 'secondary'
+                    : 'outline'
+              }
+              className={cn(
+                'flex items-center gap-1 text-xs',
+                accessStatus === 'free' && 'bg-green-500/90 text-white',
+                accessStatus === 'purchased' && 'bg-yellow-500/90 text-white',
+                accessStatus === 'preview' && 'bg-blue-500/90 text-white',
+                accessStatus === 'locked' && 'bg-gray-500/90 text-white',
+              )}
+            >
+              {getAccessIcon()}
+              {accessStatus === 'free'
+                ? vietnameseTranslations.payment.free
+                : accessStatus === 'purchased'
+                  ? 'Đã sở hữu'
+                  : accessStatus === 'preview'
+                    ? 'Xem trước'
+                    : 'Trả phí'}
+            </Badge>
           )}
-          {isFeatured && (
-            <div className="px-2 py-1 text-xs font-medium rounded-full bg-accent text-accent-foreground">
-              Featured
-            </div>
+
+          {/* Level Badge */}
+          {course.difficulty_level && (
+            <Badge
+              variant="outline"
+              className={cn(
+                'text-xs bg-white/90 backdrop-blur-sm',
+                getLevelBadgeStyle(course.difficulty_level),
+              )}
+            >
+              {course.difficulty_level === 'beginner'
+                ? vietnameseTranslations.courses.beginner
+                : course.difficulty_level === 'intermediate'
+                  ? vietnameseTranslations.courses.intermediate
+                  : course.difficulty_level === 'advanced'
+                    ? vietnameseTranslations.courses.advanced
+                    : vietnameseTranslations.courses.expert}
+            </Badge>
+          )}
+
+          {/* Featured Badge */}
+          {(course.is_featured === true || isFeatured) && (
+            <Badge className="text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+              <Crown className="h-3 w-3 mr-1" />
+              Nổi bật
+            </Badge>
+          )}
+
+          {/* Bestseller/Hot Badge */}
+          {(course.enrollment_count ?? 0) > 1000 && (
+            <Badge className="text-xs bg-orange-500 text-white">
+              🔥 Bán chạy
+            </Badge>
           )}
         </div>
 
         {/* Bookmark/Favorite */}
-        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 bg-background/80 backdrop-blur-sm">
-            <Heart className="h-4 w-4" />
+        <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 w-8 p-0 bg-background/80 backdrop-blur-sm hover:bg-background/90"
+            onClick={(e) => {
+              e.preventDefault()
+              onAddToWishlist?.(course)
+            }}
+          >
+            <Heart
+              className={cn(
+                'h-4 w-4',
+                isInWishlist && 'fill-red-500 text-red-500',
+              )}
+            />
           </Button>
+
+          {/* Quick Action Buttons */}
+          {!isCompact && (
+            <>
+              {course.preview_video_url &&
+                course.preview_video_url.length > 0 &&
+                accessStatus !== 'purchased' && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 p-0 bg-background/80 backdrop-blur-sm hover:bg-background/90"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      onPreview?.(course)
+                    }}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                )}
+
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 w-8 p-0 bg-background/80 backdrop-blur-sm hover:bg-background/90"
+                onClick={(e) => e.preventDefault()}
+              >
+                <Share2 className="h-4 w-4" />
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Progress Bar (if showing progress) */}
         {showProgress && progress > 0 && (
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/20">
-            <div 
+            <div
               className="h-full bg-success transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
@@ -125,69 +312,122 @@ export function CourseCard({
       </div>
 
       {/* Course Content */}
-      <div className={cn("p-4", isCompact && "p-3")}>
+      <div className={cn('p-4', isCompact && 'p-3')}>
         {/* Course Title */}
-        <Link 
+        <Link
           to="/courses/$courseId"
           params={{ courseId: course.id }}
           className="block"
         >
-          <h3 className={cn(
-            "font-semibold line-clamp-2 text-foreground group-hover:text-primary transition-colors",
-            isCompact ? "text-base" : "text-lg",
-            isFeatured && "text-xl"
-          )}>
+          <h3
+            className={cn(
+              'font-semibold line-clamp-2 text-foreground group-hover:text-primary transition-colors',
+              isCompact ? 'text-base' : 'text-lg',
+              isFeatured && 'text-xl',
+            )}
+          >
             {course.title}
           </h3>
         </Link>
 
         {/* Instructor */}
-        {showInstructor && course.instructor_name && !isCompact && (
-          <p className="text-sm text-muted-foreground mt-1">
-            by {course.instructor_name}
-          </p>
-        )}
+        {showInstructor &&
+          course.instructor_name &&
+          course.instructor_name.length > 0 &&
+          !isCompact && (
+            <p className="text-sm text-muted-foreground mt-1">
+              {vietnameseTranslations.courses.instructor}:{' '}
+              {course.instructor_name}
+            </p>
+          )}
 
         {/* Description */}
-        {course.description && !isCompact && (
+        {course.description && course.description.length > 0 && !isCompact && (
           <p className="text-sm text-muted-foreground line-clamp-2 mt-2 leading-relaxed">
             {course.description}
           </p>
         )}
 
         {/* Course Metadata */}
-        <div className={cn(
-          "flex items-center gap-4 text-xs text-muted-foreground",
-          isCompact ? "mt-2" : "mt-3"
-        )}>
-          {course.duration_minutes && (
+        <div
+          className={cn(
+            'flex items-center gap-4 text-xs text-muted-foreground',
+            isCompact ? 'mt-2' : 'mt-3',
+          )}
+        >
+          {(course.duration_minutes ?? 0) > 0 && (
             <div className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
               <span>{formatDuration(course.duration_minutes)}</span>
             </div>
           )}
-          {course.rating && (
+          {(course.rating ?? 0) > 0 && (
             <div className="flex items-center gap-1">
               <Star className="h-3 w-3 fill-current text-warning" />
-              <span>{course.rating}</span>
-              {course.rating_count && (
-                <span className="text-muted-foreground">({course.rating_count})</span>
+              <span>{course.rating.toFixed(1)}</span>
+              {(course.rating_count ?? 0) > 0 && (
+                <span className="text-muted-foreground">
+                  ({course.rating_count.toLocaleString()})
+                </span>
               )}
             </div>
           )}
-          {course.enrollment_count && (
+          {(course.enrollment_count ?? 0) > 0 && (
             <div className="flex items-center gap-1">
               <Users className="h-3 w-3" />
               <span>{course.enrollment_count.toLocaleString()}</span>
             </div>
           )}
+          {(course.total_lectures ?? 0) > 0 && !isCompact && (
+            <div className="flex items-center gap-1">
+              <BookOpen className="h-3 w-3" />
+              <span>
+                {course.total_lectures}{' '}
+                {vietnameseTranslations.courses.lectures}
+              </span>
+            </div>
+          )}
         </div>
+
+        {/* Additional Metadata Row */}
+        {!isCompact && (
+          <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
+            {course.language && course.language.length > 0 && (
+              <div className="flex items-center gap-1">
+                <Globe className="h-3 w-3" />
+                <span>{course.language}</span>
+              </div>
+            )}
+            {course.subtitles && course.subtitles.length > 0 && (
+              <div className="flex items-center gap-1">
+                <Subtitles className="h-3 w-3" />
+                <span>CC</span>
+              </div>
+            )}
+            {course.certificate_available === true && (
+              <div className="flex items-center gap-1">
+                <Medal className="h-3 w-3" />
+                <span>{vietnameseTranslations.courses.certificate}</span>
+              </div>
+            )}
+            {course.mobile_access === true && (
+              <div className="flex items-center gap-1 text-green-600">
+                <span>📱 Di động</span>
+              </div>
+            )}
+            {course.lifetime_access === true && accessStatus !== 'free' && (
+              <div className="flex items-center gap-1 text-blue-600">
+                <span>♾️ Trọn đời</span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Tags */}
         {course.tags && course.tags.length > 0 && !isCompact && (
           <div className="flex flex-wrap gap-1 mt-3">
             {course.tags.slice(0, 3).map((tag, index) => (
-              <span 
+              <span
                 key={index}
                 className="px-2 py-1 text-xs bg-muted text-muted-foreground rounded"
               >
@@ -203,42 +443,103 @@ export function CourseCard({
         )}
 
         {/* Footer Actions */}
-        <div className={cn(
-          "flex items-center justify-between",
-          isCompact ? "mt-3" : "mt-4"
-        )}>
-          <div className="flex items-center gap-2">
-            <span className={cn(
-              "font-bold text-primary",
-              isFeatured ? "text-xl" : "text-lg"
-            )}>
-              {formatPrice(course.price || 0, course.currency)}
-            </span>
-            {course.price && course.price > 0 && (
-              <span className="text-xs text-muted-foreground line-through">
-                ${(course.price * 1.5).toFixed(0)}
-              </span>
-            )}
-          </div>
+        <div
+          className={cn(
+            'flex items-center justify-between',
+            isCompact ? 'mt-3' : 'mt-4',
+          )}
+        >
+          {/* Pricing Section */}
+          {showPricing && (
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <span
+                  className={cn(
+                    'font-bold',
+                    isFeatured ? 'text-xl' : 'text-lg',
+                    course.is_free === true ? 'text-green-600' : 'text-primary',
+                  )}
+                >
+                  {course.is_free === true
+                    ? vietnameseTranslations.payment.free
+                    : formatPrice(
+                        getDiscountedPrice(),
+                        course.currency ?? 'VND',
+                      )}
+                </span>
+                {(course.discount_percentage ?? 0) > 0 &&
+                  (course.price ?? 0) > 0 &&
+                  course.is_free !== true && (
+                    <span className="text-xs text-muted-foreground line-through">
+                      {formatPrice(course.price, course.currency)}
+                    </span>
+                  )}
+                {(course.discount_percentage ?? 0) > 0 && (
+                  <Badge variant="destructive" className="text-xs">
+                    -{course.discount_percentage}%
+                  </Badge>
+                )}
+              </div>
+              {course.access_type === 'subscription' &&
+                course.is_free !== true && (
+                  <span className="text-xs text-muted-foreground">
+                    hoặc có trong gói đăng ký
+                  </span>
+                )}
+            </div>
+          )}
 
+          {/* Action Buttons */}
           <div className="flex items-center gap-2">
-            {!isCompact && (
-              <Button 
-                size="sm" 
-                variant="ghost" 
-                className="h-8 w-8 p-0"
-                onClick={(e) => e.preventDefault()}
-              >
-                <Share2 className="h-4 w-4" />
-              </Button>
-            )}
-            <Button size={isCompact ? "sm" : "default"} asChild>
-              <Link
-                to="/courses/$courseId"
-                params={{ courseId: course.id }}
-              >
-                {showProgress && progress > 0 ? 'Continue' : 'Enroll Now'}
-              </Link>
+            {/* Secondary Action (Share/Preview) */}
+            {!isCompact &&
+              accessStatus === 'locked' &&
+              course.preview_video_url &&
+              course.preview_video_url.length > 0 && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    onPreview?.(course)
+                  }}
+                >
+                  <Eye className="h-4 w-4 mr-1" />
+                  {vietnameseTranslations.courses.preview}
+                </Button>
+              )}
+
+            {/* Primary Action Button */}
+            <Button
+              size={isCompact ? 'sm' : 'default'}
+              variant={accessStatus === 'locked' ? 'default' : 'secondary'}
+              className={cn(
+                accessStatus === 'locked' && 'bg-primary hover:bg-primary/90',
+                accessStatus === 'free' &&
+                  'bg-green-600 hover:bg-green-700 text-white',
+                accessStatus === 'purchased' &&
+                  'bg-blue-600 hover:bg-blue-700 text-white',
+              )}
+              onClick={(e) => {
+                e.preventDefault()
+                const action = getButtonAction()
+                if (accessStatus === 'free' || accessStatus === 'purchased') {
+                  // Navigate to course
+                  window.location.href = `/courses/${course.id}`
+                } else {
+                  action()
+                }
+              }}
+            >
+              {accessStatus === 'locked' && (
+                <ShoppingCart className="h-4 w-4 mr-1" />
+              )}
+              {accessStatus === 'free' && <Play className="h-4 w-4 mr-1" />}
+              {accessStatus === 'purchased' && (
+                <Check className="h-4 w-4 mr-1" />
+              )}
+              {accessStatus === 'preview' && <Eye className="h-4 w-4 mr-1" />}
+              {getButtonText()}
             </Button>
           </div>
         </div>
@@ -247,15 +548,15 @@ export function CourseCard({
         {showProgress && progress > 0 && (
           <div className="mt-3 pt-3 border-t">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>{progress}% Complete</span>
+              <span>{progress}% hoàn thành</span>
               <span>
                 {progress === 100 ? (
                   <div className="flex items-center gap-1 text-success">
                     <Award className="h-3 w-3" />
-                    Completed
+                    {vietnameseTranslations.learning.completed}
                   </div>
                 ) : (
-                  'In Progress'
+                  vietnameseTranslations.learning.inProgress
                 )}
               </span>
             </div>

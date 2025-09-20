@@ -26,7 +26,8 @@ async function request<T>(
   const url = `${config.apiBaseUrl}${path}`
   const headers: HeadersInit = { ...(opts.headers || {}) }
   // Only set JSON content-type when we actually send a JSON body
-  const hasBody = typeof opts.body !== 'undefined' && !(opts.body instanceof FormData)
+  const hasBody =
+    typeof opts.body !== 'undefined' && !(opts.body instanceof FormData)
   if (hasBody) headers['Content-Type'] = 'application/json'
   if (opts.token) headers['Authorization'] = `Bearer ${opts.token}`
 
@@ -37,7 +38,19 @@ async function request<T>(
 
   if (!res.ok) {
     const msg = isJson && body?.message ? body.message : res.statusText
-    throw new ApiError(msg || 'Request failed', res.status)
+    const error = new ApiError(msg || 'Request failed', res.status)
+
+    // Handle 401 errors globally to trigger logout
+    if (res.status === 401) {
+      // Clear auth data on 401 errors
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('study.auth')
+        // Trigger a custom event that the auth context can listen to
+        window.dispatchEvent(new CustomEvent('auth:logout'))
+      }
+    }
+
+    throw error
   }
 
   return body as T
@@ -89,12 +102,12 @@ export const api = {
     if (params.q) search.set('q', params.q)
     const qs = search.toString()
     return requestGateway<{
-        courses: Array<Course>
-        total: number
-        page: number
-        page_size: number
-        total_pages: number
-      }>(`/courses${qs ? `?${qs}` : ''}`)
+      courses: Array<Course>
+      total: number
+      page: number
+      page_size: number
+      total_pages: number
+    }>(`/courses${qs ? `?${qs}` : ''}`)
   },
 
   getCourse: (id: string) => requestGateway<Course>(`/courses/${id}`),
@@ -108,13 +121,16 @@ export const api = {
     if (params.page_size) search.set('page_size', String(params.page_size))
     const qs = search.toString()
     return requestGateway<{
-        lectures: Array<Lecture>
-        total: number
-        page: number
-        page_size: number
-        total_pages: number
-      }>(`/courses/${courseId}/lectures${qs ? `?${qs}` : ''}`)
+      lectures: Array<Lecture>
+      total: number
+      page: number
+      page_size: number
+      total_pages: number
+    }>(`/courses/${courseId}/lectures${qs ? `?${qs}` : ''}`)
   },
+
+  getLecture: (lectureId: string) =>
+    requestGateway<Lecture>(`/courses/lectures/${lectureId}`),
 
   enroll: (token: string, courseId: string) =>
     requestGateway<Enrollment>(`/courses/${courseId}/enroll`, {
@@ -132,12 +148,12 @@ export const api = {
     if (params.page_size) search.set('page_size', String(params.page_size))
     const qs = search.toString()
     return requestGateway<{
-        enrollments: Array<Enrollment>
-        total: number
-        page: number
-        page_size: number
-        total_pages: number
-      }>(`/enrollments${qs ? `?${qs}` : ''}`, { token })
+      enrollments: Array<Enrollment>
+      total: number
+      page: number
+      page_size: number
+      total_pages: number
+    }>(`/enrollments${qs ? `?${qs}` : ''}`, { token })
   },
 
   // Course management (instructor)
@@ -166,7 +182,16 @@ export const api = {
     requestGateway<null>(`/courses/${id}`, { method: 'DELETE', token }),
   createLecture: (
     token: string,
-    payload: { course_id: string; title: string; description?: string; order_number?: number; duration_minutes?: number; video_url?: string; video_id?: string; is_free?: boolean },
+    payload: {
+      course_id: string
+      title: string
+      description?: string
+      order_number?: number
+      duration_minutes?: number
+      video_url?: string
+      video_id?: string
+      is_free?: boolean
+    },
   ) =>
     requestGateway<Lecture>('/courses/lectures', {
       method: 'POST',
@@ -175,8 +200,15 @@ export const api = {
     }),
 
   // Video (proxied)
-  getVideo: (videoId: string) => request<any>(`/videos/${videoId}`),
-  listCourseVideos: (courseId: string) => request<any>(`/videos/course/${courseId}`),
+  getVideo: (token: string, videoId: string) => request<any>(`/videos/${videoId}`, { token }),
+  listCourseVideos: (courseId: string) =>
+    request<any>(`/videos/course/${courseId}`),
+  getVideoUploadUrl: (token: string, filename: string, size: number) =>
+    request<any>('/videos/upload-url', {
+      method: 'POST',
+      token,
+      body: JSON.stringify({ filename, size }),
+    }),
   // Progress
   updateProgress: (
     token: string,
@@ -206,7 +238,11 @@ export const api = {
     }),
   completeLecture: (
     token: string,
-    payload: { course_id: string; lecture_id: string; watch_time_seconds: number },
+    payload: {
+      course_id: string
+      lecture_id: string
+      watch_time_seconds: number
+    },
   ) =>
     request<GatewayResponse<any>>('/progress/lectures/complete', {
       method: 'POST',
@@ -328,9 +364,13 @@ export const api = {
       body: JSON.stringify(payload),
       token,
     }),
-  listPaymentMethods: (token: string) => request<any>('/payments/methods', { token }),
+  listPaymentMethods: (token: string) =>
+    request<any>('/payments/methods', { token }),
   setDefaultPaymentMethod: (token: string, methodId: string) =>
-    request<any>(`/payments/methods/${methodId}/default`, { method: 'PUT', token }),
+    request<any>(`/payments/methods/${methodId}/default`, {
+      method: 'PUT',
+      token,
+    }),
   deletePaymentMethod: (token: string, methodId: string) =>
     request<any>(`/payments/methods/${methodId}`, { method: 'DELETE', token }),
   purchaseCourse: (token: string, courseId: string, payload: any) =>
@@ -346,9 +386,12 @@ export const api = {
     const s = new URLSearchParams()
     Object.entries(params).forEach(([k, v]) => s.set(k, String(v)))
     const qs = s.toString()
-    return request<any>(`/payments/transactions${qs ? `?${qs}` : ''}`, { token })
+    return request<any>(`/payments/transactions${qs ? `?${qs}` : ''}`, {
+      token,
+    })
   },
-  listSubscriptions: (token: string) => request<any>('/payments/subscriptions', { token }),
+  listSubscriptions: (token: string) =>
+    request<any>('/payments/subscriptions', { token }),
   createSubscription: (token: string, payload: any) =>
     request<any>('/payments/subscriptions', {
       method: 'POST',
@@ -363,14 +406,21 @@ export const api = {
     }),
 
   // Chatbot (REST)
-  listChatSessions: (token: string, params: Record<string, string | number> = {}) => {
+  listChatSessions: (
+    token: string,
+    params: Record<string, string | number> = {},
+  ) => {
     const s = new URLSearchParams()
     Object.entries(params).forEach(([k, v]) => s.set(k, String(v)))
     const qs = s.toString()
     return request<any>(`/chat/sessions${qs ? `?${qs}` : ''}`, { token })
   },
   createChatSession: (token: string, payload: any) =>
-    request<any>('/chat/sessions', { method: 'POST', body: JSON.stringify(payload), token }),
+    request<any>('/chat/sessions', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      token,
+    }),
   sendChatMessage: (token: string, sessionId: string, payload: any) =>
     request<any>(`/chat/sessions/${sessionId}/messages`, {
       method: 'POST',
@@ -378,3 +428,106 @@ export const api = {
       token,
     }),
 }
+
+// Enhanced API client with automatic token injection and better error handling
+class ApiClient {
+  private getStoredToken(): string | null {
+    if (typeof window === 'undefined') return null
+    try {
+      const auth = localStorage.getItem('study.auth')
+      if (!auth) return null
+      const parsed = JSON.parse(auth)
+      return parsed.token || null
+    } catch {
+      return null
+    }
+  }
+
+  private isTokenValid(token: string | null): boolean {
+    if (!token) return false
+    try {
+      const parts = token.split('.')
+      if (parts.length !== 3) return false
+      const payload = JSON.parse(atob(parts[1]))
+      const now = Math.floor(Date.now() / 1000)
+      return payload.exp && payload.exp > now + 60
+    } catch {
+      return false
+    }
+  }
+
+  private getAuthToken(providedToken?: string): string | null {
+    const token = providedToken || this.getStoredToken()
+
+    // Validate token and clear if invalid
+    if (token && !this.isTokenValid(token)) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('study.auth')
+        window.dispatchEvent(new CustomEvent('auth:logout'))
+      }
+      return null
+    }
+
+    return token
+  }
+
+  async get(path: string, options: { token?: string } = {}) {
+    const token = this.getAuthToken(options.token)
+    return request(path, { method: 'GET', token })
+  }
+
+  async post(
+    path: string,
+    data?: any,
+    options: {
+      token?: string
+      headers?: Record<string, string>
+      onUploadProgress?: (progressEvent: any) => void
+    } = {},
+  ) {
+    const token = this.getAuthToken(options.token)
+    const body = data instanceof FormData ? data : JSON.stringify(data)
+
+    const requestOptions: RequestInit & {
+      token?: string
+      onUploadProgress?: any
+    } = {
+      method: 'POST',
+      body,
+      headers: options.headers,
+      token,
+    }
+
+    if (options.onUploadProgress) {
+      requestOptions.onUploadProgress = options.onUploadProgress
+    }
+
+    return request(path, requestOptions)
+  }
+
+  async put(path: string, data?: any, options: { token?: string } = {}) {
+    const token = this.getAuthToken(options.token)
+    return request(path, {
+      method: 'PUT',
+      body: data ? JSON.stringify(data) : undefined,
+      token,
+    })
+  }
+
+  async patch(path: string, data?: any, options: { token?: string } = {}) {
+    const token = this.getAuthToken(options.token)
+    return request(path, {
+      method: 'PATCH',
+      body: data ? JSON.stringify(data) : undefined,
+      token,
+    })
+  }
+
+  async delete(path: string, options: { token?: string } = {}) {
+    const token = this.getAuthToken(options.token)
+    return request(path, { method: 'DELETE', token })
+  }
+}
+
+// Create singleton instance for instructor dashboard
+export const apiClient = new ApiClient()

@@ -8,4 +8,3 @@ export function InstructorGuard({ children }: { children: React.ReactNode }) {
   }
   return <>{children}</>
 }
-

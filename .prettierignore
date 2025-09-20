@@ -1,3 +1,50 @@
+# Build outputs
+.output/
+.nitro/
+dist/
+build/
+.vite/
+
+# Dependencies
+node_modules/
+
+# Generated files
+**/*.generated.ts
+src/routeTree.gen.ts
+
+# Config files that should maintain their own formatting
+eslint.config.js
+prettier.config.js
+vite.config.ts
+tailwind.config.ts
+postcss.config.js
+
+# Lock files
 package-lock.json
-pnpm-lock.yaml
 yarn.lock
+pnpm-lock.yaml
+bun.lockb
+
+# Cache directories
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Environment files
+.env*
+!.env.example

@@ -1,302 +1,260 @@
-import React, { useState, useMemo } from 'react'
-import {
-  createFileRoute,
-  useNavigate,
-  useSearch,
-} from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { 
-  Grid3X3, 
-  List, 
-  Loader2,
-  AlertCircle,
-  BookOpen,
-  TrendingUp,
-  Star,
-  Filter
-} from 'lucide-react'
-import { api } from '@/lib/api-client'
-import { CourseCard } from '@/components/CourseCard'
-import { CourseFilters, type CourseFilters as CourseFiltersType } from '@/components/CourseFilters'
-import { Pagination } from '@/components/Pagination'
+import { Filter, Grid, List, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
-
-type Search = { 
-  page?: number
-  q?: string
-  category?: string
-  level?: string
-  minPrice?: number
-  maxPrice?: number
-  minRating?: number
-  sortBy?: string
-  view?: 'grid' | 'list'
-}
+import { Input } from '@/components/ui/input'
+import { CourseCard } from '@/components/CourseCard'
+import { CourseFilters } from '@/components/CourseFilters'
+import { CourseMarketplaceProvider } from '@/lib/course-marketplace-context'
+import { api } from '@/lib/api-client'
+import type { Course } from '@/lib/types'
 
 export const Route = createFileRoute('/courses/')({
-  validateSearch: (search: Record<string, unknown>): Search => {
-    return {
-      page: Number(search.page) || 1,
-      q: typeof search.q === 'string' ? search.q : '',
-      category: typeof search.category === 'string' ? search.category : 'All Categories',
-      level: typeof search.level === 'string' ? search.level : 'All Levels',
-      minPrice: Number(search.minPrice) || 0,
-      maxPrice: Number(search.maxPrice) || 1000,
-      minRating: Number(search.minRating) || 0,
-      sortBy: typeof search.sortBy === 'string' ? search.sortBy : 'relevance',
-      view: (search.view === 'list' || search.view === 'grid') ? search.view : 'grid',
-    }
-  },
   component: CoursesPage,
 })
 
 function CoursesPage() {
-  const navigate = useNavigate()
-  const searchParams = useSearch({ from: '/courses/' })
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>(searchParams.view || 'grid')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [showFilters, setShowFilters] = useState(false)
 
-  const filters: CourseFiltersType = useMemo(() => ({
-    search: searchParams.q || '',
-    category: searchParams.category || 'All Categories',
-    level: searchParams.level || 'All Levels',
-    minPrice: searchParams.minPrice || 0,
-    maxPrice: searchParams.maxPrice || 1000,
-    minRating: searchParams.minRating || 0,
-    duration: 'Any Duration',
-    status: '',
-    instructor: '',
-    isFree: false,
-    hasVideos: false,
-    hasCertificate: false,
-    sortBy: searchParams.sortBy || 'relevance',
-    sortOrder: 'desc' as const,
-  }), [searchParams])
-
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['courses', searchParams],
-    queryFn: async () => {
-      const res = await api.listCourses({
-        page: searchParams.page || 1,
-        q: searchParams.q || '',
-        category: searchParams.category !== 'All Categories' ? searchParams.category : undefined,
-        level: searchParams.level !== 'All Levels' ? searchParams.level : undefined,
-        min_price: searchParams.minPrice,
-        max_price: searchParams.maxPrice,
-        min_rating: searchParams.minRating,
-        sort_by: searchParams.sortBy,
-      })
-      return res.data!
-    },
+  // Fetch courses from API
+  const {
+    data: coursesData,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['courses', searchQuery],
+    queryFn: () => api.listCourses({ q: searchQuery || undefined }),
   })
 
-  const handleFiltersChange = (newFilters: CourseFiltersType) => {
-    const searchParams: Search = {
-      page: 1,
-      q: newFilters.search || undefined,
-      category: newFilters.category !== 'All Categories' ? newFilters.category : undefined,
-      level: newFilters.level !== 'All Levels' ? newFilters.level : undefined,
-      minPrice: newFilters.minPrice > 0 ? newFilters.minPrice : undefined,
-      maxPrice: newFilters.maxPrice < 1000 ? newFilters.maxPrice : undefined,
-      minRating: newFilters.minRating > 0 ? newFilters.minRating : undefined,
-      sortBy: newFilters.sortBy !== 'relevance' ? newFilters.sortBy : undefined,
-      view: viewMode,
-    }
+  // Transform API data to match frontend expectations
+  const apiCourses = coursesData?.data?.courses || []
+  const courses = apiCourses.map((course: any) => ({
+    ...course,
+    difficulty_level: course.level || 'beginner',
+    is_free: course.price === 0,
+    access_type: course.price === 0 ? 'free' : 'one_time',
+    // Ensure we have required fields
+    instructor_name: course.instructor_name || 'Unknown Instructor',
+    currency: 'VND',
+    price:
+      course.currency === 'USD' && course.price
+        ? course.price * 24000
+        : course.price, // Convert USD to VND
+    thumbnail_url: course.thumbnail_url || '/api/placeholder/400/225',
+    tags: course.tags || [],
+    rating: course.rating || 0,
+    rating_count: course.rating_count || 0,
+    enrollment_count: course.enrollment_count || 0,
+    duration_minutes: course.duration_minutes || 0,
+    total_lectures: Math.floor((course.duration_minutes || 0) / 15), // Estimate lectures
+    certificate_available: true,
+    mobile_access: true,
+    lifetime_access: course.price > 0,
+    language: 'Tiếng Việt',
+  }))
 
-    navigate({ 
-      to: '/courses/', 
-      search: searchParams,
-      replace: true
-    })
-  }
+  // Legacy mock data for fallback
+  const mockCourses: Array<Course> = [
+    {
+      id: '1',
+      title: 'Lập trình React từ cơ bản đến nâng cao',
+      description:
+        'Học React một cách toàn diện từ những khái niệm cơ bản đến các kỹ thuật nâng cao',
+      instructor_name: 'Nguyễn Văn A',
+      duration_minutes: 1200,
+      rating: 4.8,
+      rating_count: 256,
+      enrollment_count: 1540,
+      price: 899000,
+      currency: 'VND',
+      is_free: false,
+      difficulty_level: 'intermediate',
+      category: 'Programming',
+      language: 'Tiếng Việt',
+      total_lectures: 45,
+      certificate_available: true,
+      mobile_access: true,
+      lifetime_access: true,
+      tags: ['React', 'JavaScript', 'Frontend'],
+      is_featured: true,
+      access_type: 'one_time' as const,
+      thumbnail_url: '/api/placeholder/400/225',
+      preview_video_url: '/api/placeholder/video',
+    },
+    {
+      id: '2',
+      title: 'Node.js và Express.js cho Backend',
+      description: 'Xây dựng API và ứng dụng backend với Node.js và Express.js',
+      instructor_name: 'Trần Thị B',
+      duration_minutes: 900,
+      rating: 4.6,
+      rating_count: 189,
+      enrollment_count: 987,
+      price: 799000,
+      currency: 'VND',
+      is_free: false,
+      difficulty_level: 'intermediate',
+      category: 'Programming',
+      language: 'Tiếng Việt',
+      total_lectures: 38,
+      certificate_available: true,
+      mobile_access: true,
+      lifetime_access: true,
+      tags: ['Node.js', 'Express', 'Backend'],
+      is_featured: false,
+      access_type: 'one_time' as const,
+      thumbnail_url: '/api/placeholder/400/225',
+    },
+    {
+      id: '3',
+      title: 'TypeScript cho JavaScript Developer',
+      description: 'Nâng cao kỹ năng JavaScript với TypeScript',
+      instructor_name: 'Lê Văn C',
+      duration_minutes: 600,
+      rating: 4.9,
+      rating_count: 324,
+      enrollment_count: 2156,
+      price: 0,
+      currency: 'VND',
+      is_free: true,
+      difficulty_level: 'beginner',
+      category: 'Programming',
+      language: 'Tiếng Việt',
+      total_lectures: 25,
+      certificate_available: true,
+      mobile_access: true,
+      lifetime_access: true,
+      tags: ['TypeScript', 'JavaScript'],
+      is_featured: false,
+      access_type: 'free' as const,
+      thumbnail_url: '/api/placeholder/400/225',
+    },
+  ]
 
-  const handleResetFilters = () => {
-    navigate({ 
-      to: '/courses/', 
-      search: { page: 1, view: viewMode },
-      replace: true
-    })
-  }
+  // Use API data if available, otherwise fall back to mock data
+  const allCourses = courses.length > 0 ? courses : mockCourses
 
-  const handleViewModeChange = (mode: 'grid' | 'list') => {
-    setViewMode(mode)
-    navigate({ 
-      to: '/courses/', 
-      search: { ...searchParams, view: mode },
-      replace: true
-    })
-  }
-
-  const handlePageChange = (page: number) => {
-    navigate({ 
-      to: '/courses/', 
-      search: { ...searchParams, page },
-      replace: true
-    })
-  }
-
-  // Featured courses for empty state or top of page
-  const featuredCourses = data?.courses?.slice(0, 3) || []
-
-  if (isError) {
-    return (
-      <div className="min-h-[50vh] flex flex-col items-center justify-center">
-        <AlertCircle className="h-12 w-12 text-destructive mb-4" />
-        <h2 className="text-xl font-semibold mb-2">Failed to load courses</h2>
-        <p className="text-muted-foreground mb-4">
-          {error instanceof Error ? error.message : 'Something went wrong while fetching courses'}
-        </p>
-        <Button onClick={() => window.location.reload()}>
-          Try Again
-        </Button>
-      </div>
-    )
-  }
+  const filteredCourses = allCourses.filter(
+    (course) =>
+      course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      course.description.toLowerCase().includes(searchQuery.toLowerCase()),
+  )
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-primary/5 to-accent/5 border-b">
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-4xl">
-            <h1 className="text-3xl lg:text-4xl font-bold font-academic text-foreground mb-4">
-              Explore Our Course Catalog
-            </h1>
-            <p className="text-lg text-muted-foreground mb-6">
-              Discover thousands of courses from expert instructors in technology, 
-              business, design, and more.
-            </p>
-            
-            {/* Quick Stats */}
-            <div className="flex flex-wrap gap-6 text-sm">
-              <div className="flex items-center gap-2">
-                <BookOpen className="h-4 w-4 text-primary" />
-                <span>
-                  <span className="font-semibold">{data?.total || 0}</span> courses
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-primary" />
-                <span>Updated weekly</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Star className="h-4 w-4 text-primary" />
-                <span>Expert instructors</span>
-              </div>
+    <CourseMarketplaceProvider>
+      <div className="container py-8">
+        {/* Header */}
+        <div className="flex flex-col gap-4 mb-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h1 className="text-3xl font-bold">Khóa học</h1>
+              <p className="text-muted-foreground">
+                Khám phá {allCourses.length} khóa học chất lượng cao
+                {isLoading && ' (Đang tải...)'}
+                {error && ' (Lỗi kết nối API)'}
+              </p>
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Filters */}
-      <CourseFilters
-        filters={filters}
-        onFiltersChange={handleFiltersChange}
-        onReset={handleResetFilters}
-        isLoading={isLoading}
-        totalResults={data?.total || 0}
-      />
-
-      {/* Content */}
-      <div className="container mx-auto px-4 py-6">
-        {/* Results Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <h2 className="text-lg font-semibold">
-              {isLoading ? (
-                'Loading...'
-              ) : (
-                <>
-                  {data?.total || 0} course{(data?.total || 0) !== 1 ? 's' : ''}
-                  {filters.search && ` for "${filters.search}"`}
-                </>
-              )}
-            </h2>
-            {data?.page && data?.total_pages && data.total_pages > 1 && (
-              <span className="text-sm text-muted-foreground">
-                Page {data.page} of {data.total_pages}
-              </span>
-            )}
-          </div>
-
-          {/* View Mode Toggle */}
-          <div className="flex items-center gap-2">
-            <div className="bg-muted p-1 rounded-md">
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-2">
               <Button
-                variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                variant={viewMode === 'grid' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => handleViewModeChange('grid')}
-                className="h-8 w-8 p-0"
+                onClick={() => setViewMode('grid')}
               >
-                <Grid3X3 className="h-4 w-4" />
+                <Grid className="h-4 w-4" />
               </Button>
               <Button
-                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                variant={viewMode === 'list' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => handleViewModeChange('list')}
-                className="h-8 w-8 p-0"
+                onClick={() => setViewMode('list')}
               >
                 <List className="h-4 w-4" />
               </Button>
             </div>
           </div>
+
+          {/* Search and Filters */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Tìm kiếm khóa học..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <Filter className="h-4 w-4 mr-2" />
+              Bộ lọc
+            </Button>
+          </div>
+
+          {/* Filters Panel */}
+          {showFilters && (
+            <div className="border rounded-lg p-4">
+              <CourseFilters onFilterChange={() => {}} />
+            </div>
+          )}
         </div>
 
-        {/* Loading State */}
-        {isLoading && (
-          <div className="flex items-center justify-center py-12">
-            <div className="flex items-center gap-3">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              <span className="text-muted-foreground">Loading courses...</span>
-            </div>
-          </div>
-        )}
+        {/* Course Grid */}
+        <div
+          className={`
+        ${
+          viewMode === 'grid'
+            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+            : 'flex flex-col gap-4'
+        }
+      `}
+        >
+          {filteredCourses.map((course) => (
+            <CourseCard
+              key={course.id}
+              course={course}
+              variant={viewMode === 'list' ? 'compact' : 'default'}
+              showInstructor={true}
+              showProgress={false}
+              showAccessStatus={true}
+              showPricing={true}
+              onPreview={(course) => console.log('Preview:', course.title)}
+              onPurchase={(course) => console.log('Purchase:', course.title)}
+              onAddToWishlist={(course) =>
+                console.log('Add to wishlist:', course.title)
+              }
+              isInWishlist={false}
+            />
+          ))}
+        </div>
 
         {/* Empty State */}
-        {!isLoading && data && data.courses.length === 0 && (
+        {filteredCourses.length === 0 && (
           <div className="text-center py-12">
-            <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No courses found</h3>
-            <p className="text-muted-foreground mb-6">
-              Try adjusting your search terms or filters to find what you're looking for.
-            </p>
-            <Button onClick={handleResetFilters} variant="outline">
-              <Filter className="h-4 w-4 mr-2" />
-              Clear all filters
+            <div className="text-muted-foreground mb-4">
+              Không tìm thấy khóa học nào phù hợp với tìm kiếm của bạn
+            </div>
+            <Button variant="outline" onClick={() => setSearchQuery('')}>
+              Xóa bộ lọc
             </Button>
           </div>
         )}
 
-        {/* Course Grid/List */}
-        {!isLoading && data && data.courses.length > 0 && (
-          <div className={cn(
-            "grid gap-6",
-            viewMode === 'grid' 
-              ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" 
-              : "grid-cols-1"
-          )}>
-            {data.courses.map((course, index) => (
-              <CourseCard
-                key={course.id}
-                course={course}
-                variant={viewMode === 'list' ? 'compact' : index < 3 ? 'featured' : 'default'}
-                showInstructor={true}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Pagination */}
-        {!isLoading && data && data.total_pages && data.total_pages > 1 && (
-          <div className="mt-12 flex justify-center">
-            <Pagination
-              page={data.page}
-              totalPages={data.total_pages}
-              onPageChange={handlePageChange}
-            />
+        {/* Load More */}
+        {filteredCourses.length > 0 && (
+          <div className="text-center mt-12">
+            <Button variant="outline" size="lg">
+              Xem thêm khóa học
+            </Button>
           </div>
         )}
       </div>
-    </div>
+    </CourseMarketplaceProvider>
   )
 }

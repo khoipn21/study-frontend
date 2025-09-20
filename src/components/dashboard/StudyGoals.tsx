@@ -1,13 +1,13 @@
 import React, { useState } from 'react'
 import {
-  Target,
-  Plus,
+  Calendar,
   CheckCircle,
   Clock,
-  Calendar,
-  TrendingUp,
   Edit3,
+  Plus,
+  Target,
   Trash2,
+  TrendingUp,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -30,23 +30,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { StudyGoal } from '@/lib/dashboard'
 import { cn } from '@/lib/utils'
+import type { StudyGoal } from '@/lib/dashboard'
 
 interface StudyGoalsProps {
-  goals: StudyGoal[]
-  onCreateGoal?: (goal: Omit<StudyGoal, 'id' | 'current' | 'isCompleted' | 'createdAt'>) => void
+  goals: Array<StudyGoal>
+  onCreateGoal?: (
+    goal: Omit<StudyGoal, 'id' | 'current' | 'isCompleted' | 'createdAt'>,
+  ) => void
   onUpdateGoal?: (goalId: string, progress: number) => void
   onDeleteGoal?: (goalId: string) => void
   className?: string
 }
 
-export function StudyGoals({ 
-  goals, 
-  onCreateGoal, 
-  onUpdateGoal, 
+export function StudyGoals({
+  goals,
+  onCreateGoal,
+  onUpdateGoal,
   onDeleteGoal,
-  className 
+  className,
 }: StudyGoalsProps) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [formData, setFormData] = useState({
@@ -84,21 +86,31 @@ export function StudyGoals({
 
   const getGoalTypeIcon = (type: StudyGoal['type']) => {
     switch (type) {
-      case 'daily': return Clock
-      case 'weekly': return Calendar
-      case 'monthly': return TrendingUp
-      case 'custom': return Target
-      default: return Target
+      case 'daily':
+        return Clock
+      case 'weekly':
+        return Calendar
+      case 'monthly':
+        return TrendingUp
+      case 'custom':
+        return Target
+      default:
+        return Target
     }
   }
 
   const getGoalTypeColor = (type: StudyGoal['type']) => {
     switch (type) {
-      case 'daily': return 'text-blue-600 bg-blue-50 border-blue-200'
-      case 'weekly': return 'text-green-600 bg-green-50 border-green-200'
-      case 'monthly': return 'text-purple-600 bg-purple-50 border-purple-200'
-      case 'custom': return 'text-orange-600 bg-orange-50 border-orange-200'
-      default: return 'text-gray-600 bg-gray-50 border-gray-200'
+      case 'daily':
+        return 'text-blue-600 bg-blue-50 border-blue-200'
+      case 'weekly':
+        return 'text-green-600 bg-green-50 border-green-200'
+      case 'monthly':
+        return 'text-purple-600 bg-purple-50 border-purple-200'
+      case 'custom':
+        return 'text-orange-600 bg-orange-50 border-orange-200'
+      default:
+        return 'text-gray-600 bg-gray-50 border-gray-200'
     }
   }
 
@@ -108,7 +120,7 @@ export function StudyGoals({
     const now = new Date()
     const diffMs = date.getTime() - now.getTime()
     const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
-    
+
     if (diffDays < 0) return 'Overdue'
     if (diffDays === 0) return 'Due today'
     if (diffDays === 1) return 'Due tomorrow'
@@ -116,7 +128,11 @@ export function StudyGoals({
     return date.toLocaleDateString()
   }
 
-  const getProgressColor = (progress: number, target: number, isCompleted: boolean) => {
+  const getProgressColor = (
+    progress: number,
+    target: number,
+    isCompleted: boolean,
+  ) => {
     if (isCompleted) return 'text-green-600'
     const percentage = (progress / target) * 100
     if (percentage >= 90) return 'text-green-600'
@@ -144,7 +160,8 @@ export function StudyGoals({
             <DialogHeader>
               <DialogTitle>Create Study Goal</DialogTitle>
               <DialogDescription>
-                Set a new learning goal to stay motivated and track your progress.
+                Set a new learning goal to stay motivated and track your
+                progress.
               </DialogDescription>
             </DialogHeader>
 
@@ -155,7 +172,9 @@ export function StudyGoals({
                   id="title"
                   placeholder="e.g., Complete React Course"
                   value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, title: e.target.value }))
+                  }
                 />
               </div>
 
@@ -165,7 +184,12 @@ export function StudyGoals({
                   id="description"
                   placeholder="What do you want to achieve?"
                   value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
                   rows={3}
                 />
               </div>
@@ -175,7 +199,12 @@ export function StudyGoals({
                   <Label>Goal Type</Label>
                   <Select
                     value={formData.type}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, type: value as StudyGoal['type'] }))}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        type: value as StudyGoal['type'],
+                      }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -193,7 +222,12 @@ export function StudyGoals({
                   <Label>Unit</Label>
                   <Select
                     value={formData.unit}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, unit: value as StudyGoal['unit'] }))}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        unit: value as StudyGoal['unit'],
+                      }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -216,7 +250,12 @@ export function StudyGoals({
                     type="number"
                     min="1"
                     value={formData.target}
-                    onChange={(e) => setFormData(prev => ({ ...prev, target: parseInt(e.target.value) || 1 }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        target: parseInt(e.target.value) || 1,
+                      }))
+                    }
                   />
                 </div>
 
@@ -227,7 +266,12 @@ export function StudyGoals({
                       id="deadline"
                       type="date"
                       value={formData.deadline}
-                      onChange={(e) => setFormData(prev => ({ ...prev, deadline: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          deadline: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                 )}
@@ -235,10 +279,16 @@ export function StudyGoals({
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsCreateDialogOpen(false)}
+              >
                 Cancel
               </Button>
-              <Button onClick={handleCreateGoal} disabled={!formData.title.trim()}>
+              <Button
+                onClick={handleCreateGoal}
+                disabled={!formData.title.trim()}
+              >
                 Create Goal
               </Button>
             </DialogFooter>
@@ -266,7 +316,11 @@ export function StudyGoals({
             const colorClasses = getGoalTypeColor(goal.type)
             const progressPercentage = (goal.current / goal.target) * 100
             const deadline = formatDeadline(goal.deadline)
-            const progressColor = getProgressColor(goal.current, goal.target, goal.isCompleted)
+            const progressColor = getProgressColor(
+              goal.current,
+              goal.target,
+              goal.isCompleted,
+            )
 
             return (
               <div key={goal.id} className="academic-card p-4">
@@ -280,9 +334,13 @@ export function StudyGoals({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-foreground">{goal.title}</h4>
+                        <h4 className="font-medium text-foreground">
+                          {goal.title}
+                        </h4>
                         {goal.description && (
-                          <p className="text-sm text-muted-foreground mt-1">{goal.description}</p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {goal.description}
+                          </p>
                         )}
                       </div>
 
@@ -314,24 +372,29 @@ export function StudyGoals({
                           {Math.round(progressPercentage)}%
                         </span>
                       </div>
-                      
-                      <Progress 
-                        value={Math.min(progressPercentage, 100)} 
+
+                      <Progress
+                        value={Math.min(progressPercentage, 100)}
                         className="h-2"
                       />
-                      
+
                       {/* Deadline Info */}
                       {deadline && (
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-muted-foreground capitalize">
                             {goal.type} goal
                           </span>
-                          <span className={cn(
-                            'font-medium',
-                            deadline.includes('Overdue') ? 'text-destructive' :
-                            deadline.includes('today') || deadline.includes('tomorrow') ? 'text-warning' :
-                            'text-muted-foreground'
-                          )}>
+                          <span
+                            className={cn(
+                              'font-medium',
+                              deadline.includes('Overdue')
+                                ? 'text-destructive'
+                                : deadline.includes('today') ||
+                                    deadline.includes('tomorrow')
+                                  ? 'text-warning'
+                                  : 'text-muted-foreground',
+                            )}
+                          >
                             {deadline}
                           </span>
                         </div>

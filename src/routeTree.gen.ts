@@ -8,9 +8,8 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { createServerRootRoute } from '@tanstack/react-start/server'
-
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ForumIndexRouteImport } from './routes/forum.index'
 import { Route as FilesIndexRouteImport } from './routes/files.index'
@@ -26,6 +25,9 @@ import { Route as BillingSubscriptionsRouteImport } from './routes/billing.subsc
 import { Route as BillingMethodsRouteImport } from './routes/billing.methods'
 import { Route as AuthRegisterRouteImport } from './routes/auth.register'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
+import { Route as ApiMcpTodosRouteImport } from './routes/api.mcp-todos'
+import { Route as ApiDemoTqTodosRouteImport } from './routes/api.demo-tq-todos'
+import { Route as ApiDemoNamesRouteImport } from './routes/api.demo-names'
 import { Route as DashboardInstructorIndexRouteImport } from './routes/dashboard.instructor.index'
 import { Route as LearnCourseIdLectureIdRouteImport } from './routes/learn.$courseId.$lectureId'
 import { Route as ForumTopicsTopicIdRouteImport } from './routes/forum.topics.$topicId'
@@ -34,17 +36,21 @@ import { Route as DemoStartServerFuncsRouteImport } from './routes/demo.start.se
 import { Route as DemoStartApiRequestRouteImport } from './routes/demo.start.api-request'
 import { Route as DemoFormSimpleRouteImport } from './routes/demo.form.simple'
 import { Route as DemoFormAddressRouteImport } from './routes/demo.form.address'
+import { Route as DashboardInstructorUploadIndexRouteImport } from './routes/dashboard.instructor.upload.index'
+import { Route as DashboardInstructorStudentsIndexRouteImport } from './routes/dashboard.instructor.students.index'
+import { Route as DashboardInstructorMessagesIndexRouteImport } from './routes/dashboard.instructor.messages.index'
+import { Route as DashboardInstructorCoursesIndexRouteImport } from './routes/dashboard.instructor.courses.index'
+import { Route as DashboardInstructorAnalyticsIndexRouteImport } from './routes/dashboard.instructor.analytics.index'
 import { Route as MeCourseCourseIdProgressRouteImport } from './routes/me.course.$courseId.progress'
 import { Route as DashboardInstructorCoursesNewRouteImport } from './routes/dashboard.instructor.courses.new'
 import { Route as DashboardInstructorCoursesCourseIdLecturesRouteImport } from './routes/dashboard.instructor.courses.$courseId.lectures'
 import { Route as DashboardInstructorCoursesCourseIdEditRouteImport } from './routes/dashboard.instructor.courses.$courseId.edit'
-import { ServerRoute as McpServerRouteImport } from './routes/mcp'
-import { ServerRoute as ApiMcpTodosServerRouteImport } from './routes/api.mcp-todos'
-import { ServerRoute as ApiDemoTqTodosServerRouteImport } from './routes/api.demo-tq-todos'
-import { ServerRoute as ApiDemoNamesServerRouteImport } from './routes/api.demo-names'
 
-const rootServerRouteImport = createServerRootRoute()
-
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -120,6 +126,21 @@ const AuthLoginRoute = AuthLoginRouteImport.update({
   path: '/auth/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMcpTodosRoute = ApiMcpTodosRouteImport.update({
+  id: '/api/mcp-todos',
+  path: '/api/mcp-todos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDemoTqTodosRoute = ApiDemoTqTodosRouteImport.update({
+  id: '/api/demo-tq-todos',
+  path: '/api/demo-tq-todos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDemoNamesRoute = ApiDemoNamesRouteImport.update({
+  id: '/api/demo-names',
+  path: '/api/demo-names',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardInstructorIndexRoute =
   DashboardInstructorIndexRouteImport.update({
     id: '/dashboard/instructor/',
@@ -161,6 +182,36 @@ const DemoFormAddressRoute = DemoFormAddressRouteImport.update({
   path: '/demo/form/address',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardInstructorUploadIndexRoute =
+  DashboardInstructorUploadIndexRouteImport.update({
+    id: '/dashboard/instructor/upload/',
+    path: '/dashboard/instructor/upload/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DashboardInstructorStudentsIndexRoute =
+  DashboardInstructorStudentsIndexRouteImport.update({
+    id: '/dashboard/instructor/students/',
+    path: '/dashboard/instructor/students/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DashboardInstructorMessagesIndexRoute =
+  DashboardInstructorMessagesIndexRouteImport.update({
+    id: '/dashboard/instructor/messages/',
+    path: '/dashboard/instructor/messages/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DashboardInstructorCoursesIndexRoute =
+  DashboardInstructorCoursesIndexRouteImport.update({
+    id: '/dashboard/instructor/courses/',
+    path: '/dashboard/instructor/courses/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DashboardInstructorAnalyticsIndexRoute =
+  DashboardInstructorAnalyticsIndexRouteImport.update({
+    id: '/dashboard/instructor/analytics/',
+    path: '/dashboard/instructor/analytics/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const MeCourseCourseIdProgressRoute =
   MeCourseCourseIdProgressRouteImport.update({
     id: '/me/course/$courseId/progress',
@@ -185,29 +236,13 @@ const DashboardInstructorCoursesCourseIdEditRoute =
     path: '/dashboard/instructor/courses/$courseId/edit',
     getParentRoute: () => rootRouteImport,
   } as any)
-const McpServerRoute = McpServerRouteImport.update({
-  id: '/mcp',
-  path: '/mcp',
-  getParentRoute: () => rootServerRouteImport,
-} as any)
-const ApiMcpTodosServerRoute = ApiMcpTodosServerRouteImport.update({
-  id: '/api/mcp-todos',
-  path: '/api/mcp-todos',
-  getParentRoute: () => rootServerRouteImport,
-} as any)
-const ApiDemoTqTodosServerRoute = ApiDemoTqTodosServerRouteImport.update({
-  id: '/api/demo-tq-todos',
-  path: '/api/demo-tq-todos',
-  getParentRoute: () => rootServerRouteImport,
-} as any)
-const ApiDemoNamesServerRoute = ApiDemoNamesServerRouteImport.update({
-  id: '/api/demo-names',
-  path: '/api/demo-names',
-  getParentRoute: () => rootServerRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/mcp': typeof McpRoute
+  '/api/demo-names': typeof ApiDemoNamesRoute
+  '/api/demo-tq-todos': typeof ApiDemoTqTodosRoute
+  '/api/mcp-todos': typeof ApiMcpTodosRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/billing/methods': typeof BillingMethodsRoute
@@ -232,11 +267,20 @@ export interface FileRoutesByFullPath {
   '/dashboard/instructor': typeof DashboardInstructorIndexRoute
   '/dashboard/instructor/courses/new': typeof DashboardInstructorCoursesNewRoute
   '/me/course/$courseId/progress': typeof MeCourseCourseIdProgressRoute
+  '/dashboard/instructor/analytics': typeof DashboardInstructorAnalyticsIndexRoute
+  '/dashboard/instructor/courses': typeof DashboardInstructorCoursesIndexRoute
+  '/dashboard/instructor/messages': typeof DashboardInstructorMessagesIndexRoute
+  '/dashboard/instructor/students': typeof DashboardInstructorStudentsIndexRoute
+  '/dashboard/instructor/upload': typeof DashboardInstructorUploadIndexRoute
   '/dashboard/instructor/courses/$courseId/edit': typeof DashboardInstructorCoursesCourseIdEditRoute
   '/dashboard/instructor/courses/$courseId/lectures': typeof DashboardInstructorCoursesCourseIdLecturesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/mcp': typeof McpRoute
+  '/api/demo-names': typeof ApiDemoNamesRoute
+  '/api/demo-tq-todos': typeof ApiDemoTqTodosRoute
+  '/api/mcp-todos': typeof ApiMcpTodosRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/billing/methods': typeof BillingMethodsRoute
@@ -261,12 +305,21 @@ export interface FileRoutesByTo {
   '/dashboard/instructor': typeof DashboardInstructorIndexRoute
   '/dashboard/instructor/courses/new': typeof DashboardInstructorCoursesNewRoute
   '/me/course/$courseId/progress': typeof MeCourseCourseIdProgressRoute
+  '/dashboard/instructor/analytics': typeof DashboardInstructorAnalyticsIndexRoute
+  '/dashboard/instructor/courses': typeof DashboardInstructorCoursesIndexRoute
+  '/dashboard/instructor/messages': typeof DashboardInstructorMessagesIndexRoute
+  '/dashboard/instructor/students': typeof DashboardInstructorStudentsIndexRoute
+  '/dashboard/instructor/upload': typeof DashboardInstructorUploadIndexRoute
   '/dashboard/instructor/courses/$courseId/edit': typeof DashboardInstructorCoursesCourseIdEditRoute
   '/dashboard/instructor/courses/$courseId/lectures': typeof DashboardInstructorCoursesCourseIdLecturesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/mcp': typeof McpRoute
+  '/api/demo-names': typeof ApiDemoNamesRoute
+  '/api/demo-tq-todos': typeof ApiDemoTqTodosRoute
+  '/api/mcp-todos': typeof ApiMcpTodosRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/billing/methods': typeof BillingMethodsRoute
@@ -291,6 +344,11 @@ export interface FileRoutesById {
   '/dashboard/instructor/': typeof DashboardInstructorIndexRoute
   '/dashboard/instructor/courses/new': typeof DashboardInstructorCoursesNewRoute
   '/me/course/$courseId/progress': typeof MeCourseCourseIdProgressRoute
+  '/dashboard/instructor/analytics/': typeof DashboardInstructorAnalyticsIndexRoute
+  '/dashboard/instructor/courses/': typeof DashboardInstructorCoursesIndexRoute
+  '/dashboard/instructor/messages/': typeof DashboardInstructorMessagesIndexRoute
+  '/dashboard/instructor/students/': typeof DashboardInstructorStudentsIndexRoute
+  '/dashboard/instructor/upload/': typeof DashboardInstructorUploadIndexRoute
   '/dashboard/instructor/courses/$courseId/edit': typeof DashboardInstructorCoursesCourseIdEditRoute
   '/dashboard/instructor/courses/$courseId/lectures': typeof DashboardInstructorCoursesCourseIdLecturesRoute
 }
@@ -298,6 +356,10 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/mcp'
+    | '/api/demo-names'
+    | '/api/demo-tq-todos'
+    | '/api/mcp-todos'
     | '/auth/login'
     | '/auth/register'
     | '/billing/methods'
@@ -322,11 +384,20 @@ export interface FileRouteTypes {
     | '/dashboard/instructor'
     | '/dashboard/instructor/courses/new'
     | '/me/course/$courseId/progress'
+    | '/dashboard/instructor/analytics'
+    | '/dashboard/instructor/courses'
+    | '/dashboard/instructor/messages'
+    | '/dashboard/instructor/students'
+    | '/dashboard/instructor/upload'
     | '/dashboard/instructor/courses/$courseId/edit'
     | '/dashboard/instructor/courses/$courseId/lectures'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/mcp'
+    | '/api/demo-names'
+    | '/api/demo-tq-todos'
+    | '/api/mcp-todos'
     | '/auth/login'
     | '/auth/register'
     | '/billing/methods'
@@ -351,11 +422,20 @@ export interface FileRouteTypes {
     | '/dashboard/instructor'
     | '/dashboard/instructor/courses/new'
     | '/me/course/$courseId/progress'
+    | '/dashboard/instructor/analytics'
+    | '/dashboard/instructor/courses'
+    | '/dashboard/instructor/messages'
+    | '/dashboard/instructor/students'
+    | '/dashboard/instructor/upload'
     | '/dashboard/instructor/courses/$courseId/edit'
     | '/dashboard/instructor/courses/$courseId/lectures'
   id:
     | '__root__'
     | '/'
+    | '/mcp'
+    | '/api/demo-names'
+    | '/api/demo-tq-todos'
+    | '/api/mcp-todos'
     | '/auth/login'
     | '/auth/register'
     | '/billing/methods'
@@ -380,12 +460,21 @@ export interface FileRouteTypes {
     | '/dashboard/instructor/'
     | '/dashboard/instructor/courses/new'
     | '/me/course/$courseId/progress'
+    | '/dashboard/instructor/analytics/'
+    | '/dashboard/instructor/courses/'
+    | '/dashboard/instructor/messages/'
+    | '/dashboard/instructor/students/'
+    | '/dashboard/instructor/upload/'
     | '/dashboard/instructor/courses/$courseId/edit'
     | '/dashboard/instructor/courses/$courseId/lectures'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  McpRoute: typeof McpRoute
+  ApiDemoNamesRoute: typeof ApiDemoNamesRoute
+  ApiDemoTqTodosRoute: typeof ApiDemoTqTodosRoute
+  ApiMcpTodosRoute: typeof ApiMcpTodosRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
   BillingMethodsRoute: typeof BillingMethodsRoute
@@ -410,54 +499,24 @@ export interface RootRouteChildren {
   DashboardInstructorIndexRoute: typeof DashboardInstructorIndexRoute
   DashboardInstructorCoursesNewRoute: typeof DashboardInstructorCoursesNewRoute
   MeCourseCourseIdProgressRoute: typeof MeCourseCourseIdProgressRoute
+  DashboardInstructorAnalyticsIndexRoute: typeof DashboardInstructorAnalyticsIndexRoute
+  DashboardInstructorCoursesIndexRoute: typeof DashboardInstructorCoursesIndexRoute
+  DashboardInstructorMessagesIndexRoute: typeof DashboardInstructorMessagesIndexRoute
+  DashboardInstructorStudentsIndexRoute: typeof DashboardInstructorStudentsIndexRoute
+  DashboardInstructorUploadIndexRoute: typeof DashboardInstructorUploadIndexRoute
   DashboardInstructorCoursesCourseIdEditRoute: typeof DashboardInstructorCoursesCourseIdEditRoute
   DashboardInstructorCoursesCourseIdLecturesRoute: typeof DashboardInstructorCoursesCourseIdLecturesRoute
-}
-export interface FileServerRoutesByFullPath {
-  '/mcp': typeof McpServerRoute
-  '/api/demo-names': typeof ApiDemoNamesServerRoute
-  '/api/demo-tq-todos': typeof ApiDemoTqTodosServerRoute
-  '/api/mcp-todos': typeof ApiMcpTodosServerRoute
-}
-export interface FileServerRoutesByTo {
-  '/mcp': typeof McpServerRoute
-  '/api/demo-names': typeof ApiDemoNamesServerRoute
-  '/api/demo-tq-todos': typeof ApiDemoTqTodosServerRoute
-  '/api/mcp-todos': typeof ApiMcpTodosServerRoute
-}
-export interface FileServerRoutesById {
-  __root__: typeof rootServerRouteImport
-  '/mcp': typeof McpServerRoute
-  '/api/demo-names': typeof ApiDemoNamesServerRoute
-  '/api/demo-tq-todos': typeof ApiDemoTqTodosServerRoute
-  '/api/mcp-todos': typeof ApiMcpTodosServerRoute
-}
-export interface FileServerRouteTypes {
-  fileServerRoutesByFullPath: FileServerRoutesByFullPath
-  fullPaths:
-    | '/mcp'
-    | '/api/demo-names'
-    | '/api/demo-tq-todos'
-    | '/api/mcp-todos'
-  fileServerRoutesByTo: FileServerRoutesByTo
-  to: '/mcp' | '/api/demo-names' | '/api/demo-tq-todos' | '/api/mcp-todos'
-  id:
-    | '__root__'
-    | '/mcp'
-    | '/api/demo-names'
-    | '/api/demo-tq-todos'
-    | '/api/mcp-todos'
-  fileServerRoutesById: FileServerRoutesById
-}
-export interface RootServerRouteChildren {
-  McpServerRoute: typeof McpServerRoute
-  ApiDemoNamesServerRoute: typeof ApiDemoNamesServerRoute
-  ApiDemoTqTodosServerRoute: typeof ApiDemoTqTodosServerRoute
-  ApiMcpTodosServerRoute: typeof ApiMcpTodosServerRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -563,6 +622,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/mcp-todos': {
+      id: '/api/mcp-todos'
+      path: '/api/mcp-todos'
+      fullPath: '/api/mcp-todos'
+      preLoaderRoute: typeof ApiMcpTodosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/demo-tq-todos': {
+      id: '/api/demo-tq-todos'
+      path: '/api/demo-tq-todos'
+      fullPath: '/api/demo-tq-todos'
+      preLoaderRoute: typeof ApiDemoTqTodosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/demo-names': {
+      id: '/api/demo-names'
+      path: '/api/demo-names'
+      fullPath: '/api/demo-names'
+      preLoaderRoute: typeof ApiDemoNamesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/instructor/': {
       id: '/dashboard/instructor/'
       path: '/dashboard/instructor'
@@ -619,6 +699,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoFormAddressRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/instructor/upload/': {
+      id: '/dashboard/instructor/upload/'
+      path: '/dashboard/instructor/upload'
+      fullPath: '/dashboard/instructor/upload'
+      preLoaderRoute: typeof DashboardInstructorUploadIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/instructor/students/': {
+      id: '/dashboard/instructor/students/'
+      path: '/dashboard/instructor/students'
+      fullPath: '/dashboard/instructor/students'
+      preLoaderRoute: typeof DashboardInstructorStudentsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/instructor/messages/': {
+      id: '/dashboard/instructor/messages/'
+      path: '/dashboard/instructor/messages'
+      fullPath: '/dashboard/instructor/messages'
+      preLoaderRoute: typeof DashboardInstructorMessagesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/instructor/courses/': {
+      id: '/dashboard/instructor/courses/'
+      path: '/dashboard/instructor/courses'
+      fullPath: '/dashboard/instructor/courses'
+      preLoaderRoute: typeof DashboardInstructorCoursesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/instructor/analytics/': {
+      id: '/dashboard/instructor/analytics/'
+      path: '/dashboard/instructor/analytics'
+      fullPath: '/dashboard/instructor/analytics'
+      preLoaderRoute: typeof DashboardInstructorAnalyticsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/me/course/$courseId/progress': {
       id: '/me/course/$courseId/progress'
       path: '/me/course/$courseId/progress'
@@ -649,41 +764,13 @@ declare module '@tanstack/react-router' {
     }
   }
 }
-declare module '@tanstack/react-start/server' {
-  interface ServerFileRoutesByPath {
-    '/mcp': {
-      id: '/mcp'
-      path: '/mcp'
-      fullPath: '/mcp'
-      preLoaderRoute: typeof McpServerRouteImport
-      parentRoute: typeof rootServerRouteImport
-    }
-    '/api/mcp-todos': {
-      id: '/api/mcp-todos'
-      path: '/api/mcp-todos'
-      fullPath: '/api/mcp-todos'
-      preLoaderRoute: typeof ApiMcpTodosServerRouteImport
-      parentRoute: typeof rootServerRouteImport
-    }
-    '/api/demo-tq-todos': {
-      id: '/api/demo-tq-todos'
-      path: '/api/demo-tq-todos'
-      fullPath: '/api/demo-tq-todos'
-      preLoaderRoute: typeof ApiDemoTqTodosServerRouteImport
-      parentRoute: typeof rootServerRouteImport
-    }
-    '/api/demo-names': {
-      id: '/api/demo-names'
-      path: '/api/demo-names'
-      fullPath: '/api/demo-names'
-      preLoaderRoute: typeof ApiDemoNamesServerRouteImport
-      parentRoute: typeof rootServerRouteImport
-    }
-  }
-}
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  McpRoute: McpRoute,
+  ApiDemoNamesRoute: ApiDemoNamesRoute,
+  ApiDemoTqTodosRoute: ApiDemoTqTodosRoute,
+  ApiMcpTodosRoute: ApiMcpTodosRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,
   BillingMethodsRoute: BillingMethodsRoute,
@@ -708,6 +795,12 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardInstructorIndexRoute: DashboardInstructorIndexRoute,
   DashboardInstructorCoursesNewRoute: DashboardInstructorCoursesNewRoute,
   MeCourseCourseIdProgressRoute: MeCourseCourseIdProgressRoute,
+  DashboardInstructorAnalyticsIndexRoute:
+    DashboardInstructorAnalyticsIndexRoute,
+  DashboardInstructorCoursesIndexRoute: DashboardInstructorCoursesIndexRoute,
+  DashboardInstructorMessagesIndexRoute: DashboardInstructorMessagesIndexRoute,
+  DashboardInstructorStudentsIndexRoute: DashboardInstructorStudentsIndexRoute,
+  DashboardInstructorUploadIndexRoute: DashboardInstructorUploadIndexRoute,
   DashboardInstructorCoursesCourseIdEditRoute:
     DashboardInstructorCoursesCourseIdEditRoute,
   DashboardInstructorCoursesCourseIdLecturesRoute:
@@ -716,12 +809,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-const rootServerRouteChildren: RootServerRouteChildren = {
-  McpServerRoute: McpServerRoute,
-  ApiDemoNamesServerRoute: ApiDemoNamesServerRoute,
-  ApiDemoTqTodosServerRoute: ApiDemoTqTodosServerRoute,
-  ApiMcpTodosServerRoute: ApiMcpTodosServerRoute,
-}
-export const serverRouteTree = rootServerRouteImport
-  ._addFileChildren(rootServerRouteChildren)
-  ._addFileTypes<FileServerRouteTypes>()

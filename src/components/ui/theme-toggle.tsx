@@ -1,14 +1,14 @@
 import * as React from 'react'
-import { Moon, Sun, Palette, GraduationCap, Building2 } from 'lucide-react'
-import { Button } from './button'
+import { Building2, GraduationCap, Moon, Palette, Sun } from 'lucide-react'
 import { useTheme } from '@/lib/theme-context'
+import { Button } from './button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuLabel,
 } from './dropdown-menu'
 
 export function ThemeToggle() {
@@ -29,35 +29,55 @@ export function ThemeToggle() {
           Appearance
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => setTheme('light')} className="flex justify-between">
+        <DropdownMenuItem
+          onClick={() => setTheme('light')}
+          className="flex justify-between"
+        >
           <span className="flex items-center gap-2">
             <Sun className="h-4 w-4" />
             Light
           </span>
-          {theme === 'light' && <div className="h-2 w-2 rounded-full bg-primary" />}
+          {theme === 'light' && (
+            <div className="h-2 w-2 rounded-full bg-primary" />
+          )}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme('dark')} className="flex justify-between">
+        <DropdownMenuItem
+          onClick={() => setTheme('dark')}
+          className="flex justify-between"
+        >
           <span className="flex items-center gap-2">
             <Moon className="h-4 w-4" />
             Dark
           </span>
-          {theme === 'dark' && <div className="h-2 w-2 rounded-full bg-primary" />}
+          {theme === 'dark' && (
+            <div className="h-2 w-2 rounded-full bg-primary" />
+          )}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuLabel>Style</DropdownMenuLabel>
-        <DropdownMenuItem onClick={() => setThemeStyle('academic')} className="flex justify-between">
+        <DropdownMenuItem
+          onClick={() => setThemeStyle('academic')}
+          className="flex justify-between"
+        >
           <span className="flex items-center gap-2">
             <GraduationCap className="h-4 w-4" />
             Academic
           </span>
-          {themeStyle === 'academic' && <div className="h-2 w-2 rounded-full bg-primary" />}
+          {themeStyle === 'academic' && (
+            <div className="h-2 w-2 rounded-full bg-primary" />
+          )}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setThemeStyle('corporate')} className="flex justify-between">
+        <DropdownMenuItem
+          onClick={() => setThemeStyle('corporate')}
+          className="flex justify-between"
+        >
           <span className="flex items-center gap-2">
             <Building2 className="h-4 w-4" />
             Corporate
           </span>
-          {themeStyle === 'corporate' && <div className="h-2 w-2 rounded-full bg-primary" />}
+          {themeStyle === 'corporate' && (
+            <div className="h-2 w-2 rounded-full bg-primary" />
+          )}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

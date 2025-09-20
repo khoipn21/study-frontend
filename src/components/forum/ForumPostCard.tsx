@@ -1,20 +1,19 @@
 import React from 'react'
 import { Link } from '@tanstack/react-router'
 import {
-  MessageSquare,
-  Eye,
-  ThumbsUp,
-  ThumbsDown,
-  Pin,
-  Lock,
-  CheckCircle,
-  User,
   Calendar,
+  CheckCircle,
+  Eye,
+  Lock,
+  MessageSquare,
+  Pin,
   Tag,
+  ThumbsDown,
+  ThumbsUp,
+  User,
 } from 'lucide-react'
-import { ForumPost } from '@/lib/forum'
-import { formatDistanceToNow } from '@/lib/utils'
-import { cn } from '@/lib/utils'
+import { cn, formatDistanceToNow } from '@/lib/utils'
+import type { ForumPost } from '@/lib/forum'
 
 interface ForumPostCardProps {
   post: ForumPost
@@ -30,35 +29,49 @@ export function ForumPostCard({
   className,
 }: ForumPostCardProps) {
   const isCompact = variant === 'compact'
-  
+
   return (
     <div
       className={cn(
         'academic-card p-4 hover:shadow-md transition-shadow',
         isCompact && 'p-3',
-        className
+        className,
       )}
     >
       <div className="flex gap-3">
         {/* Vote Section */}
         <div className="flex flex-col items-center gap-1 min-w-[40px]">
           <button className="p-1 rounded hover:bg-muted transition-colors">
-            <ThumbsUp className={cn(
-              'h-4 w-4',
-              post.userVote === 'up' ? 'text-primary fill-current' : 'text-muted-foreground'
-            )} />
+            <ThumbsUp
+              className={cn(
+                'h-4 w-4',
+                post.userVote === 'up'
+                  ? 'text-primary fill-current'
+                  : 'text-muted-foreground',
+              )}
+            />
           </button>
-          <span className={cn(
-            'text-sm font-medium',
-            post.votes > 0 ? 'text-success' : post.votes < 0 ? 'text-destructive' : 'text-muted-foreground'
-          )}>
+          <span
+            className={cn(
+              'text-sm font-medium',
+              post.votes > 0
+                ? 'text-success'
+                : post.votes < 0
+                  ? 'text-destructive'
+                  : 'text-muted-foreground',
+            )}
+          >
             {post.votes}
           </span>
           <button className="p-1 rounded hover:bg-muted transition-colors">
-            <ThumbsDown className={cn(
-              'h-4 w-4',
-              post.userVote === 'down' ? 'text-destructive fill-current' : 'text-muted-foreground'
-            )} />
+            <ThumbsDown
+              className={cn(
+                'h-4 w-4',
+                post.userVote === 'down'
+                  ? 'text-destructive fill-current'
+                  : 'text-muted-foreground',
+              )}
+            />
           </button>
         </div>
 
@@ -67,9 +80,7 @@ export function ForumPostCard({
           {/* Header */}
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="flex items-center gap-2 flex-wrap">
-              {post.isPinned && (
-                <Pin className="h-4 w-4 text-warning" />
-              )}
+              {post.isPinned && <Pin className="h-4 w-4 text-warning" />}
               {post.isLocked && (
                 <Lock className="h-4 w-4 text-muted-foreground" />
               )}
@@ -88,7 +99,7 @@ export function ForumPostCard({
                 </span>
               )}
             </div>
-            
+
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
               <div className="flex items-center gap-1">
                 <Eye className="h-3 w-3" />
@@ -107,10 +118,12 @@ export function ForumPostCard({
             params={{ postId: post.id }}
             className="block group"
           >
-            <h3 className={cn(
-              'font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2',
-              isCompact ? 'text-sm' : 'text-base'
-            )}>
+            <h3
+              className={cn(
+                'font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2',
+                isCompact ? 'text-sm' : 'text-base',
+              )}
+            >
               {post.title}
             </h3>
           </Link>
@@ -155,20 +168,25 @@ export function ForumPostCard({
                 ) : (
                   <User className="h-4 w-4 text-muted-foreground" />
                 )}
-                <span className="text-sm font-medium">{post.author.username}</span>
+                <span className="text-sm font-medium">
+                  {post.author.username}
+                </span>
                 <span
                   className={cn(
                     'px-1.5 py-0.5 rounded text-xs font-medium',
-                    post.author.role === 'instructor' && 'bg-primary/10 text-primary',
-                    post.author.role === 'admin' && 'bg-destructive/10 text-destructive',
-                    post.author.role === 'student' && 'bg-muted text-muted-foreground'
+                    post.author.role === 'instructor' &&
+                      'bg-primary/10 text-primary',
+                    post.author.role === 'admin' &&
+                      'bg-destructive/10 text-destructive',
+                    post.author.role === 'student' &&
+                      'bg-muted text-muted-foreground',
                   )}
                 >
                   {post.author.role}
                 </span>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Calendar className="h-3 w-3" />
               <span>{formatDistanceToNow(new Date(post.createdAt))}</span>

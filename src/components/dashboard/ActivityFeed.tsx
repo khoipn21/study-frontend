@@ -1,45 +1,59 @@
 import React from 'react'
 import { Link } from '@tanstack/react-router'
 import {
-  BookOpen,
-  CheckCircle,
   Award,
-  MessageSquare,
+  BookOpen,
   Bot,
+  CheckCircle,
+  Clock,
+  MessageSquare,
   Play,
   TrendingUp,
-  Clock,
 } from 'lucide-react'
-import { RecentActivity } from '@/lib/dashboard'
 import { formatDistanceToNow } from '@/lib/utils'
+import type { RecentActivity } from '@/lib/dashboard'
 
 interface ActivityFeedProps {
-  activities: RecentActivity[]
+  activities: Array<RecentActivity>
   className?: string
 }
 
 export function ActivityFeed({ activities, className }: ActivityFeedProps) {
   const getActivityIcon = (type: string) => {
     switch (type) {
-      case 'course_started': return BookOpen
-      case 'lecture_completed': return CheckCircle
-      case 'certificate_earned': return Award
-      case 'forum_post': return MessageSquare
-      case 'chat_session': return Bot
-      case 'achievement_unlocked': return Award
-      default: return Play
+      case 'course_started':
+        return BookOpen
+      case 'lecture_completed':
+        return CheckCircle
+      case 'certificate_earned':
+        return Award
+      case 'forum_post':
+        return MessageSquare
+      case 'chat_session':
+        return Bot
+      case 'achievement_unlocked':
+        return Award
+      default:
+        return Play
     }
   }
 
   const getActivityColor = (type: string) => {
     switch (type) {
-      case 'course_started': return 'text-blue-600 bg-blue-50'
-      case 'lecture_completed': return 'text-green-600 bg-green-50'
-      case 'certificate_earned': return 'text-yellow-600 bg-yellow-50'
-      case 'forum_post': return 'text-purple-600 bg-purple-50'
-      case 'chat_session': return 'text-pink-600 bg-pink-50'
-      case 'achievement_unlocked': return 'text-orange-600 bg-orange-50'
-      default: return 'text-gray-600 bg-gray-50'
+      case 'course_started':
+        return 'text-blue-600 bg-blue-50'
+      case 'lecture_completed':
+        return 'text-green-600 bg-green-50'
+      case 'certificate_earned':
+        return 'text-yellow-600 bg-yellow-50'
+      case 'forum_post':
+        return 'text-purple-600 bg-purple-50'
+      case 'chat_session':
+        return 'text-pink-600 bg-pink-50'
+      case 'achievement_unlocked':
+        return 'text-orange-600 bg-orange-50'
+      default:
+        return 'text-gray-600 bg-gray-50'
     }
   }
 
@@ -79,17 +93,22 @@ export function ActivityFeed({ activities, className }: ActivityFeedProps) {
       <div className="p-4 border-b">
         <h3 className="font-semibold text-foreground">Recent Activity</h3>
       </div>
-      
+
       <div className="divide-y">
         {activities.map((activity) => {
           const Icon = getActivityIcon(activity.type)
           const colorClasses = getActivityColor(activity.type)
-          
+
           return (
-            <div key={activity.id} className="p-4 hover:bg-muted/50 transition-colors">
+            <div
+              key={activity.id}
+              className="p-4 hover:bg-muted/50 transition-colors"
+            >
               <div className="flex gap-3">
                 {/* Activity Icon */}
-                <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${colorClasses}`}>
+                <div
+                  className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${colorClasses}`}
+                >
                   <Icon className="h-5 w-5" />
                 </div>
 
@@ -103,28 +122,30 @@ export function ActivityFeed({ activities, className }: ActivityFeedProps) {
                       <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                         {activity.description}
                       </p>
-                      
+
                       {/* Activity Metadata */}
                       <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          <span>{formatDistanceToNow(new Date(activity.timestamp))}</span>
+                          <span>
+                            {formatDistanceToNow(new Date(activity.timestamp))}
+                          </span>
                         </div>
-                        
+
                         {activity.metadata?.duration && (
                           <div className="flex items-center gap-1">
                             <Play className="h-3 w-3" />
                             <span>{activity.metadata.duration}min</span>
                           </div>
                         )}
-                        
+
                         {activity.metadata?.progress && (
                           <div className="flex items-center gap-1">
                             <TrendingUp className="h-3 w-3" />
                             <span>{activity.metadata.progress}% complete</span>
                           </div>
                         )}
-                        
+
                         {activity.metadata?.points && (
                           <div className="flex items-center gap-1">
                             <Award className="h-3 w-3" />

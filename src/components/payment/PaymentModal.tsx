@@ -1,4 +1,15 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
+import {
+  AlertCircle,
+  CheckCircle,
+  CreditCard,
+  Crown,
+  Gift,
+  Loader2,
+  Lock,
+  X,
+  Zap,
+} from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -19,20 +30,13 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import {
-  CreditCard,
-  Lock,
-  CheckCircle,
-  AlertCircle,
-  Loader2,
-  Gift,
-  Zap,
-  Crown,
-  X
-} from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
-import { lemonSqueezyService, type CourseCheckoutData, type SubscriptionCheckoutData } from '@/lib/lemon-squeezy'
+import { lemonSqueezyService } from '@/lib/lemon-squeezy'
 import { cn } from '@/lib/utils'
+import type {
+  CourseCheckoutData,
+  SubscriptionCheckoutData,
+} from '@/lib/lemon-squeezy'
 
 export interface PaymentModalProps {
   children: React.ReactNode
@@ -49,7 +53,7 @@ export interface PaymentModalProps {
     variantId: string
     price: number
     currency: string
-    features: string[]
+    features: Array<string>
   }
   onSuccess?: () => void
   onCancel?: () => void
@@ -68,30 +72,35 @@ export function PaymentModal({
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [couponCode, setCouponCode] = useState('')
-  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string, discount: number } | null>(null)
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string
+    discount: number
+  } | null>(null)
   const [acceptTerms, setAcceptTerms] = useState(false)
-  
+
   const isCourse = type === 'course'
   const isSubscription = type === 'subscription'
 
   const formatPrice = (price: number, currency: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', { 
-      style: 'currency', 
-      currency 
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency,
     }).format(price)
   }
 
   const calculateFinalPrice = () => {
-    const basePrice = isCourse ? courseData?.price || 0 : subscriptionData?.price || 0
+    const basePrice = isCourse
+      ? courseData?.price || 0
+      : subscriptionData?.price || 0
     if (appliedCoupon) {
       return basePrice * (1 - appliedCoupon.discount / 100)
     }
     return basePrice
   }
 
-  const applyCoupon = async () => {
+  const applyCoupon = () => {
     if (!couponCode.trim()) return
-    
+
     // Simulate coupon validation
     // In real implementation, validate with your backend
     if (couponCode.toLowerCase() === 'student10') {
@@ -140,7 +149,8 @@ export function PaymentModal({
           userName: user.username,
         }
 
-        checkoutUrl = await lemonSqueezyService.createCourseCheckout(checkoutData)
+        checkoutUrl =
+          await lemonSqueezyService.createCourseCheckout(checkoutData)
       } else if (isSubscription && subscriptionData) {
         const checkoutData: SubscriptionCheckoutData = {
           planName: subscriptionData.planName,
@@ -150,13 +160,18 @@ export function PaymentModal({
           userName: user.username,
         }
 
-        checkoutUrl = await lemonSqueezyService.createSubscriptionCheckout(checkoutData)
+        checkoutUrl =
+          await lemonSqueezyService.createSubscriptionCheckout(checkoutData)
       }
 
       if (checkoutUrl) {
         // Open Lemon Squeezy checkout in new window/tab
-        window.open(checkoutUrl, '_blank', 'width=800,height=800,scrollbars=yes,resizable=yes')
-        
+        window.open(
+          checkoutUrl,
+          '_blank',
+          'width=800,height=800,scrollbars=yes,resizable=yes',
+        )
+
         // Close modal and call success callback
         setIsOpen(false)
         onSuccess?.()
@@ -165,7 +180,11 @@ export function PaymentModal({
       }
     } catch (err) {
       console.error('Payment error:', err)
-      setError(err instanceof Error ? err.message : 'Payment failed. Please try again.')
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Payment failed. Please try again.',
+      )
     } finally {
       setIsLoading(false)
     }
@@ -192,10 +211,9 @@ export function PaymentModal({
             Complete Your {isCourse ? 'Purchase' : 'Subscription'}
           </DialogTitle>
           <DialogDescription>
-            {isCourse 
+            {isCourse
               ? 'Get lifetime access to this course and all its content'
-              : 'Subscribe for unlimited access to all premium courses'
-            }
+              : 'Subscribe for unlimited access to all premium courses'}
           </DialogDescription>
         </DialogHeader>
 
@@ -205,16 +223,23 @@ export function PaymentModal({
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <h4 className="font-semibold text-foreground">
-                  {isCourse ? courseData?.title : `${subscriptionData?.planName} Plan`}
+                  {isCourse
+                    ? courseData?.title
+                    : `${subscriptionData?.planName} Plan`}
                 </h4>
                 {isSubscription && subscriptionData && (
                   <div className="mt-2 space-y-1">
-                    {subscriptionData.features.slice(0, 3).map((feature, index) => (
-                      <div key={index} className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <CheckCircle className="h-3 w-3 text-success" />
-                        <span>{feature}</span>
-                      </div>
-                    ))}
+                    {subscriptionData.features
+                      .slice(0, 3)
+                      .map((feature, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center gap-2 text-sm text-muted-foreground"
+                        >
+                          <CheckCircle className="h-3 w-3 text-success" />
+                          <span>{feature}</span>
+                        </div>
+                      ))}
                     {subscriptionData.features.length > 3 && (
                       <div className="text-sm text-muted-foreground">
                         +{subscriptionData.features.length - 3} more features
@@ -224,16 +249,20 @@ export function PaymentModal({
                 )}
               </div>
               <div className="text-right">
-                {isCourse && courseData?.originalPrice && courseData.originalPrice > courseData.price && (
-                  <div className="text-sm text-muted-foreground line-through">
-                    {formatPrice(courseData.originalPrice, courseData.currency)}
-                  </div>
-                )}
+                {isCourse &&
+                  courseData?.originalPrice &&
+                  courseData.originalPrice > courseData.price && (
+                    <div className="text-sm text-muted-foreground line-through">
+                      {formatPrice(
+                        courseData.originalPrice,
+                        courseData.currency,
+                      )}
+                    </div>
+                  )}
                 <div className="text-lg font-bold text-primary">
-                  {isCourse 
+                  {isCourse
                     ? formatPrice(courseData?.price || 0, courseData?.currency)
-                    : `${formatPrice(subscriptionData?.price || 0, subscriptionData?.currency)}/month`
-                  }
+                    : `${formatPrice(subscriptionData?.price || 0, subscriptionData?.currency)}/month`}
                 </div>
               </div>
             </div>
@@ -241,7 +270,9 @@ export function PaymentModal({
 
           {/* Coupon Code */}
           <div className="space-y-3">
-            <Label className="text-sm font-medium">Coupon Code (Optional)</Label>
+            <Label className="text-sm font-medium">
+              Coupon Code (Optional)
+            </Label>
             {!appliedCoupon ? (
               <div className="flex gap-2">
                 <Input
@@ -286,18 +317,26 @@ export function PaymentModal({
               <div className="flex justify-between text-sm">
                 <span>Subtotal:</span>
                 <span>
-                  {isCourse 
+                  {isCourse
                     ? formatPrice(courseData?.price || 0, courseData?.currency)
-                    : formatPrice(subscriptionData?.price || 0, subscriptionData?.currency)
-                  }
+                    : formatPrice(
+                        subscriptionData?.price || 0,
+                        subscriptionData?.currency,
+                      )}
                 </span>
               </div>
               <div className="flex justify-between text-sm text-success">
                 <span>Discount ({appliedCoupon.discount}%):</span>
                 <span>
-                  -{formatPrice(
-                    (isCourse ? courseData?.price || 0 : subscriptionData?.price || 0) * (appliedCoupon.discount / 100),
-                    isCourse ? courseData?.currency : subscriptionData?.currency
+                  -
+                  {formatPrice(
+                    (isCourse
+                      ? courseData?.price || 0
+                      : subscriptionData?.price || 0) *
+                      (appliedCoupon.discount / 100),
+                    isCourse
+                      ? courseData?.currency
+                      : subscriptionData?.currency,
                   )}
                 </span>
               </div>
@@ -306,7 +345,9 @@ export function PaymentModal({
                 <span className="text-primary">
                   {formatPrice(
                     calculateFinalPrice(),
-                    isCourse ? courseData?.currency : subscriptionData?.currency
+                    isCourse
+                      ? courseData?.currency
+                      : subscriptionData?.currency,
                   )}
                   {isSubscription && '/month'}
                 </span>
@@ -322,16 +363,28 @@ export function PaymentModal({
               onCheckedChange={setAcceptTerms}
               className="mt-0.5"
             />
-            <Label htmlFor="terms" className="text-sm text-muted-foreground leading-relaxed">
+            <Label
+              htmlFor="terms"
+              className="text-sm text-muted-foreground leading-relaxed"
+            >
               I accept the{' '}
-              <a href="/terms" className="text-primary hover:underline" target="_blank">
+              <a
+                href="/terms"
+                className="text-primary hover:underline"
+                target="_blank"
+              >
                 Terms of Service
-              </a>
-              {' '}and{' '}
-              <a href="/privacy" className="text-primary hover:underline" target="_blank">
+              </a>{' '}
+              and{' '}
+              <a
+                href="/privacy"
+                className="text-primary hover:underline"
+                target="_blank"
+              >
                 Privacy Policy
               </a>
-              {isSubscription && '. You can cancel your subscription at any time.'}
+              {isSubscription &&
+                '. You can cancel your subscription at any time.'}
             </Label>
           </div>
 
@@ -355,12 +408,11 @@ export function PaymentModal({
             ) : (
               <CreditCard className="h-4 w-4 mr-2" />
             )}
-            {isLoading 
-              ? 'Processing...' 
-              : `Complete ${isCourse ? 'Purchase' : 'Subscription'} - ${formatPrice(calculateFinalPrice(), isCourse ? courseData?.currency : subscriptionData?.currency)}${isSubscription ? '/month' : ''}`
-            }
+            {isLoading
+              ? 'Processing...'
+              : `Complete ${isCourse ? 'Purchase' : 'Subscription'} - ${formatPrice(calculateFinalPrice(), isCourse ? courseData?.currency : subscriptionData?.currency)}${isSubscription ? '/month' : ''}`}
           </Button>
-          
+
           <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
             <Lock className="h-3 w-3" />
             <span>Secured by Lemon Squeezy • SSL Encrypted</span>
@@ -384,21 +436,26 @@ export function SubscriptionPlanCard({
   planName: string
   price: number
   currency?: string
-  features: string[]
+  features: Array<string>
   isPopular?: boolean
   variantId: string
   className?: string
 }) {
-  const formatPrice = (price: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(price)
+  const formatPrice = (priceValue: number, currencyCode: string) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currencyCode,
+    }).format(priceValue)
   }
 
   return (
-    <div className={cn(
-      "academic-card p-6 relative",
-      isPopular && "border-primary shadow-lg",
-      className
-    )}>
+    <div
+      className={cn(
+        'academic-card p-6 relative',
+        isPopular && 'border-primary shadow-lg',
+        className,
+      )}
+    >
       {isPopular && (
         <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
           <span className="bg-primary text-primary-foreground px-3 py-1 text-xs font-medium rounded-full">
@@ -415,14 +472,16 @@ export function SubscriptionPlanCard({
         </h3>
         <div className="text-3xl font-bold text-primary mb-1">
           {formatPrice(price, currency)}
-          <span className="text-lg font-normal text-muted-foreground">/month</span>
+          <span className="text-lg font-normal text-muted-foreground">
+            /month
+          </span>
         </div>
       </div>
 
       <ul className="space-y-3 mb-6">
         {features.map((feature, index) => (
           <li key={index} className="flex items-start gap-3">
-            <CheckCircle className="h-4 w-4 text-success mt-0.5 flex-shrink-0" />
+            <CheckCircle className="h-4 w-4 text-success mt-0.5 shrink-0" />
             <span className="text-sm">{feature}</span>
           </li>
         ))}

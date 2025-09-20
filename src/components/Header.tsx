@@ -1,18 +1,18 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link, useRouter } from '@tanstack/react-router'
-import { 
-  Search, 
-  Bell, 
-  User, 
-  BookOpen, 
-  GraduationCap,
-  MessageCircle,
+import {
+  Bell,
+  BookOpen,
   CreditCard,
   FolderOpen,
-  Settings,
+  GraduationCap,
   LogOut,
   Menu,
-  X
+  MessageCircle,
+  Search,
+  Settings,
+  User,
+  X,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
@@ -33,38 +33,55 @@ export default function Header() {
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [isHydrated, setIsHydrated] = useState(false)
+
+  // Prevent hydration mismatch by waiting for client-side hydration
+  useEffect(() => {
+    setIsHydrated(true)
+  }, [])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      router.navigate({ to: '/courses', search: { q: searchQuery } })
+      void router.navigate({ to: '/courses', search: { q: searchQuery } })
       setSearchQuery('')
     }
   }
 
   const navigationLinks = [
     { to: '/courses', label: 'Courses', icon: BookOpen, public: true },
-    { to: '/me/enrollments', label: 'My Learning', icon: GraduationCap, requiresAuth: true },
+    {
+      to: '/me/enrollments',
+      label: 'My Learning',
+      icon: GraduationCap,
+      requiresAuth: true,
+    },
     { to: '/forum', label: 'Discussions', icon: MessageCircle, public: true },
     { to: '/chat', label: 'AI Tutor', icon: MessageCircle, requiresAuth: true },
   ]
 
   const instructorLinks = [
-    { to: '/dashboard/instructor', label: 'Instructor Dashboard', icon: Settings },
+    {
+      to: '/dashboard/instructor',
+      label: 'Instructor Dashboard',
+      icon: Settings,
+    },
   ]
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-4">
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className="flex items-center space-x-2 font-bold text-xl tracking-tight hover:opacity-80 transition-opacity"
             >
               <GraduationCap className="h-8 w-8 text-primary" />
-              <span className="hidden sm:inline-block font-academic">StudyPlatform</span>
+              <span className="hidden sm:inline-block font-academic">
+                StudyPlatform
+              </span>
             </Link>
           </div>
 
@@ -72,16 +89,17 @@ export default function Header() {
           <nav className="hidden md:flex items-center space-x-1">
             {navigationLinks.map((link) => {
               const Icon = link.icon
-              const shouldShow = link.public || (link.requiresAuth && user)
+              const shouldShow =
+                link.public || (link.requiresAuth && isHydrated && user)
               if (!shouldShow) return null
-              
+
               return (
                 <Link
                   key={link.to}
                   to={link.to}
                   className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
                   activeProps={{
-                    className: 'bg-accent text-accent-foreground'
+                    className: 'bg-accent text-accent-foreground',
                   }}
                 >
                   <Icon className="h-4 w-4" />
@@ -89,8 +107,10 @@ export default function Header() {
                 </Link>
               )
             })}
-            
-            {user && (user.role === 'instructor' || user.role === 'admin') && (
+
+            {isHydrated &&
+              user &&
+              (user.role === 'instructor' || user.role === 'admin') &&
               instructorLinks.map((link) => {
                 const Icon = link.icon
                 return (
@@ -99,15 +119,14 @@ export default function Header() {
                     to={link.to}
                     className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
                     activeProps={{
-                      className: 'bg-accent text-accent-foreground'
+                      className: 'bg-accent text-accent-foreground',
                     }}
                   >
                     <Icon className="h-4 w-4" />
                     <span>{link.label}</span>
                   </Link>
                 )
-              })
-            )}
+              })}
           </nav>
 
           {/* Search Bar */}
@@ -127,8 +146,8 @@ export default function Header() {
           {/* Right side actions */}
           <div className="flex items-center space-x-2">
             <ThemeToggle />
-            
-            {user ? (
+
+            {isHydrated && user ? (
               <>
                 {/* Notifications */}
                 <Button variant="ghost" size="sm" className="h-9 w-9 px-0">
@@ -142,50 +161,68 @@ export default function Header() {
                     <Button variant="ghost" size="sm" className="h-9 px-2">
                       <div className="flex items-center space-x-2">
                         <div className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-semibold">
-                          {user.username?.charAt(0).toUpperCase()}
+                          {user.username?.charAt(0)?.toUpperCase() ||
+                            user.email?.charAt(0)?.toUpperCase() ||
+                            'U'}
                         </div>
                         <span className="hidden sm:inline-block text-sm font-medium">
-                          {user.username}
+                          {user.username || user.email || 'User'}
                         </span>
                       </div>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
                     <DropdownMenuLabel className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium">{user.username}</p>
-                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                      <p className="text-sm font-medium">
+                        {user.username || user.email || 'User'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {user.email}
+                      </p>
                       <div className="text-xs text-muted-foreground capitalize">
                         {user.role}
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link to="/me/profile" className="flex items-center space-x-2 w-full">
+                      <Link
+                        to="/me/profile"
+                        className="flex items-center space-x-2 w-full"
+                      >
                         <User className="h-4 w-4" />
                         <span>Profile</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link to="/me/enrollments" className="flex items-center space-x-2 w-full">
+                      <Link
+                        to="/me/enrollments"
+                        className="flex items-center space-x-2 w-full"
+                      >
                         <BookOpen className="h-4 w-4" />
                         <span>My Courses</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link to="/billing/methods" className="flex items-center space-x-2 w-full">
+                      <Link
+                        to="/billing/methods"
+                        className="flex items-center space-x-2 w-full"
+                      >
                         <CreditCard className="h-4 w-4" />
                         <span>Billing</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link to="/files" className="flex items-center space-x-2 w-full">
+                      <Link
+                        to="/files"
+                        className="flex items-center space-x-2 w-full"
+                      >
                         <FolderOpen className="h-4 w-4" />
                         <span>Files</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      onClick={logout} 
+                    <DropdownMenuItem
+                      onClick={logout}
                       className="flex items-center space-x-2 text-destructive focus:text-destructive"
                     >
                       <LogOut className="h-4 w-4" />
@@ -194,7 +231,7 @@ export default function Header() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </>
-            ) : (
+            ) : isHydrated ? (
               <div className="flex items-center space-x-2">
                 <Button variant="ghost" size="sm" asChild>
                   <Link to="/auth/login">Sign in</Link>
@@ -203,7 +240,7 @@ export default function Header() {
                   <Link to="/auth/register">Get started</Link>
                 </Button>
               </div>
-            )}
+            ) : null}
 
             {/* Mobile menu button */}
             <Button
@@ -240,16 +277,17 @@ export default function Header() {
 
               {navigationLinks.map((link) => {
                 const Icon = link.icon
-                const shouldShow = link.public || (link.requiresAuth && user)
+                const shouldShow =
+                  link.public || (link.requiresAuth && isHydrated && user)
                 if (!shouldShow) return null
-                
+
                 return (
                   <Link
                     key={link.to}
                     to={link.to}
                     className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
                     activeProps={{
-                      className: 'bg-accent text-accent-foreground'
+                      className: 'bg-accent text-accent-foreground',
                     }}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
@@ -258,8 +296,9 @@ export default function Header() {
                   </Link>
                 )
               })}
-              
-              {user && (user.role === 'instructor' || user.role === 'admin') && (
+
+              {user &&
+                (user.role === 'instructor' || user.role === 'admin') &&
                 instructorLinks.map((link) => {
                   const Icon = link.icon
                   return (
@@ -268,7 +307,7 @@ export default function Header() {
                       to={link.to}
                       className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
                       activeProps={{
-                        className: 'bg-accent text-accent-foreground'
+                        className: 'bg-accent text-accent-foreground',
                       }}
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
@@ -276,8 +315,7 @@ export default function Header() {
                       <span>{link.label}</span>
                     </Link>
                   )
-                })
-              )}
+                })}
             </div>
           </div>
         )}

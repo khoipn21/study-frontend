@@ -14,7 +14,7 @@ export interface ForumPost {
   author: ForumUser
   courseId?: string
   category: ForumCategory
-  tags: string[]
+  tags: Array<string>
   createdAt: string
   updatedAt: string
   views: number
@@ -22,7 +22,7 @@ export interface ForumPost {
   isLocked: boolean
   isPinned: boolean
   isSolved: boolean
-  replies: ForumReply[]
+  replies: Array<ForumReply>
   userVote?: 'up' | 'down' | null
 }
 
@@ -37,7 +37,7 @@ export interface ForumReply {
   votes: number
   isAccepted: boolean
   userVote?: 'up' | 'down' | null
-  replies?: ForumReply[]
+  replies?: Array<ForumReply>
 }
 
 export interface ForumCategory {
@@ -53,8 +53,8 @@ export interface ForumStats {
   totalPosts: number
   totalReplies: number
   totalUsers: number
-  mostActiveUsers: ForumUser[]
-  recentPosts: ForumPost[]
+  mostActiveUsers: Array<ForumUser>
+  recentPosts: Array<ForumPost>
 }
 
 export interface CreatePostData {
@@ -62,7 +62,7 @@ export interface CreatePostData {
   content: string
   categoryId: string
   courseId?: string
-  tags: string[]
+  tags: Array<string>
 }
 
 export interface CreateReplyData {
@@ -73,9 +73,9 @@ export interface CreateReplyData {
 
 export class ForumService {
   private static instance: ForumService
-  
+
   public static getInstance(): ForumService {
-    if (!ForumService.instance) {
+    if (ForumService.instance === undefined) {
       ForumService.instance = new ForumService()
     }
     return ForumService.instance
@@ -90,23 +90,30 @@ export class ForumService {
     sortBy?: 'recent' | 'popular' | 'unanswered' | 'solved'
     page?: number
     limit?: number
-  }): Promise<{ posts: ForumPost[], total: number }> {
-    const { categoryId, courseId, search, sortBy = 'recent', page = 1, limit = 20 } = params
-    
+  }): Promise<{ posts: Array<ForumPost>; total: number }> {
+    const {
+      categoryId,
+      courseId,
+      search,
+      sortBy = 'recent',
+      page = 1,
+      limit = 20,
+    } = params
+
     try {
       const queryParams = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
         sortBy,
       })
-      
+
       if (categoryId) queryParams.append('categoryId', categoryId)
       if (courseId) queryParams.append('courseId', courseId)
       if (search) queryParams.append('search', search)
-      
+
       const response = await fetch(`/api/v1/forum/posts?${queryParams}`)
       if (!response.ok) throw new Error('Failed to fetch posts')
-      
+
       return await response.json()
     } catch (error) {
       console.error('Error fetching posts:', error)
@@ -118,7 +125,7 @@ export class ForumService {
     try {
       const response = await fetch(`/api/v1/forum/posts/${id}`)
       if (!response.ok) throw new Error('Failed to fetch post')
-      
+
       return await response.json()
     } catch (error) {
       console.error('Error fetching post:', error)
@@ -135,9 +142,9 @@ export class ForumService {
         },
         body: JSON.stringify(data),
       })
-      
+
       if (!response.ok) throw new Error('Failed to create post')
-      
+
       return await response.json()
     } catch (error) {
       console.error('Error creating post:', error)
@@ -154,9 +161,9 @@ export class ForumService {
         },
         body: JSON.stringify(data),
       })
-      
+
       if (!response.ok) throw new Error('Failed to create reply')
-      
+
       return await response.json()
     } catch (error) {
       console.error('Error creating reply:', error)
@@ -173,7 +180,7 @@ export class ForumService {
         },
         body: JSON.stringify({ vote }),
       })
-      
+
       if (!response.ok) throw new Error('Failed to vote on post')
     } catch (error) {
       console.error('Error voting on post:', error)
@@ -190,7 +197,7 @@ export class ForumService {
         },
         body: JSON.stringify({ vote }),
       })
-      
+
       if (!response.ok) throw new Error('Failed to vote on reply')
     } catch (error) {
       console.error('Error voting on reply:', error)
@@ -203,7 +210,7 @@ export class ForumService {
       const response = await fetch(`/api/v1/forum/replies/${replyId}/accept`, {
         method: 'POST',
       })
-      
+
       if (!response.ok) throw new Error('Failed to accept reply')
     } catch (error) {
       console.error('Error accepting reply:', error)
@@ -211,11 +218,11 @@ export class ForumService {
     }
   }
 
-  async getCategories(): Promise<ForumCategory[]> {
+  async getCategories(): Promise<Array<ForumCategory>> {
     try {
       const response = await fetch('/api/v1/forum/categories')
       if (!response.ok) throw new Error('Failed to fetch categories')
-      
+
       return await response.json()
     } catch (error) {
       console.error('Error fetching categories:', error)
@@ -227,7 +234,7 @@ export class ForumService {
     try {
       const response = await fetch('/api/v1/forum/stats')
       if (!response.ok) throw new Error('Failed to fetch forum stats')
-      
+
       return await response.json()
     } catch (error) {
       console.error('Error fetching forum stats:', error)
@@ -235,7 +242,7 @@ export class ForumService {
     }
   }
 
-  private getMockCategories(): ForumCategory[] {
+  private getMockCategories(): Array<ForumCategory> {
     return [
       {
         id: '1',
@@ -306,12 +313,16 @@ export class ForumService {
     }
   }
 
-  private getMockPosts(params: any): { posts: ForumPost[], total: number } {
-    const mockPosts: ForumPost[] = [
+  private getMockPosts(params: any): {
+    posts: Array<ForumPost>
+    total: number
+  } {
+    const mockPosts: Array<ForumPost> = [
       {
         id: '1',
         title: 'Best practices for React state management?',
-        content: 'I\'m working on a large React application and struggling with state management. What are the current best practices?',
+        content:
+          "I'm working on a large React application and struggling with state management. What are the current best practices?",
         author: {
           id: '2',
           username: 'alex_student',
@@ -332,7 +343,7 @@ export class ForumService {
         userVote: null,
       },
     ]
-    
+
     return { posts: mockPosts, total: mockPosts.length }
   }
 
@@ -340,7 +351,8 @@ export class ForumService {
     return {
       id,
       title: 'Best practices for React state management?',
-      content: 'I\'m working on a large React application and struggling with state management. What are the current best practices? Should I use Redux, Zustand, or stick with React\'s built-in state management?',
+      content:
+        "I'm working on a large React application and struggling with state management. What are the current best practices? Should I use Redux, Zustand, or stick with React's built-in state management?",
       author: {
         id: '2',
         username: 'alex_student',
@@ -360,7 +372,8 @@ export class ForumService {
       replies: [
         {
           id: '1',
-          content: 'For large applications, I recommend Redux Toolkit. It provides excellent developer experience and scales well.',
+          content:
+            'For large applications, I recommend Redux Toolkit. It provides excellent developer experience and scales well.',
           author: {
             id: '1',
             username: 'sarah_dev',

@@ -7,12 +7,14 @@ The enrollment workflow has been fixed to ensure **payment is required before en
 ## Current Implementation
 
 ### 1. **Free Courses (price = 0)**
+
 - ✅ Direct enrollment without payment
 - User clicks "Enroll for Free"
 - Calls `api.enroll(token, courseId)` directly
 - User gains immediate access
 
 ### 2. **Paid Courses (price > 0)**
+
 - ✅ **Payment required before enrollment**
 - User clicks "Purchase for $X" button
 - Opens Lemon Squeezy payment modal
@@ -22,6 +24,7 @@ The enrollment workflow has been fixed to ensure **payment is required before en
 ## Components
 
 ### PaymentModal Integration
+
 ```tsx
 // For paid courses only
 <PaymentModal
@@ -40,6 +43,7 @@ The enrollment workflow has been fixed to ensure **payment is required before en
 ```
 
 ### Enrollment Flow
+
 ```tsx
 // FREE COURSES ONLY - blocks paid courses
 const enrollFree = async () => {
@@ -48,7 +52,7 @@ const enrollFree = async () => {
     alert('This is a paid course. Please use the payment option.')
     return // 🛑 BLOCKS PAID COURSE ENROLLMENT
   }
-  
+
   await api.enroll(token, courseId)
   // Success - user enrolled
 }
@@ -56,7 +60,7 @@ const enrollFree = async () => {
 // PAID COURSES - called ONLY after payment success
 const handlePaymentSuccess = async () => {
   // Payment completed → now enroll
-  await api.enroll(token, courseId)  
+  await api.enroll(token, courseId)
   // User enrolled after payment
 }
 ```
@@ -73,18 +77,19 @@ const handlePaymentSuccess = async () => {
 The backend should implement these checks:
 
 ### Enrollment API (`POST /api/v1/courses/{id}/enroll`)
+
 ```go
 func (h *Handler) EnrollCourse(c *gin.Context) {
     courseID := c.Param("id")
     userID := c.GetString("user_id")
-    
+
     // Get course details
     course, err := h.courseService.GetCourse(courseID)
     if err != nil {
         c.JSON(404, gin.H{"error": "Course not found"})
         return
     }
-    
+
     // 🔒 CRITICAL: Check if course is paid
     if course.Price > 0 {
         // Verify user has paid for this course
@@ -94,35 +99,36 @@ func (h *Handler) EnrollCourse(c *gin.Context) {
             return
         }
     }
-    
+
     // Enroll user (free course OR payment verified)
     err = h.enrollmentService.EnrollUser(userID, courseID)
     if err != nil {
         c.JSON(500, gin.H{"error": "Enrollment failed"})
         return
     }
-    
+
     c.JSON(200, gin.H{"message": "Enrollment successful"})
 }
 ```
 
 ### Payment Webhook Handler
+
 ```go
 func (h *Handler) HandleLemonSqueezyWebhook(c *gin.Context) {
     // Verify webhook signature
     // Parse payment data
-    
+
     if event.Type == "order_created" && event.Status == "paid" {
         userID := event.CustomData["user_id"]
         courseID := event.CustomData["course_id"]
-        
+
         // Record successful payment
         err := h.paymentService.RecordPayment(userID, courseID, event.Amount)
         if err != nil {
             // Handle error
             return
         }
-        
+
         // Auto-enroll user after payment
         err = h.enrollmentService.EnrollUser(userID, courseID)
         if err != nil {
@@ -137,11 +143,13 @@ func (h *Handler) HandleLemonSqueezyWebhook(c *gin.Context) {
 ## Testing Scenarios
 
 ### ✅ Valid Flows
+
 1. **Free Course**: Click "Enroll for Free" → Enrolled immediately
 2. **Paid Course**: Click "Purchase" → Complete payment → Auto-enrolled
 3. **Already Enrolled**: Shows "Enrolled" status
 
-### 🛑 Blocked Flows  
+### 🛑 Blocked Flows
+
 1. **Paid Course Without Payment**: Cannot enroll directly
 2. **Unauthenticated**: Must login first
 3. **Invalid Payment**: Payment fails → No enrollment
