@@ -123,7 +123,8 @@ export function useTouchDevice() {
       const hasTouch =
         'ontouchstart' in window ||
         navigator.maxTouchPoints > 0 ||
-        (navigator as any).msMaxTouchPoints > 0
+        ((navigator as { msMaxTouchPoints?: number })?.msMaxTouchPoints ?? 0) >
+          0
 
       // Check for hover capability
       const canHover = window.matchMedia('(hover: hover)').matches
@@ -197,7 +198,8 @@ export function useResponsiveGrid(
  */
 export function useResponsiveNavigation() {
   const { deviceType } = useDeviceType()
-  const { isTouchDevice } = useTouchDevice()
+  // Touch device capabilities - currently unused
+  useTouchDevice()
 
   const [showSidebar, setShowSidebar] = useState(false)
   const [navigationStyle, setNavigationStyle] = useState<
@@ -306,7 +308,8 @@ export function useResponsiveVideo() {
       },
     }
 
-    const deviceSettings = settings[deviceType] || settings.mobile
+    const deviceSettings =
+      settings[deviceType as keyof typeof settings] || settings.mobile
 
     return {
       ...deviceSettings,
@@ -335,8 +338,10 @@ export function useOrientation() {
       // Get screen orientation angle if available
       if (screen.orientation) {
         setAngle(screen.orientation.angle)
-      } else if ((window as any).orientation !== undefined) {
-        setAngle(Math.abs((window as any).orientation))
+      } else if (
+        (window as { orientation?: number }).orientation !== undefined
+      ) {
+        setAngle(Math.abs((window as { orientation?: number }).orientation!))
       }
     }
 
@@ -379,8 +384,6 @@ export function usePerformanceMonitoring() {
     // Only run in browser
     if (typeof window === 'undefined') return
 
-    const budget = PERFORMANCE_BUDGETS[deviceType]
-
     // Monitor performance metrics
     const observer = new PerformanceObserver((list) => {
       const entries = list.getEntries()
@@ -411,13 +414,25 @@ export function usePerformanceMonitoring() {
 
   return {
     metrics,
-    budget: PERFORMANCE_BUDGETS[deviceType],
+    budget:
+      PERFORMANCE_BUDGETS[deviceType as keyof typeof PERFORMANCE_BUDGETS] ||
+      PERFORMANCE_BUDGETS.mobile,
     isWithinBudget: {
       fcp: metrics.fcp
-        ? metrics.fcp <= PERFORMANCE_BUDGETS[deviceType].firstContentfulPaint
+        ? metrics.fcp <=
+          (
+            PERFORMANCE_BUDGETS[
+              deviceType as keyof typeof PERFORMANCE_BUDGETS
+            ] || PERFORMANCE_BUDGETS.mobile
+          ).firstContentfulPaint
         : null,
       lcp: metrics.lcp
-        ? metrics.lcp <= PERFORMANCE_BUDGETS[deviceType].largestContentfulPaint
+        ? metrics.lcp <=
+          (
+            PERFORMANCE_BUDGETS[
+              deviceType as keyof typeof PERFORMANCE_BUDGETS
+            ] || PERFORMANCE_BUDGETS.mobile
+          ).largestContentfulPaint
         : null,
     },
   }

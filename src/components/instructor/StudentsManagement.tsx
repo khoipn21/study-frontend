@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   flexRender,
@@ -17,7 +17,6 @@ import {
   Clock,
   Download,
   Eye,
-  Filter,
   Mail,
   MessageSquare,
   MoreHorizontal,
@@ -26,8 +25,6 @@ import {
   Star,
   TrendingDown,
   TrendingUp,
-  UserCheck,
-  UserX,
   Users,
 } from 'lucide-react'
 
@@ -41,13 +38,7 @@ import {
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Progress } from '@/components/ui/progress'
@@ -74,22 +65,18 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from '@/components/ui/sheet'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Separator } from '@/components/ui/separator'
 import { useToast } from '@/hooks/use-toast'
 import { instructorDashboardService } from '@/lib/instructor-dashboard'
 import type { InstructorStudent } from '@/lib/instructor-dashboard'
@@ -213,7 +200,7 @@ function createColumns(): Array<ColumnDef<InstructorStudent>> {
       cell: ({ row }) => (
         <div className="flex items-center">
           <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
-          {Math.round(row.getValue('totalWatchTime') / 60)} hrs
+          {Math.round(row.original.totalWatchTime / 60)} hrs
         </div>
       ),
     },
@@ -246,9 +233,7 @@ function createColumns(): Array<ColumnDef<InstructorStudent>> {
     {
       id: 'actions',
       enableHiding: false,
-      cell: ({ row }) => {
-        const student = row.original
-
+      cell: () => {
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -289,7 +274,7 @@ interface StudentDetailsProps {
   onClose: () => void
 }
 
-function StudentDetails({ student, onClose }: StudentDetailsProps) {
+function StudentDetails({ student, onClose: _onClose }: StudentDetailsProps) {
   return (
     <div className="space-y-6">
       {/* Student Header */}
@@ -567,7 +552,6 @@ export default function StudentsManagement({
         sortBy: sorting[0]?.id,
         sortOrder: sorting[0]?.desc ? 'desc' : 'asc',
       }),
-    keepPreviousData: true,
   })
 
   // Fetch at-risk students
@@ -679,7 +663,9 @@ export default function StudentsManagement({
             </p>
             <Button
               onClick={() =>
-                queryClient.invalidateQueries(['instructor', 'students'])
+                queryClient.invalidateQueries({
+                  queryKey: ['instructor', 'students'],
+                })
               }
               className="mt-4"
             >
@@ -810,7 +796,7 @@ export default function StudentsManagement({
             <Checkbox
               id="at-risk"
               checked={showAtRiskOnly}
-              onCheckedChange={setShowAtRiskOnly}
+              onCheckedChange={(checked) => setShowAtRiskOnly(checked === true)}
             />
             <Label htmlFor="at-risk" className="text-sm">
               At-risk only

@@ -1,5 +1,5 @@
 import { config } from './config'
-import type { AuthResponse, Course, Enrollment, Lecture, Video } from './types'
+import type { AuthResponse, Course, Enrollment, Lecture } from './types'
 
 // Choose implementation (mock or real)
 
@@ -8,6 +8,123 @@ type GatewayResponse<T> = {
   message: string
   data?: T
   error?: string
+}
+
+type VideoData = {
+  id: string
+  filename: string
+  url: string
+  content_type: string
+  size: number
+  duration?: number
+  thumbnail_url?: string
+}
+
+type ProgressData = {
+  course_id: string
+  lecture_id: string
+  progress_percentage: number
+  watch_time_seconds: number
+  is_completed: boolean
+  last_watched_at: string
+}
+
+type FileData = {
+  id: string
+  filename: string
+  content_type: string
+  size: number
+  bucket: string
+  is_public: boolean
+  url: string
+  metadata?: Record<string, unknown>
+}
+
+type UploadUrlData = {
+  upload_url: string
+  file_id: string
+  expires_at: string
+}
+
+type MultipartUpload = {
+  upload_id: string
+  key: string
+  bucket: string
+}
+
+type MultipartUrls = {
+  urls: Array<{ part_number: number; url: string }>
+}
+
+type ForumTopic = {
+  id: string
+  title: string
+  description?: string
+  created_by: string
+  created_at: string
+  updated_at: string
+  posts_count: number
+}
+
+type ForumPost = {
+  id: string
+  topic_id: string
+  content: string
+  created_by: string
+  created_at: string
+  updated_at: string
+}
+
+type PaymentMethod = {
+  id: string
+  type: string
+  last_four?: string
+  brand?: string
+  is_default: boolean
+  created_at: string
+}
+
+type Transaction = {
+  id: string
+  amount: number
+  currency: string
+  status: string
+  description?: string
+  created_at: string
+}
+
+type Subscription = {
+  id: string
+  plan_id: string
+  status: string
+  current_period_start: string
+  current_period_end: string
+  cancel_at_period_end: boolean
+}
+
+type ChatSession = {
+  id: string
+  title?: string
+  created_at: string
+  updated_at: string
+  messages_count: number
+}
+
+type ChatMessage = {
+  id: string
+  session_id: string
+  role: 'user' | 'assistant'
+  content: string
+  created_at: string
+}
+
+type AnalyticsData = {
+  total_courses: number
+  total_enrollments: number
+  total_watch_time: number
+  completion_rate: number
+  revenue: number
+  growth_metrics: Record<string, number>
 }
 
 export class ApiError extends Error {
@@ -24,21 +141,40 @@ async function request<T>(
   opts: RequestInit & { token?: string } = {},
 ): Promise<T> {
   const url = `${config.apiBaseUrl}${path}`
-  const headers: HeadersInit = { ...(opts.headers || {}) }
+  const headers: Record<string, string> = {}
+
+  // Convert headers to Record<string, string>
+  if (opts.headers) {
+    if (opts.headers instanceof Headers) {
+      for (const [key, value] of opts.headers.entries()) {
+        headers[key] = value
+      }
+    } else if (typeof opts.headers === 'object') {
+      Object.assign(headers, opts.headers)
+    }
+  }
   // Only set JSON content-type when we actually send a JSON body
   const hasBody =
     typeof opts.body !== 'undefined' && !(opts.body instanceof FormData)
   if (hasBody) headers['Content-Type'] = 'application/json'
-  if (opts.token) headers['Authorization'] = `Bearer ${opts.token}`
+  if (opts.token !== undefined && opts.token !== null && opts.token !== '')
+    headers['Authorization'] = `Bearer ${opts.token}`
 
   const res = await fetch(url, { ...opts, headers })
-  const contentType = res.headers.get('content-type') || ''
+  const contentType = res.headers.get('content-type') ?? ''
   const isJson = contentType.includes('application/json')
-  const body = isJson ? await res.json() : await res.text()
+  const body: unknown = isJson ? await res.json() : await res.text()
 
   if (!res.ok) {
-    const msg = isJson && body?.message ? body.message : res.statusText
-    const error = new ApiError(msg || 'Request failed', res.status)
+    const bodyWithMessage = body as { message?: string }
+    const msg =
+      isJson &&
+      bodyWithMessage.message !== undefined &&
+      bodyWithMessage.message !== null &&
+      bodyWithMessage.message !== ''
+        ? bodyWithMessage.message
+        : res.statusText
+    const error = new ApiError(msg ?? 'Request failed', res.status)
 
     // Handle 401 errors globally to trigger logout
     if (res.status === 401) {
@@ -97,9 +233,10 @@ export const api = {
     params: { page?: number; page_size?: number; q?: string } = {},
   ) => {
     const search = new URLSearchParams()
-    if (params.page) search.set('page', String(params.page))
-    if (params.page_size) search.set('page_size', String(params.page_size))
-    if (params.q) search.set('q', params.q)
+    if (params.page !== undefined) search.set('page', String(params.page))
+    if (params.page_size !== undefined)
+      search.set('page_size', String(params.page_size))
+    if (params.q !== undefined && params.q !== '') search.set('q', params.q)
     const qs = search.toString()
     return requestGateway<{
       courses: Array<Course>
@@ -117,8 +254,9 @@ export const api = {
     params: { page?: number; page_size?: number } = {},
   ) => {
     const search = new URLSearchParams()
-    if (params.page) search.set('page', String(params.page))
-    if (params.page_size) search.set('page_size', String(params.page_size))
+    if (params.page !== undefined) search.set('page', String(params.page))
+    if (params.page_size !== undefined)
+      search.set('page_size', String(params.page_size))
     const qs = search.toString()
     return requestGateway<{
       lectures: Array<Lecture>
@@ -144,8 +282,9 @@ export const api = {
     params: { page?: number; page_size?: number } = {},
   ) => {
     const search = new URLSearchParams()
-    if (params.page) search.set('page', String(params.page))
-    if (params.page_size) search.set('page_size', String(params.page_size))
+    if (params.page !== undefined) search.set('page', String(params.page))
+    if (params.page_size !== undefined)
+      search.set('page_size', String(params.page_size))
     const qs = search.toString()
     return requestGateway<{
       enrollments: Array<Enrollment>
@@ -200,11 +339,12 @@ export const api = {
     }),
 
   // Video (proxied)
-  getVideo: (token: string, videoId: string) => request<any>(`/videos/${videoId}`, { token }),
+  getVideo: (token: string, videoId: string) =>
+    request<VideoData>(`/videos/${videoId}`, { token }),
   listCourseVideos: (courseId: string) =>
-    request<any>(`/videos/course/${courseId}`),
+    request<{ videos: Array<VideoData> }>(`/videos/course/${courseId}`),
   getVideoUploadUrl: (token: string, filename: string, size: number) =>
-    request<any>('/videos/upload-url', {
+    request<UploadUrlData>('/videos/upload-url', {
       method: 'POST',
       token,
       body: JSON.stringify({ filename, size }),
@@ -220,20 +360,29 @@ export const api = {
       is_completed: boolean
     },
   ) =>
-    request<GatewayResponse<any>>('/progress/update', {
+    request<GatewayResponse<ProgressData>>('/progress/update', {
       method: 'POST',
       body: JSON.stringify(payload),
       token,
     }),
   getLectureProgress: (token: string, courseId: string, lectureId: string) =>
-    request<GatewayResponse<any>>(
+    request<GatewayResponse<ProgressData>>(
       `/progress/courses/${courseId}/lectures/${lectureId}`,
       { token },
     ),
   getCourseProgress: (token: string, courseId: string) =>
-    request<GatewayResponse<any>>(`/progress/courses/${courseId}`, { token }),
+    request<GatewayResponse<{ progress: Array<ProgressData> }>>(
+      `/progress/courses/${courseId}`,
+      { token },
+    ),
   getCourseCompletion: (token: string, courseId: string) =>
-    request<GatewayResponse<any>>(`/progress/courses/${courseId}/completion`, {
+    request<
+      GatewayResponse<{
+        completion_rate: number
+        completed_lectures: number
+        total_lectures: number
+      }>
+    >(`/progress/courses/${courseId}/completion`, {
       token,
     }),
   completeLecture: (
@@ -244,7 +393,7 @@ export const api = {
       watch_time_seconds: number
     },
   ) =>
-    request<GatewayResponse<any>>('/progress/lectures/complete', {
+    request<GatewayResponse<ProgressData>>('/progress/lectures/complete', {
       method: 'POST',
       body: JSON.stringify(payload),
       token,
@@ -252,7 +401,7 @@ export const api = {
 
   // Analytics
   getUserAnalytics: (token: string) =>
-    request<GatewayResponse<any>>('/analytics/user', { token }),
+    request<GatewayResponse<AnalyticsData>>('/analytics/user', { token }),
 
   // Files (Bucket)
   uploadFile: (
@@ -265,7 +414,7 @@ export const api = {
       body: form,
     }).then(async (r) => {
       if (!r.ok) throw new ApiError(r.statusText, r.status)
-      return r.json()
+      return r.json() as Promise<FileData>
     }),
   listFiles: (
     token: string,
@@ -287,17 +436,28 @@ export const api = {
       }
     })
     const qs = search.toString()
-    return request<any>(`/files${qs ? `?${qs}` : ''}`, { token })
+    return request<{
+      files: Array<FileData>
+      total: number
+      page: number
+      limit: number
+    }>(`/files${qs ? `?${qs}` : ''}`, { token })
   },
   deleteFile: (token: string, fileId: string) =>
-    request<any>(`/files/${fileId}`, { method: 'DELETE', token }),
+    request<{ success: boolean }>(`/files/${fileId}`, {
+      method: 'DELETE',
+      token,
+    }),
   getFileMetadata: (token: string, fileId: string) =>
-    request<any>(`/files/${fileId}/metadata`, { token }),
+    request<{ metadata: Record<string, unknown> }>(
+      `/files/${fileId}/metadata`,
+      { token },
+    ),
   startMultipart: (
     token: string,
     payload: { filename: string; content_type?: string; bucket?: string },
   ) =>
-    request<any>('/files/upload/start', {
+    request<MultipartUpload>('/files/upload/start', {
       method: 'POST',
       body: JSON.stringify(payload),
       token,
@@ -307,7 +467,7 @@ export const api = {
     uploadId: string,
     payload: { part_numbers: Array<number> },
   ) =>
-    request<any>(`/files/upload/${uploadId}/parts`, {
+    request<MultipartUrls>(`/files/upload/${uploadId}/parts`, {
       method: 'POST',
       body: JSON.stringify(payload),
       token,
@@ -317,7 +477,7 @@ export const api = {
     uploadId: string,
     payload: { parts: Array<{ part_number: number; etag: string }> },
   ) =>
-    request<any>(`/files/upload/${uploadId}/complete`, {
+    request<FileData>(`/files/upload/${uploadId}/complete`, {
       method: 'POST',
       body: JSON.stringify(payload),
       token,
@@ -330,9 +490,15 @@ export const api = {
       if (v !== undefined) s.set(k, String(v))
     })
     const qs = s.toString()
-    return request<any>(`/forum/topics${qs ? `?${qs}` : ''}`)
+    return request<{
+      topics: Array<ForumTopic>
+      total: number
+      page: number
+      limit: number
+    }>(`/forum/topics${qs ? `?${qs}` : ''}`)
   },
-  getTopic: (topicId: string) => request<any>(`/forum/topics/${topicId}`),
+  getTopic: (topicId: string) =>
+    request<ForumTopic>(`/forum/topics/${topicId}`),
   listTopicPosts: (
     topicId: string,
     params: Record<string, string | number | undefined> = {},
@@ -342,43 +508,72 @@ export const api = {
       if (v !== undefined) s.set(k, String(v))
     })
     const qs = s.toString()
-    return request<any>(`/forum/topics/${topicId}/posts${qs ? `?${qs}` : ''}`)
+    return request<{
+      posts: Array<ForumPost>
+      total: number
+      page: number
+      limit: number
+    }>(`/forum/topics/${topicId}/posts${qs ? `?${qs}` : ''}`)
   },
-  createTopic: (token: string, payload: any) =>
-    request<any>('/forum/topics', {
+  createTopic: (
+    token: string,
+    payload: Omit<
+      ForumTopic,
+      'id' | 'created_by' | 'created_at' | 'updated_at' | 'posts_count'
+    >,
+  ) =>
+    request<ForumTopic>('/forum/topics', {
       method: 'POST',
       body: JSON.stringify(payload),
       token,
     }),
-  createPost: (token: string, payload: any) =>
-    request<any>('/forum/posts', {
+  createPost: (
+    token: string,
+    payload: Omit<ForumPost, 'id' | 'created_by' | 'created_at' | 'updated_at'>,
+  ) =>
+    request<ForumPost>('/forum/posts', {
       method: 'POST',
       body: JSON.stringify(payload),
       token,
     }),
 
   // Payments
-  createPaymentMethod: (token: string, payload: any) =>
-    request<any>('/payments/methods', {
+  createPaymentMethod: (
+    token: string,
+    payload: Omit<PaymentMethod, 'id' | 'is_default' | 'created_at'>,
+  ) =>
+    request<PaymentMethod>('/payments/methods', {
       method: 'POST',
       body: JSON.stringify(payload),
       token,
     }),
   listPaymentMethods: (token: string) =>
-    request<any>('/payments/methods', { token }),
+    request<{ payment_methods: Array<PaymentMethod> }>('/payments/methods', {
+      token,
+    }),
   setDefaultPaymentMethod: (token: string, methodId: string) =>
-    request<any>(`/payments/methods/${methodId}/default`, {
+    request<{ success: boolean }>(`/payments/methods/${methodId}/default`, {
       method: 'PUT',
       token,
     }),
   deletePaymentMethod: (token: string, methodId: string) =>
-    request<any>(`/payments/methods/${methodId}`, { method: 'DELETE', token }),
-  purchaseCourse: (token: string, courseId: string, payload: any) =>
-    request<any>(`/payments/purchase/course/${courseId}`, {
-      method: 'POST',
-      body: JSON.stringify(payload),
+    request<{ success: boolean }>(`/payments/methods/${methodId}`, {
+      method: 'DELETE',
       token,
     }),
+  purchaseCourse: (
+    token: string,
+    courseId: string,
+    payload: { payment_method_id: string; amount?: number },
+  ) =>
+    request<{ transaction: Transaction; enrollment: Enrollment }>(
+      `/payments/purchase/course/${courseId}`,
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        token,
+      },
+    ),
   listTransactions: (
     token: string,
     params: Record<string, string | number> = {},
@@ -386,20 +581,34 @@ export const api = {
     const s = new URLSearchParams()
     Object.entries(params).forEach(([k, v]) => s.set(k, String(v)))
     const qs = s.toString()
-    return request<any>(`/payments/transactions${qs ? `?${qs}` : ''}`, {
+    return request<{
+      transactions: Array<Transaction>
+      total: number
+      page: number
+      limit: number
+    }>(`/payments/transactions${qs ? `?${qs}` : ''}`, {
       token,
     })
   },
   listSubscriptions: (token: string) =>
-    request<any>('/payments/subscriptions', { token }),
-  createSubscription: (token: string, payload: any) =>
-    request<any>('/payments/subscriptions', {
+    request<{ subscriptions: Array<Subscription> }>('/payments/subscriptions', {
+      token,
+    }),
+  createSubscription: (
+    token: string,
+    payload: { plan_id: string; payment_method_id?: string },
+  ) =>
+    request<Subscription>('/payments/subscriptions', {
       method: 'POST',
       body: JSON.stringify(payload),
       token,
     }),
-  updateSubscription: (token: string, subscriptionId: string, payload: any) =>
-    request<any>(`/payments/subscriptions/${subscriptionId}`, {
+  updateSubscription: (
+    token: string,
+    subscriptionId: string,
+    payload: Partial<Pick<Subscription, 'cancel_at_period_end'>>,
+  ) =>
+    request<Subscription>(`/payments/subscriptions/${subscriptionId}`, {
       method: 'PUT',
       body: JSON.stringify(payload),
       token,
@@ -413,16 +622,28 @@ export const api = {
     const s = new URLSearchParams()
     Object.entries(params).forEach(([k, v]) => s.set(k, String(v)))
     const qs = s.toString()
-    return request<any>(`/chat/sessions${qs ? `?${qs}` : ''}`, { token })
+    return request<{
+      sessions: Array<ChatSession>
+      total: number
+      page: number
+      limit: number
+    }>(`/chat/sessions${qs ? `?${qs}` : ''}`, { token })
   },
-  createChatSession: (token: string, payload: any) =>
-    request<any>('/chat/sessions', {
+  createChatSession: (
+    token: string,
+    payload: { title?: string; context?: Record<string, unknown> },
+  ) =>
+    request<ChatSession>('/chat/sessions', {
       method: 'POST',
       body: JSON.stringify(payload),
       token,
     }),
-  sendChatMessage: (token: string, sessionId: string, payload: any) =>
-    request<any>(`/chat/sessions/${sessionId}/messages`, {
+  sendChatMessage: (
+    token: string,
+    sessionId: string,
+    payload: { content: string; role?: 'user' },
+  ) =>
+    request<ChatMessage>(`/chat/sessions/${sessionId}/messages`, {
       method: 'POST',
       body: JSON.stringify(payload),
       token,
@@ -435,32 +656,41 @@ class ApiClient {
     if (typeof window === 'undefined') return null
     try {
       const auth = localStorage.getItem('study.auth')
-      if (!auth) return null
-      const parsed = JSON.parse(auth)
-      return parsed.token || null
+      if (auth === null || auth === undefined || auth === '') return null
+      const parsed = JSON.parse(auth) as { token?: string }
+      return parsed.token ?? null
     } catch {
       return null
     }
   }
 
   private isTokenValid(token: string | null): boolean {
-    if (!token) return false
+    if (token === null || token === undefined || token === '') return false
     try {
       const parts = token.split('.')
       if (parts.length !== 3) return false
-      const payload = JSON.parse(atob(parts[1]))
+      const payload = JSON.parse(atob(parts[1])) as { exp?: number }
       const now = Math.floor(Date.now() / 1000)
-      return payload.exp && payload.exp > now + 60
+      return Boolean(
+        payload.exp !== undefined &&
+          payload.exp !== null &&
+          payload.exp > now + 60,
+      )
     } catch {
       return false
     }
   }
 
   private getAuthToken(providedToken?: string): string | null {
-    const token = providedToken || this.getStoredToken()
+    const token = providedToken ?? this.getStoredToken()
 
     // Validate token and clear if invalid
-    if (token && !this.isTokenValid(token)) {
+    if (
+      token !== null &&
+      token !== undefined &&
+      token !== '' &&
+      !this.isTokenValid(token)
+    ) {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('study.auth')
         window.dispatchEvent(new CustomEvent('auth:logout'))
@@ -471,61 +701,77 @@ class ApiClient {
     return token
   }
 
-  async get(path: string, options: { token?: string } = {}) {
+  async get<T = unknown>(
+    path: string,
+    options: { token?: string } = {},
+  ): Promise<T> {
     const token = this.getAuthToken(options.token)
-    return request(path, { method: 'GET', token })
+    return request<T>(path, { method: 'GET', token: token ?? undefined })
   }
 
-  async post(
+  async post<T = unknown>(
     path: string,
-    data?: any,
+    data?: unknown,
     options: {
       token?: string
       headers?: Record<string, string>
-      onUploadProgress?: (progressEvent: any) => void
+      onUploadProgress?: (progressEvent: unknown) => void
     } = {},
-  ) {
+  ): Promise<T> {
     const token = this.getAuthToken(options.token)
     const body = data instanceof FormData ? data : JSON.stringify(data)
 
     const requestOptions: RequestInit & {
       token?: string
-      onUploadProgress?: any
+      onUploadProgress?: unknown
     } = {
       method: 'POST',
       body,
       headers: options.headers,
-      token,
+      token: token ?? undefined,
     }
 
     if (options.onUploadProgress) {
       requestOptions.onUploadProgress = options.onUploadProgress
     }
 
-    return request(path, requestOptions)
+    return request<T>(path, requestOptions)
   }
 
-  async put(path: string, data?: any, options: { token?: string } = {}) {
+  async put<T = unknown>(
+    path: string,
+    data?: unknown,
+    options: { token?: string } = {},
+  ): Promise<T> {
     const token = this.getAuthToken(options.token)
-    return request(path, {
+    return request<T>(path, {
       method: 'PUT',
-      body: data ? JSON.stringify(data) : undefined,
-      token,
+      body:
+        data !== undefined && data !== null ? JSON.stringify(data) : undefined,
+      token: token ?? undefined,
     })
   }
 
-  async patch(path: string, data?: any, options: { token?: string } = {}) {
+  async patch<T = unknown>(
+    path: string,
+    data?: unknown,
+    options: { token?: string } = {},
+  ): Promise<T> {
     const token = this.getAuthToken(options.token)
-    return request(path, {
+    return request<T>(path, {
       method: 'PATCH',
-      body: data ? JSON.stringify(data) : undefined,
-      token,
+      body:
+        data !== undefined && data !== null ? JSON.stringify(data) : undefined,
+      token: token ?? undefined,
     })
   }
 
-  async delete(path: string, options: { token?: string } = {}) {
+  async delete<T = unknown>(
+    path: string,
+    options: { token?: string } = {},
+  ): Promise<T> {
     const token = this.getAuthToken(options.token)
-    return request(path, { method: 'DELETE', token })
+    return request<T>(path, { method: 'DELETE', token: token ?? undefined })
   }
 }
 

@@ -21,7 +21,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { forumService } from '@/lib/forum'
-import { cn } from '@/lib/utils'
 import type { CreatePostData, ForumCategory } from '@/lib/forum'
 
 interface CreatePostModalProps {

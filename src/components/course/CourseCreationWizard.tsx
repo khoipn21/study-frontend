@@ -21,26 +21,10 @@ import { CourseDetailsStep } from './wizard-steps/CourseDetailsStep'
 import { BasicInfoStep } from './wizard-steps/BasicInfoStep'
 import type {
   CourseCreationData,
-  WizardStep,
-  LectureCreationData,
   CourseResource,
-  ProcessedVideo,
+  LectureCreationData,
+  WizardStep,
 } from '@/lib/course-management-types'
-
-// Step Component Props Interface
-interface StepComponentProps {
-  errors: string[]
-  onNext?: () => void
-}
-
-// Custom Wizard State with CourseCreationData
-interface CustomWizardState {
-  currentStep: number
-  formData: Partial<CourseCreationData>
-  isSubmitting: boolean
-  canProceed: boolean
-  errors: Partial<Record<number, Array<string>>>
-}
 
 // Complete Course Creation Schema
 const courseCreationSchema = z.object({
@@ -59,9 +43,7 @@ const courseCreationSchema = z.object({
   currency: z.enum(['VND', 'USD']),
 
   // Course Details (Step 2)
-  learning_outcomes: z
-    .array(z.string())
-    .min(1, 'At least one learning outcome required'),
+  learning_outcomes: z.array(z.string()).default([]),
   requirements: z.array(z.string()).default([]),
   language: z.string().min(1, 'Please select a language'),
   tags: z.array(z.string()).default([]),
@@ -80,7 +62,7 @@ const courseCreationSchema = z.object({
   // Additional fields for other steps
   lectures: z.array(z.any()).default([]),
   resources: z.array(z.any()).default([]),
-  videos: z.array(z.any()).default([]),
+  videos: z.array(z.any()).optional(),
 })
 
 type CourseFormData = z.infer<typeof courseCreationSchema>
@@ -98,7 +80,7 @@ export function CourseCreationWizard({
 
   // React Hook Form setup
   const form = useForm<CourseFormData>({
-    resolver: zodResolver(courseCreationSchema),
+    resolver: zodResolver(courseCreationSchema) as any,
     defaultValues: {
       title: editingCourse?.title || '',
       description: editingCourse?.description || '',
@@ -133,7 +115,9 @@ export function CourseCreationWizard({
   // Wizard State
   const [currentStep, setCurrentStep] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [stepErrors, setStepErrors] = useState<Record<number, string[]>>({})
+  const [stepErrors, setStepErrors] = useState<Record<number, Array<string>>>(
+    {},
+  )
 
   // Auto-save functionality
   const debouncedSave = useMemo(() => {
@@ -258,6 +242,9 @@ export function CourseCreationWizard({
         start_date: data.start_date,
         end_date: data.end_date,
         max_students: data.max_students,
+        // Include lectures data
+        lectures: data.lectures || [],
+        resources: data.resources || [],
       }
 
       return api.createCourse(token, courseData)

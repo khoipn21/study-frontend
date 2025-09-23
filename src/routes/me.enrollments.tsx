@@ -1,16 +1,6 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
-import {
-  Award,
-  BookOpen,
-  Calendar,
-  Clock,
-  Filter,
-  Grid,
-  List,
-  Play,
-  Search,
-} from 'lucide-react'
+import { Award, BookOpen, Clock, Grid, List, Play, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -72,7 +62,7 @@ function MyEnrollments() {
       lifetime_access: true,
       tags: ['React', 'JavaScript', 'Frontend'],
       is_featured: true,
-      access_type: 'one_time' as const,
+      access_type: 'paid' as const,
       thumbnail_url: '/api/placeholder/400/225',
       progress: 75,
       enrollmentDate: '2024-01-15',
@@ -99,7 +89,7 @@ function MyEnrollments() {
       lifetime_access: true,
       tags: ['Node.js', 'Express', 'Backend'],
       is_featured: false,
-      access_type: 'one_time' as const,
+      access_type: 'paid' as const,
       thumbnail_url: '/api/placeholder/400/225',
       progress: 45,
       enrollmentDate: '2024-01-10',
@@ -153,7 +143,7 @@ function MyEnrollments() {
       lifetime_access: true,
       tags: ['Python', 'Data Science', 'Machine Learning'],
       is_featured: false,
-      access_type: 'one_time' as const,
+      access_type: 'paid' as const,
       thumbnail_url: '/api/placeholder/400/225',
       progress: 20,
       enrollmentDate: '2024-01-05',
@@ -166,15 +156,33 @@ function MyEnrollments() {
     .filter((course) => {
       const matchesSearch =
         course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        course.instructor_name.toLowerCase().includes(searchQuery.toLowerCase())
+        course.instructor_name
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase())
 
       if (filterStatus === 'all') return matchesSearch
       if (filterStatus === 'in-progress')
-        return matchesSearch && course.progress > 0 && course.progress < 100
+        return (
+          matchesSearch &&
+          course.progress !== null &&
+          course.progress !== undefined &&
+          course.progress > 0 &&
+          course.progress < 100
+        )
       if (filterStatus === 'completed')
-        return matchesSearch && course.progress === 100
+        return (
+          matchesSearch &&
+          course.progress !== null &&
+          course.progress !== undefined &&
+          course.progress === 100
+        )
       if (filterStatus === 'not-started')
-        return matchesSearch && course.progress === 0
+        return (
+          matchesSearch &&
+          course.progress !== null &&
+          course.progress !== undefined &&
+          course.progress === 0
+        )
 
       return matchesSearch
     })
@@ -375,7 +383,8 @@ function MyEnrollments() {
                           {course.title}
                         </h3>
                         <p className="text-sm text-muted-foreground mb-2">
-                          Giảng viên: {course.instructor_name}
+                          Giảng viên:{' '}
+                          {course.instructor_name ?? 'Chưa có thông tin'}
                         </p>
 
                         {/* Progress */}
@@ -410,8 +419,8 @@ function MyEnrollments() {
                           </span>
                           <span>{course.total_lectures} bài học</span>
                           <span>
-                            {Math.floor(course.duration_minutes / 60)}h{' '}
-                            {course.duration_minutes % 60}m
+                            {Math.floor((course.duration_minutes ?? 0) / 60)}h{' '}
+                            {(course.duration_minutes ?? 0) % 60}m
                           </span>
                         </div>
                       </div>
@@ -430,7 +439,11 @@ function MyEnrollments() {
                                 : 'Bắt đầu'}
                           </Link>
                         </Button>
-                        {course.progress === 100 &&
+                        {course.progress !== null &&
+                          course.progress !== undefined &&
+                          course.progress === 100 &&
+                          course.certificate_available !== null &&
+                          course.certificate_available !== undefined &&
                           course.certificate_available && (
                             <Button variant="outline" size="sm">
                               <Award className="h-4 w-4 mr-1" />

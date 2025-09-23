@@ -1,46 +1,28 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   Award,
   BarChart3,
   Bell,
   BookOpen,
-  Bookmark,
   Brain,
   Calendar,
   CheckCircle,
-  ChevronRight,
   Clock,
-  Coffee,
   Crown,
   Download,
   Eye,
-  FileText,
-  Filter,
-  Fire,
-  Globe,
   Grid3X3,
   HelpCircle,
-  Lightbulb,
   List,
-  Medal,
-  MessageSquare,
   MoreHorizontal,
-  Mountain,
-  Pause,
   Play,
   RefreshCw,
   Search,
   Settings,
   Share2,
-  Star,
   Target,
-  ThumbsUp,
-  Timer,
   TrendingUp,
-  Users,
-  Video,
-  Zap,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -56,7 +38,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Separator } from '@/components/ui/separator'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -66,17 +47,19 @@ import {
 import { api } from '@/lib/api-client'
 import { useAuth } from '@/lib/auth-context'
 import {
-  formatVietnameseCount,
   formatVietnameseDate,
   formatVietnameseDuration,
-  vietnameseTranslations,
 } from '@/lib/vietnamese-locale'
-import { formatVND } from '@/lib/currency'
 import { cn } from '@/lib/utils'
 import type { Course, Enrollment, User } from '@/lib/types'
 
 interface DashboardProps {
   user: User
+}
+
+// Extended enrollment type with course data
+interface EnrollmentWithCourse extends Enrollment {
+  course?: Course
 }
 
 interface LearningStats {
@@ -121,17 +104,6 @@ interface RecentActivity {
   courseId?: string
   timestamp: string
   metadata?: any
-}
-
-interface LearningPath {
-  id: string
-  title: string
-  description: string
-  courses: Array<Course>
-  progress: number
-  estimatedDuration: number
-  difficulty: 'beginner' | 'intermediate' | 'advanced'
-  category: string
 }
 
 const MOCK_LEARNING_STATS: LearningStats = {
@@ -217,13 +189,14 @@ export function EnhancedUserDashboard({ user }: DashboardProps) {
   })
 
   // Fetch user analytics
-  const { data: analyticsData } = useQuery({
+  useQuery({
     queryKey: ['analytics', user.id],
     queryFn: () => api.getUserAnalytics(token || ''),
     enabled: !!token,
   })
 
-  const enrollments = enrollmentsData?.data?.enrollments || []
+  const enrollments: Array<EnrollmentWithCourse> =
+    enrollmentsData?.data?.enrollments || []
   const stats = MOCK_LEARNING_STATS // In production, this would come from API
 
   const filteredEnrollments = enrollments.filter((enrollment) => {
@@ -231,16 +204,18 @@ export function EnhancedUserDashboard({ user }: DashboardProps) {
       !searchQuery ||
       enrollment.course?.title
         ?.toLowerCase()
-        .includes(searchQuery.toLowerCase())
+        .includes(searchQuery.toLowerCase()) ||
+      false
 
     const matchesFilter =
       filterStatus === 'all' ||
       (filterStatus === 'completed' &&
-        enrollment.progress_percentage === 100) ||
+        (enrollment.progress_percentage ?? 0) === 100) ||
       (filterStatus === 'in_progress' &&
-        enrollment.progress_percentage > 0 &&
-        enrollment.progress_percentage < 100) ||
-      (filterStatus === 'not_started' && enrollment.progress_percentage === 0)
+        (enrollment.progress_percentage ?? 0) > 0 &&
+        (enrollment.progress_percentage ?? 0) < 100) ||
+      (filterStatus === 'not_started' &&
+        (enrollment.progress_percentage ?? 0) === 0)
 
     return matchesSearch && matchesFilter
   })
@@ -354,7 +329,8 @@ export function EnhancedUserDashboard({ user }: DashboardProps) {
                 {enrollments
                   .filter(
                     (e) =>
-                      e.progress_percentage > 0 && e.progress_percentage < 100,
+                      (e.progress_percentage ?? 0) > 0 &&
+                      (e.progress_percentage ?? 0) < 100,
                   )
                   .slice(0, 3)
                   .map((enrollment) => (
@@ -367,15 +343,16 @@ export function EnhancedUserDashboard({ user }: DashboardProps) {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium truncate">
-                          {enrollment.course?.title}
+                          {enrollment.course?.title ||
+                            'Course Title Not Available'}
                         </h4>
                         <div className="flex items-center gap-2 mt-1">
                           <Progress
-                            value={enrollment.progress_percentage || 0}
+                            value={enrollment.progress_percentage ?? 0}
                             className="flex-1"
                           />
                           <span className="text-sm text-muted-foreground">
-                            {Math.round(enrollment.progress_percentage || 0)}%
+                            {Math.round(enrollment.progress_percentage ?? 0)}%
                           </span>
                         </div>
                       </div>
@@ -444,7 +421,7 @@ export function EnhancedUserDashboard({ user }: DashboardProps) {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-orange-600">
-                <Fire className="h-5 w-5" />
+                <TrendingUp className="h-5 w-5" />
                 Chuỗi học tập
               </CardTitle>
             </CardHeader>
@@ -668,7 +645,7 @@ export function EnhancedUserDashboard({ user }: DashboardProps) {
                   {enrollment.course?.thumbnail_url ? (
                     <img
                       src={enrollment.course.thumbnail_url}
-                      alt={enrollment.course.title}
+                      alt={enrollment.course.title || 'Course Thumbnail'}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
@@ -681,10 +658,10 @@ export function EnhancedUserDashboard({ user }: DashboardProps) {
                   <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white p-2">
                     <div className="flex items-center justify-between text-sm">
                       <span>
-                        {Math.round(enrollment.progress_percentage || 0)}% hoàn
+                        {Math.round(enrollment.progress_percentage ?? 0)}% hoàn
                         thành
                       </span>
-                      {enrollment.progress_percentage === 100 && (
+                      {(enrollment.progress_percentage ?? 0) === 100 && (
                         <Badge className="bg-green-500">
                           <CheckCircle className="h-3 w-3 mr-1" />
                           Hoàn thành
@@ -692,7 +669,7 @@ export function EnhancedUserDashboard({ user }: DashboardProps) {
                       )}
                     </div>
                     <Progress
-                      value={enrollment.progress_percentage || 0}
+                      value={enrollment.progress_percentage ?? 0}
                       className="mt-1 h-1"
                     />
                   </div>
@@ -730,7 +707,7 @@ export function EnhancedUserDashboard({ user }: DashboardProps) {
                 {/* Course Info */}
                 <div className="p-4">
                   <h3 className="font-semibold text-lg mb-2 line-clamp-2">
-                    {enrollment.course?.title}
+                    {enrollment.course?.title || 'Course Title Not Available'}
                   </h3>
 
                   <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
@@ -780,17 +757,17 @@ export function EnhancedUserDashboard({ user }: DashboardProps) {
                   <Button
                     className="w-full"
                     variant={
-                      enrollment.progress_percentage === 100
+                      (enrollment.progress_percentage ?? 0) === 100
                         ? 'outline'
                         : 'default'
                     }
                   >
-                    {enrollment.progress_percentage === 100 ? (
+                    {(enrollment.progress_percentage ?? 0) === 100 ? (
                       <>
                         <Award className="h-4 w-4 mr-2" />
                         Xem lại
                       </>
-                    ) : enrollment.progress_percentage > 0 ? (
+                    ) : (enrollment.progress_percentage ?? 0) > 0 ? (
                       <>
                         <Play className="h-4 w-4 mr-2" />
                         Tiếp tục học
@@ -992,7 +969,7 @@ export function EnhancedUserDashboard({ user }: DashboardProps) {
               <div className="flex justify-between items-center">
                 <span className="text-sm">Chuỗi học tập hiện tại:</span>
                 <div className="flex items-center gap-1">
-                  <Fire className="h-4 w-4 text-orange-500" />
+                  <TrendingUp className="h-4 w-4 text-orange-500" />
                   <span className="font-medium">
                     {stats.currentStreak} ngày
                   </span>

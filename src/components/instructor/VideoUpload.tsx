@@ -114,12 +114,10 @@ export default function VideoUpload({
   const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(
     null,
   )
-  const [chunkedState, setChunkedState] = useState<ChunkedUploadState | null>(
-    null,
-  )
+  const [, setChunkedState] = useState<ChunkedUploadState | null>(null)
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [showUploadDialog, setShowUploadDialog] = useState(false)
-  const [resumeDialog, setResumeDialog] = useState(false)
+  const [,] = useState(false)
 
   // Video metadata
   const [videoTitle, setVideoTitle] = useState('')
@@ -139,7 +137,12 @@ export default function VideoUpload({
       onProgress: (progress: number) => void
     }) => {
       if (!lectureId) throw new Error('Lecture ID is required')
-      await instructorDashboardService.uploadVideo(lectureId, file, onProgress)
+      await instructorDashboardService.uploadVideo(
+        lectureId,
+        file,
+        undefined,
+        onProgress,
+      )
     },
     onSuccess: () => {
       toast({
@@ -150,10 +153,11 @@ export default function VideoUpload({
       setSelectedVideo(null)
       setUploadProgress(null)
       setChunkedState(null)
-      queryClient.invalidateQueries(['instructor', 'videos'])
+      queryClient.invalidateQueries({ queryKey: ['instructor', 'videos'] })
     },
-    onError: (error: any) => {
-      const errorMessage = error.message || 'Failed to upload video'
+    onError: (error: unknown) => {
+      const errorMessage =
+        (error as { message?: string }).message || 'Failed to upload video'
       toast({
         title: 'Upload Failed',
         description: errorMessage,

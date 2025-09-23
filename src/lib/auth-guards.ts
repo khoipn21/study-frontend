@@ -9,7 +9,7 @@ function isTokenValid(token: string | null): boolean {
     if (parts.length !== 3) return false
 
     // Decode the payload to check expiry
-    const payload = JSON.parse(atob(parts[1]))
+    const payload = JSON.parse(atob(parts[1])) as { exp?: number }
     const now = Math.floor(Date.now() / 1000)
 
     // Check if token is expired (with 1 minute buffer for early refresh)
@@ -30,7 +30,7 @@ export function checkAuthentication() {
     const auth = localStorage.getItem('study.auth')
     if (!auth) return false
 
-    const parsed = JSON.parse(auth)
+    const parsed = JSON.parse(auth) as { token: string | null; user: any }
     const hasValidToken = isTokenValid(parsed.token)
 
     if (!hasValidToken && parsed.token) {
@@ -45,7 +45,7 @@ export function checkAuthentication() {
   }
 }
 
-export function requireAuthentication(location: any) {
+export function requireAuthentication(location: { href: string }) {
   const isAuthenticated = checkAuthentication()
   if (!isAuthenticated) {
     throw redirect({
@@ -58,7 +58,7 @@ export function requireAuthentication(location: any) {
   }
 }
 
-export function requireInstructorRole(location: any) {
+export function requireInstructorRole(location: { href: string }) {
   const isAuthenticated = checkAuthentication()
   if (!isAuthenticated) {
     throw redirect({
@@ -73,8 +73,8 @@ export function requireInstructorRole(location: any) {
     const auth = localStorage.getItem('study.auth')
     if (!auth) throw new Error('No auth data')
 
-    const parsed = JSON.parse(auth)
-    const user = parsed.user
+    const parsed = JSON.parse(auth) as { token: string | null; user: any }
+    const user = parsed.user as { roles?: Array<string>; role?: string }
     const hasValidToken = isTokenValid(parsed.token)
 
     if (!hasValidToken) {
@@ -91,10 +91,7 @@ export function requireInstructorRole(location: any) {
 
     if (!hasInstructorRole) {
       throw redirect({
-        to: '/unauthorized',
-        search: {
-          message: 'You need instructor privileges to access this page',
-        },
+        to: '/',
       })
     }
   } catch (error) {

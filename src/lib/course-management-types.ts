@@ -1,5 +1,5 @@
 // Extended types for Course Management System
-import type { Course, Lecture, User, Video } from './types'
+import type { Course } from './types'
 
 // Wizard Step Types
 export interface WizardStep {
@@ -54,7 +54,7 @@ export interface CourseCreationData {
   resources: Array<CourseResource>
 
   // Step 6: Videos
-  videos: Array<VideoUpload>
+  videos: Array<ProcessedVideo>
 }
 
 // Lecture Management

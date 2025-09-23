@@ -30,31 +30,51 @@ function CoursesPage() {
   })
 
   // Transform API data to match frontend expectations
-  const apiCourses = coursesData?.data?.courses || []
-  const courses = apiCourses.map((course: any) => ({
-    ...course,
-    difficulty_level: course.level || 'beginner',
-    is_free: course.price === 0,
-    access_type: course.price === 0 ? 'free' : 'one_time',
-    // Ensure we have required fields
-    instructor_name: course.instructor_name || 'Unknown Instructor',
-    currency: 'VND',
-    price:
-      course.currency === 'USD' && course.price
-        ? course.price * 24000
-        : course.price, // Convert USD to VND
-    thumbnail_url: course.thumbnail_url || '/api/placeholder/400/225',
-    tags: course.tags || [],
-    rating: course.rating || 0,
-    rating_count: course.rating_count || 0,
-    enrollment_count: course.enrollment_count || 0,
-    duration_minutes: course.duration_minutes || 0,
-    total_lectures: Math.floor((course.duration_minutes || 0) / 15), // Estimate lectures
-    certificate_available: true,
-    mobile_access: true,
-    lifetime_access: course.price > 0,
-    language: 'Tiếng Việt',
-  }))
+  const apiCourses = coursesData?.data?.courses ?? []
+  const courses = apiCourses.map(
+    (course: {
+      id: string
+      title: string
+      description?: string
+      instructor_name?: string
+      level?: string
+      price?: number
+      currency?: string
+      thumbnail_url?: string
+      tags?: Array<string>
+      rating?: number
+      rating_count?: number
+      enrollment_count?: number
+      duration_minutes?: number
+    }) => ({
+      ...course,
+      difficulty_level:
+        (course.level as 'beginner' | 'intermediate' | 'advanced' | 'expert') ??
+        'beginner',
+      is_free: course.price === 0,
+      access_type: course.price === 0 ? ('free' as const) : ('paid' as const),
+      // Ensure we have required fields
+      instructor_name: course.instructor_name ?? 'Unknown Instructor',
+      currency: 'VND',
+      price:
+        course.currency === 'USD' &&
+        course.price !== undefined &&
+        course.price !== null
+          ? course.price * 24000
+          : (course.price ?? 0), // Convert USD to VND
+      thumbnail_url: course.thumbnail_url ?? '/api/placeholder/400/225',
+      tags: course.tags ?? [],
+      rating: course.rating ?? 0,
+      rating_count: course.rating_count ?? 0,
+      enrollment_count: course.enrollment_count ?? 0,
+      duration_minutes: course.duration_minutes ?? 0,
+      total_lectures: Math.floor((course.duration_minutes ?? 0) / 15), // Estimate lectures
+      certificate_available: true,
+      mobile_access: true,
+      lifetime_access: (course.price ?? 0) > 0,
+      language: 'Tiếng Việt',
+    }),
+  )
 
   // Legacy mock data for fallback
   const mockCourses: Array<Course> = [
@@ -80,7 +100,7 @@ function CoursesPage() {
       lifetime_access: true,
       tags: ['React', 'JavaScript', 'Frontend'],
       is_featured: true,
-      access_type: 'one_time' as const,
+      access_type: 'paid' as const,
       thumbnail_url: '/api/placeholder/400/225',
       preview_video_url: '/api/placeholder/video',
     },
@@ -105,7 +125,7 @@ function CoursesPage() {
       lifetime_access: true,
       tags: ['Node.js', 'Express', 'Backend'],
       is_featured: false,
-      access_type: 'one_time' as const,
+      access_type: 'paid' as const,
       thumbnail_url: '/api/placeholder/400/225',
     },
     {
@@ -140,7 +160,9 @@ function CoursesPage() {
   const filteredCourses = allCourses.filter(
     (course) =>
       course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.description.toLowerCase().includes(searchQuery.toLowerCase()),
+      (course.description || '')
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()),
   )
 
   return (
@@ -200,7 +222,34 @@ function CoursesPage() {
           {/* Filters Panel */}
           {showFilters && (
             <div className="border rounded-lg p-4">
-              <CourseFilters onFilterChange={() => {}} />
+              <CourseFilters
+                filters={{
+                  search: '',
+                  category: '',
+                  level: '',
+                  minPrice: 0,
+                  maxPrice: 10000000,
+                  minRating: 0,
+                  duration: '',
+                  status: '',
+                  instructor: '',
+                  isFree: false,
+                  hasVideos: false,
+                  hasCertificate: false,
+                  sortBy: 'newest',
+                  sortOrder: 'desc',
+                  language: '',
+                  accessType: '',
+                  isPopular: false,
+                  isFeatured: false,
+                  hasSubtitles: false,
+                  instructorVerified: false,
+                  completionRate: 0,
+                  currency: 'VND',
+                }}
+                onFiltersChange={() => {}}
+                onReset={() => {}}
+              />
             </div>
           )}
         </div>

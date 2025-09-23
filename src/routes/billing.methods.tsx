@@ -85,7 +85,16 @@ function PaymentMethodsPage() {
         </button>
       </form>
       <ul className="divide-y bg-white border rounded">
-        {methods.data?.map((m: any) => (
+        {(
+          methods.data as
+            | Array<{
+                id: string
+                provider: string
+                card_last_four: string
+                card_expiry: string
+              }>
+            | undefined
+        )?.map((m) => (
           <li key={m.id} className="p-3 flex items-center justify-between">
             <div>
               <p className="font-medium">

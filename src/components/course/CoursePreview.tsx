@@ -25,7 +25,6 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { useCourseAccess } from '@/lib/course-marketplace-context'
-import { cn } from '@/lib/utils'
 import type { Course } from '@/lib/types'
 
 interface CoursePreviewProps {
@@ -44,14 +43,14 @@ export function CoursePreview({
   previewDurationLimit = 300, // 5 minutes default
 }: CoursePreviewProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const { getAccessStatus, hasFullAccess } = useCourseAccess()
+  const { hasFullAccess } = useCourseAccess()
 
   // Video player state
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [isMuted, setIsMuted] = useState(false)
-  const [volume, setVolume] = useState(1)
+  const [,] = useState(1)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -62,7 +61,6 @@ export function CoursePreview({
   const [showPreviewWarning, setShowPreviewWarning] = useState(false)
   const [previewExpired, setPreviewExpired] = useState(false)
 
-  const accessStatus = course ? getAccessStatus(course) : 'locked'
   const hasFullCourseAccess = course ? hasFullAccess(course.id) : false
 
   // Get effective preview duration (course setting or default)
@@ -137,14 +135,6 @@ export function CoursePreview({
     if (videoRef.current) {
       setDuration(videoRef.current.duration)
       setIsLoading(false)
-    }
-  }
-
-  const handleVolumeChange = (newVolume: number) => {
-    setVolume(newVolume)
-    setIsMuted(newVolume === 0)
-    if (videoRef.current) {
-      videoRef.current.volume = newVolume
     }
   }
 

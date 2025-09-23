@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 import {
   DndContext,
@@ -56,7 +56,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import {
   FormControl,
@@ -174,7 +173,7 @@ function SortableLectureCard({
             </div>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <span className="capitalize">{lecture.type}</span>
-              {lecture.duration_minutes > 0 && (
+              {lecture.duration_minutes && lecture.duration_minutes > 0 && (
                 <div className="flex items-center gap-1">
                   <Clock className="w-3 h-3" />
                   <span>{lecture.duration_minutes} min</span>
@@ -375,10 +374,8 @@ function LectureDialog({
 }
 
 export function LectureManagementStep({
-  formData,
   onUpdate,
   errors,
-  onNext,
 }: LectureManagementStepProps) {
   const { watch, setValue } = useFormContext<CourseCreationData>()
 
@@ -563,7 +560,12 @@ export function LectureManagementStep({
                     lecture={lecture}
                     index={index}
                     onEdit={() => openEditDialog(lecture)}
-                    onDelete={() => lecture.id !== null && lecture.id !== undefined && lecture.id !== '' && deleteLecture(lecture.id)}
+                    onDelete={() =>
+                      lecture.id !== null &&
+                      lecture.id !== undefined &&
+                      lecture.id !== '' &&
+                      deleteLecture(lecture.id)
+                    }
                   />
                 ))}
               </div>

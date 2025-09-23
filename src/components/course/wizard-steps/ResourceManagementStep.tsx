@@ -6,26 +6,10 @@ import { Download, File, FileText, Image, Upload, Video, X } from 'lucide-react'
 import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 // Hooks
@@ -61,19 +45,25 @@ function getFileIcon(fileName: string) {
   const extension = fileName.toLowerCase().split('.').pop()
 
   if (
-    extension !== null && extension !== undefined && extension !== '' &&
+    extension !== null &&
+    extension !== undefined &&
+    extension !== '' &&
     ALLOWED_FILE_TYPES.documents.some((ext) => ext.includes(extension))
   ) {
     return <FileText className="w-5 h-5" />
   }
   if (
-    extension !== null && extension !== undefined && extension !== '' &&
+    extension !== null &&
+    extension !== undefined &&
+    extension !== '' &&
     ALLOWED_FILE_TYPES.images.some((ext) => ext.includes(extension))
   ) {
     return <Image className="w-5 h-5" />
   }
   if (
-    extension !== null && extension !== undefined && extension !== '' &&
+    extension !== null &&
+    extension !== undefined &&
+    extension !== '' &&
     ALLOWED_FILE_TYPES.audio.some((ext) => ext.includes(extension))
   ) {
     return <Video className="w-5 h-5" />
@@ -128,7 +118,6 @@ function ResourceCard({
               <Switch
                 checked={resource.is_public}
                 onCheckedChange={onTogglePublic}
-                size="sm"
               />
               <Label className="text-xs">
                 {resource.is_public ? 'Public' : 'Private'}
@@ -299,10 +288,8 @@ function UploadProgressCard({ upload, onCancel }: UploadProgressCardProps) {
 }
 
 export function ResourceManagementStep({
-  formData,
   onUpdate,
   errors,
-  onNext,
 }: ResourceManagementStepProps) {
   const { token } = useAuth()
   const { watch, setValue } = useFormContext<CourseCreationData>()
@@ -321,7 +308,7 @@ export function ResourceManagementStep({
         name: file.name,
         size: file.size,
         type: file.type,
-        lastModified: file.lastModified
+        lastModified: file.lastModified,
       })
 
       // Validate file
@@ -332,11 +319,13 @@ export function ResourceManagementStep({
       // Additional file validation - check if file can be read
       try {
         const reader = new FileReader()
-        const fileContent = await new Promise<ArrayBuffer>((resolve, reject) => {
-          reader.onload = () => resolve(reader.result as ArrayBuffer)
-          reader.onerror = () => reject(new Error('Failed to read file'))
-          reader.readAsArrayBuffer(file)
-        })
+        const fileContent = await new Promise<ArrayBuffer>(
+          (resolve, reject) => {
+            reader.onload = () => resolve(reader.result as ArrayBuffer)
+            reader.onerror = () => reject(new Error('Failed to read file'))
+            reader.readAsArrayBuffer(file)
+          },
+        )
 
         if (fileContent.byteLength === 0) {
           throw new Error('File appears to be empty or corrupted')
@@ -344,15 +333,19 @@ export function ResourceManagementStep({
 
         console.log('File content validated:', {
           actualSize: fileContent.byteLength,
-          expectedSize: file.size
+          expectedSize: file.size,
         })
       } catch (readError) {
         console.error('File reading error:', readError)
-        throw new Error('Failed to read file. Please try selecting the file again.')
+        throw new Error(
+          'Failed to read file. Please try selecting the file again.',
+        )
       }
 
       if (file.size > MAX_FILE_SIZE) {
-        throw new Error(`File is too large. Maximum size is ${formatFileSize(MAX_FILE_SIZE)}`)
+        throw new Error(
+          `File is too large. Maximum size is ${formatFileSize(MAX_FILE_SIZE)}`,
+        )
       }
 
       const extension = `.${file.name.split('.').pop()?.toLowerCase()}`
@@ -372,12 +365,12 @@ export function ResourceManagementStep({
     },
     onSuccess: (response, file) => {
       const newResource: CourseResource = {
-        id: response.file_id as string,
-        filename: response.filename as string,
+        id: response.id,
+        filename: response.filename,
         original_name: file.name,
         file_type: file.type,
         file_size: file.size,
-        download_url: response.url as string,
+        download_url: response.url,
         is_public: false,
         uploaded_at: new Date().toISOString(),
       }
@@ -401,7 +394,7 @@ export function ResourceManagementStep({
     },
     onError: (error: Error, file) => {
       toast.error(
-        `Failed to upload ${file.name}: ${(error as any).message ?? 'Unknown error'}`,
+        `Failed to upload ${file.name}: ${(error as { message?: string }).message ?? 'Unknown error'}`,
       )
 
       // Update upload status
@@ -411,11 +404,14 @@ export function ResourceManagementStep({
           ([_, upload]) => upload.filename === file.name,
         )?.[0]
         if (uploadId !== null && uploadId !== undefined && uploadId !== '') {
-          newMap.set(uploadId, {
-            ...(newMap.get(uploadId) ?? {}),
-            status: 'error',
-            error: (error as any).message ?? 'Unknown error',
-          })
+          const existingUpload = newMap.get(uploadId)
+          if (existingUpload) {
+            newMap.set(uploadId, {
+              ...existingUpload,
+              status: 'error',
+              error: (error as { message?: string }).message ?? 'Unknown error',
+            })
+          }
         }
         return newMap
       })

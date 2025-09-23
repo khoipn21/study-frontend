@@ -5,13 +5,10 @@ import {
   ChevronDown,
   Clock,
   DollarSign,
-  Filter,
   Globe,
   Search,
   SlidersHorizontal,
-  Smartphone,
   Star,
-  Users,
   X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -26,16 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible'
 import { cn } from '@/lib/utils'
 import type { CourseFilter } from '@/lib/types'
 
@@ -145,8 +133,8 @@ export function CourseFilters({
         if (value && newFilters[filterKey]) {
           newFilters[filterKey] = newFilters[filterKey].filter(
             (item) => item !== value,
-          )
-          if (newFilters[filterKey].length === 0) {
+          ) as any
+          if (newFilters[filterKey]?.length === 0) {
             delete newFilters[filterKey]
           }
         } else {

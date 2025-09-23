@@ -107,7 +107,11 @@ export function useInstructorWebSocket(
             // Update notifications cache
             queryClient.setQueryData(
               ['instructor', 'notifications'],
-              (oldData: any) => {
+              (
+                oldData:
+                  | { notifications: Array<any>; unreadCount: number }
+                  | undefined,
+              ) => {
                 if (!oldData)
                   return { notifications: [notification], unreadCount: 1 }
                 return {
@@ -130,7 +134,9 @@ export function useInstructorWebSocket(
             onNewMessage?.(message)
 
             // Update messages cache
-            queryClient.invalidateQueries(['instructor', 'messages'])
+            queryClient.invalidateQueries({
+              queryKey: ['instructor', 'messages'],
+            })
 
             // Show toast notification
             toast({
@@ -171,8 +177,12 @@ export function useInstructorWebSocket(
             onStudentActivity?.(activity)
 
             // Invalidate relevant queries
-            queryClient.invalidateQueries(['instructor', 'dashboard'])
-            queryClient.invalidateQueries(['instructor', 'analytics'])
+            queryClient.invalidateQueries({
+              queryKey: ['instructor', 'dashboard'],
+            })
+            queryClient.invalidateQueries({
+              queryKey: ['instructor', 'analytics'],
+            })
             break
           }
 

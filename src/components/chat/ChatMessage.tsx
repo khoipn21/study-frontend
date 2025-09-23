@@ -1,7 +1,5 @@
-import React from 'react'
 import {
   Bot,
-  Code2,
   Copy,
   ExternalLink,
   ThumbsDown,
@@ -143,7 +141,11 @@ export function ChatMessage({
         >
           <div className="prose prose-sm max-w-none">
             {formatContent(contentWithoutCodeBlocks).map((element, index) => {
-              if (element === '[CODE_BLOCK]' && codeBlocks[codeBlockIndex]) {
+              if (
+                typeof element === 'string' &&
+                element === '[CODE_BLOCK]' &&
+                codeBlocks[codeBlockIndex]
+              ) {
                 const codeBlock = codeBlocks[codeBlockIndex++]
                 return (
                   <div key={index} className="my-3">

@@ -15,7 +15,7 @@ export const Route = createFileRoute('/')({
 
 function HomePage() {
   return (
-    <div className="flex flex-col min-h-screen p-8">
+    <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
       <section className="container py-24 sm:py-32">
         <div className="flex flex-col items-center text-center space-y-8">

@@ -68,8 +68,15 @@ export class AIChatService {
 
       if (!response.ok) throw new Error('Failed to send message')
 
-      const data = await response.json()
-      return data.message
+      const data = (await response.json()) as { message: string }
+      return {
+        id: Math.random().toString(36).substring(7),
+        content: data.message,
+        role: 'assistant',
+        timestamp: new Date().toISOString(),
+        courseId: request.context?.courseId,
+        lectureId: request.context?.lectureId,
+      }
     } catch (error) {
       console.error('Error sending message:', error)
       return this.getMockResponse(request.message, request.context)
@@ -157,7 +164,7 @@ export class AIChatService {
       )
       if (!response.ok) throw new Error('Failed to fetch suggestions')
 
-      const data = await response.json()
+      const data = (await response.json()) as { suggestions: Array<string> }
       return data.suggestions
     } catch (error) {
       console.error('Error fetching course suggestions:', error)
@@ -172,7 +179,7 @@ export class AIChatService {
       )
       if (!response.ok) throw new Error('Failed to fetch suggestions')
 
-      const data = await response.json()
+      const data = (await response.json()) as { suggestions: Array<string> }
       return data.suggestions
     } catch (error) {
       console.error('Error fetching lecture suggestions:', error)
@@ -231,7 +238,7 @@ export class AIChatService {
 
   private generateContextualResponse(
     userMessage: string,
-    context?: ChatContext,
+    _context?: ChatContext,
   ): string {
     const message = userMessage.toLowerCase()
 

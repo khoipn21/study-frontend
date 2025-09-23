@@ -3,7 +3,6 @@ import { Link } from '@tanstack/react-router'
 import {
   Award,
   BookOpen,
-  Calendar,
   CheckCircle,
   Download,
   MessageCircle,
@@ -350,7 +349,7 @@ export function PaymentSuccess({
                 we're here to help.
               </p>
               <Button variant="outline" className="w-full" asChild>
-                <Link to="/support">
+                <Link to="/">
                   <MessageCircle className="h-4 w-4 mr-2" />
                   Contact Support
                 </Link>

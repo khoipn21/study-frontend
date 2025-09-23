@@ -71,11 +71,15 @@ function LoginPage() {
         )
       }
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Login error:', error)
+      const errorObj = error as {
+        response?: { data?: { message?: string } }
+        message?: string
+      }
       setError(
-        error?.response?.data?.message ||
-          error?.message ||
+        errorObj?.response?.data?.message ||
+          errorObj?.message ||
           'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin đăng nhập.',
       )
     },
@@ -201,12 +205,16 @@ function LoginPage() {
                   >
                     Mật khẩu
                   </Label>
-                  <Link
-                    to="/auth/forgot-password"
+                  <a
+                    href="#"
                     className="text-sm text-primary hover:text-primary/80 transition-colors"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      alert('Tính năng quên mật khẩu đang được phát triển')
+                    }}
                   >
                     Quên mật khẩu?
-                  </Link>
+                  </a>
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -285,13 +293,27 @@ function LoginPage() {
             {/* Footer */}
             <div className="text-center text-xs text-muted-foreground">
               Bằng cách đăng nhập, bạn đồng ý với{' '}
-              <Link to="/terms" className="text-primary hover:underline">
+              <a
+                href="#"
+                className="text-primary hover:underline"
+                onClick={(e) => {
+                  e.preventDefault()
+                  alert('Điều khoản dịch vụ đang được cập nhật')
+                }}
+              >
                 Điều khoản dịch vụ
-              </Link>{' '}
+              </a>{' '}
               và{' '}
-              <Link to="/privacy" className="text-primary hover:underline">
+              <a
+                href="#"
+                className="text-primary hover:underline"
+                onClick={(e) => {
+                  e.preventDefault()
+                  alert('Chính sách bảo mật đang được cập nhật')
+                }}
+              >
                 Chính sách bảo mật
-              </Link>
+              </a>
             </div>
           </CardContent>
         </Card>

@@ -1,4 +1,3 @@
-import * as React from 'react'
 import { Building2, GraduationCap, Moon, Palette, Sun } from 'lucide-react'
 import { useTheme } from '@/lib/theme-context'
 import { Button } from './button'
@@ -12,7 +11,7 @@ import {
 } from './dropdown-menu'
 
 export function ThemeToggle() {
-  const { theme, themeStyle, setTheme, setThemeStyle, toggleTheme } = useTheme()
+  const { theme, themeStyle, setTheme, setThemeStyle } = useTheme()
 
   return (
     <DropdownMenu>

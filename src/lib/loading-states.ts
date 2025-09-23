@@ -466,7 +466,11 @@ export function getRandomLoadingMessage(
   category: keyof typeof loadingMessages,
   subcategory: string,
 ): LoadingState {
-  const messages = loadingMessages[category][subcategory]
+  const categoryMessages = loadingMessages[category] as Record<
+    string,
+    Array<LoadingState>
+  >
+  const messages = categoryMessages[subcategory]
   if (!messages || !Array.isArray(messages)) {
     return getDefaultLoadingMessage()
   }
@@ -480,7 +484,11 @@ export function getSequentialLoadingMessages(
   category: keyof typeof loadingMessages,
   subcategory: string,
 ): Array<LoadingState> {
-  const messages = loadingMessages[category][subcategory]
+  const categoryMessages = loadingMessages[category] as Record<
+    string,
+    Array<LoadingState>
+  >
+  const messages = categoryMessages[subcategory]
   if (!messages || !Array.isArray(messages)) {
     return [getDefaultLoadingMessage()]
   }
@@ -500,7 +508,7 @@ export function getDefaultLoadingMessage(): LoadingState {
 }
 
 // Fun loading messages for long waits
-export const funLoadingMessages = [
+export const funLoadingMessages: Array<LoadingState> = [
   {
     message: 'Did you know?',
     submessage:

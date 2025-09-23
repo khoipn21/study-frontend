@@ -1,34 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  AlertCircle,
   Archive,
   CheckCircle,
-  Clock,
-  Filter,
-  Forward,
   MessageSquare,
   MoreHorizontal,
   Paperclip,
-  Phone,
   Plus,
-  Reply,
   Search,
   Send,
-  Smile,
   Star,
   Trash2,
   Users,
-  Video,
 } from 'lucide-react'
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -47,7 +33,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
@@ -60,8 +45,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
 import { useToast } from '@/hooks/use-toast'
 import { instructorDashboardService } from '@/lib/instructor-dashboard'
 import type {
@@ -579,10 +562,10 @@ export default function CommunicationCenter() {
   })
 
   // Fetch messages for selected thread
-  const { data: messagesData, isLoading: messagesLoading } = useQuery({
+  const { data: messagesData } = useQuery({
     queryKey: ['instructor', 'messages', selectedThreadId],
-    queryFn: () => {
-      if (!selectedThreadId) return { messages: [] }
+    queryFn: async () => {
+      if (!selectedThreadId) return { messages: [], total: 0 }
       return instructorDashboardService.getMessages(selectedThreadId)
     },
     enabled: !!selectedThreadId,
@@ -601,12 +584,12 @@ export default function CommunicationCenter() {
     }) =>
       instructorDashboardService.sendMessage(threadId, content, attachments),
     onSuccess: () => {
-      queryClient.invalidateQueries([
-        'instructor',
-        'messages',
-        selectedThreadId,
-      ])
-      queryClient.invalidateQueries(['instructor', 'messages', 'threads'])
+      queryClient.invalidateQueries({
+        queryKey: ['instructor', 'messages', selectedThreadId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['instructor', 'messages', 'threads'],
+      })
     },
     onError: () => {
       toast({
@@ -620,8 +603,7 @@ export default function CommunicationCenter() {
   // Update thread mutation
   const updateThreadMutation = useMutation({
     mutationFn: ({
-      threadId,
-      updates,
+      updates: _updates,
     }: {
       threadId: string
       updates: Partial<MessageThread>
@@ -630,7 +612,9 @@ export default function CommunicationCenter() {
       return Promise.resolve()
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['instructor', 'messages', 'threads'])
+      queryClient.invalidateQueries({
+        queryKey: ['instructor', 'messages', 'threads'],
+      })
       toast({
         title: 'Success',
         description: 'Conversation updated.',

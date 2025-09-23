@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Download, Filter, MessageSquare, UserPlus } from 'lucide-react'
+import { Download, Filter, MessageSquare } from 'lucide-react'
 import InstructorDashboardLayout from '@/components/instructor/InstructorDashboardLayout'
 import StudentsManagement from '@/components/instructor/StudentsManagement'
 import { Button } from '@/components/ui/button'

@@ -26,7 +26,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { cn } from '@/lib/utils'
 
 export default function Header() {
   const { user, logout } = useAuth()
@@ -39,6 +38,12 @@ export default function Header() {
   useEffect(() => {
     setIsHydrated(true)
   }, [])
+
+  // Don't render header on dashboard routes
+  const location = useRouter().state.location
+  if (location.pathname.startsWith('/dashboard/')) {
+    return null
+  }
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -90,8 +95,9 @@ export default function Header() {
             {navigationLinks.map((link) => {
               const Icon = link.icon
               const shouldShow =
-                link.public || (link.requiresAuth && isHydrated && user)
-              if (!shouldShow) return null
+                link.public === true ||
+                (link.requiresAuth === true && isHydrated && user != null)
+              if (shouldShow !== true) return null
 
               return (
                 <Link
@@ -161,12 +167,12 @@ export default function Header() {
                     <Button variant="ghost" size="sm" className="h-9 px-2">
                       <div className="flex items-center space-x-2">
                         <div className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-semibold">
-                          {user.username?.charAt(0)?.toUpperCase() ||
-                            user.email?.charAt(0)?.toUpperCase() ||
+                          {user.username?.charAt(0)?.toUpperCase() ??
+                            user.email?.charAt(0)?.toUpperCase() ??
                             'U'}
                         </div>
                         <span className="hidden sm:inline-block text-sm font-medium">
-                          {user.username || user.email || 'User'}
+                          {user.username ?? user.email ?? 'User'}
                         </span>
                       </div>
                     </Button>
@@ -186,7 +192,7 @@ export default function Header() {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link
-                        to="/me/profile"
+                        to="/me/dashboard"
                         className="flex items-center space-x-2 w-full"
                       >
                         <User className="h-4 w-4" />
@@ -278,8 +284,9 @@ export default function Header() {
               {navigationLinks.map((link) => {
                 const Icon = link.icon
                 const shouldShow =
-                  link.public || (link.requiresAuth && isHydrated && user)
-                if (!shouldShow) return null
+                  link.public === true ||
+                  (link.requiresAuth === true && isHydrated && user != null)
+                if (shouldShow !== true) return null
 
                 return (
                   <Link

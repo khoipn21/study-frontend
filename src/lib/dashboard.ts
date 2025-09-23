@@ -135,9 +135,12 @@ export class DashboardService {
   ): Promise<DashboardData> {
     try {
       const { apiClient } = await import('./api-client')
-      const response = await apiClient.get(`/dashboard/user/${userId}`, {
-        token,
-      })
+      const response = await apiClient.get<{ data: DashboardData }>(
+        `/dashboard/user/${userId}`,
+        {
+          token,
+        },
+      )
       return response.data
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
@@ -168,9 +171,13 @@ export class DashboardService {
   ): Promise<StudyGoal> {
     try {
       const { apiClient } = await import('./api-client')
-      const response = await apiClient.post('/dashboard/goals', goal, {
-        token,
-      })
+      const response = await apiClient.post<{ data: StudyGoal }>(
+        '/dashboard/goals',
+        goal,
+        {
+          token,
+        },
+      )
       return response.data
     } catch (error) {
       console.error('Error creating study goal:', error)
@@ -191,12 +198,16 @@ export class DashboardService {
   > {
     try {
       const { apiClient } = await import('./api-client')
-      const response = await apiClient.get(
-        `/dashboard/stats/weekly/${userId}`,
-        {
-          token,
-        },
-      )
+      const response = await apiClient.get<{
+        data: Array<{
+          date: string
+          minutes: number
+          lecturesCompleted: number
+          coursesStarted: number
+        }>
+      }>(`/dashboard/stats/weekly/${userId}`, {
+        token,
+      })
       return response.data
     } catch (error) {
       console.error('Error fetching weekly stats:', error)

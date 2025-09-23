@@ -19,7 +19,6 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
 import { useCourseAccess } from '@/lib/course-marketplace-context'
 import { formatCoursePrice, formatVietnameseDuration } from '@/lib/currency'
@@ -53,10 +52,8 @@ export function CourseCard({
   onAddToWishlist,
   isInWishlist = false,
 }: CourseCardProps) {
-  const { getAccessStatus, canAccessCourse, hasFullAccess } = useCourseAccess()
+  const { getAccessStatus } = useCourseAccess()
   const accessStatus = getAccessStatus(course)
-  const hasAccess = canAccessCourse(course)
-  const isPurchased = hasFullAccess(course.id)
   const getLevelBadgeStyle = (level: string) => {
     switch (level.toLowerCase()) {
       case 'beginner':
@@ -84,8 +81,8 @@ export function CourseCard({
 
   const getDiscountedPrice = () => {
     if ((course.price ?? 0) === 0 || course.is_free === true) return 0
-    if ((course.discount_percentage ?? 0) === 0) return course.price
-    return course.price * (1 - course.discount_percentage / 100)
+    if ((course.discount_percentage ?? 0) === 0) return course.price ?? 0
+    return (course.price ?? 0) * (1 - (course.discount_percentage ?? 0) / 100)
   }
 
   const getAccessIcon = () => {
@@ -100,21 +97,6 @@ export function CourseCard({
         return <Lock className="h-4 w-4 text-muted-foreground" />
       default:
         return <Lock className="h-4 w-4 text-muted-foreground" />
-    }
-  }
-
-  const getAccessStatusText = () => {
-    switch (accessStatus) {
-      case 'free':
-        return 'Truy cập miễn phí'
-      case 'purchased':
-        return 'Truy cập đầy đủ'
-      case 'preview':
-        return 'Có thể xem trước'
-      case 'locked':
-        return 'Cần thanh toán'
-      default:
-        return 'Cần thanh toán'
     }
   }
 
@@ -160,7 +142,7 @@ export function CourseCard({
     >
       {/* Course Thumbnail */}
       <div className="relative aspect-video overflow-hidden">
-        {course.thumbnail_url && course.thumbnail_url.length > 0 ? (
+        {course.thumbnail_url != null && course.thumbnail_url !== '' ? (
           <img
             src={course.thumbnail_url}
             alt={course.title}
@@ -272,8 +254,8 @@ export function CourseCard({
           {/* Quick Action Buttons */}
           {!isCompact && (
             <>
-              {course.preview_video_url &&
-                course.preview_video_url.length > 0 &&
+              {course.preview_video_url != null &&
+                course.preview_video_url !== '' &&
                 accessStatus !== 'purchased' && (
                   <Button
                     size="sm"
@@ -332,8 +314,8 @@ export function CourseCard({
 
         {/* Instructor */}
         {showInstructor &&
-          course.instructor_name &&
-          course.instructor_name.length > 0 &&
+          course.instructor_name != null &&
+          course.instructor_name !== '' &&
           !isCompact && (
             <p className="text-sm text-muted-foreground mt-1">
               {vietnameseTranslations.courses.instructor}:{' '}
@@ -342,11 +324,13 @@ export function CourseCard({
           )}
 
         {/* Description */}
-        {course.description && course.description.length > 0 && !isCompact && (
-          <p className="text-sm text-muted-foreground line-clamp-2 mt-2 leading-relaxed">
-            {course.description}
-          </p>
-        )}
+        {course.description != null &&
+          course.description !== '' &&
+          !isCompact && (
+            <p className="text-sm text-muted-foreground line-clamp-2 mt-2 leading-relaxed">
+              {course.description}
+            </p>
+          )}
 
         {/* Course Metadata */}
         <div
@@ -358,16 +342,16 @@ export function CourseCard({
           {(course.duration_minutes ?? 0) > 0 && (
             <div className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
-              <span>{formatDuration(course.duration_minutes)}</span>
+              <span>{formatDuration(course.duration_minutes ?? 0)}</span>
             </div>
           )}
           {(course.rating ?? 0) > 0 && (
             <div className="flex items-center gap-1">
               <Star className="h-3 w-3 fill-current text-warning" />
-              <span>{course.rating.toFixed(1)}</span>
+              <span>{(course.rating ?? 0).toFixed(1)}</span>
               {(course.rating_count ?? 0) > 0 && (
                 <span className="text-muted-foreground">
-                  ({course.rating_count.toLocaleString()})
+                  ({(course.rating_count ?? 0).toLocaleString()})
                 </span>
               )}
             </div>
@@ -375,7 +359,7 @@ export function CourseCard({
           {(course.enrollment_count ?? 0) > 0 && (
             <div className="flex items-center gap-1">
               <Users className="h-3 w-3" />
-              <span>{course.enrollment_count.toLocaleString()}</span>
+              <span>{(course.enrollment_count ?? 0).toLocaleString()}</span>
             </div>
           )}
           {(course.total_lectures ?? 0) > 0 && !isCompact && (
@@ -392,13 +376,13 @@ export function CourseCard({
         {/* Additional Metadata Row */}
         {!isCompact && (
           <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
-            {course.language && course.language.length > 0 && (
+            {course.language != null && course.language !== '' && (
               <div className="flex items-center gap-1">
                 <Globe className="h-3 w-3" />
                 <span>{course.language}</span>
               </div>
             )}
-            {course.subtitles && course.subtitles.length > 0 && (
+            {course.subtitles != null && course.subtitles.length > 0 && (
               <div className="flex items-center gap-1">
                 <Subtitles className="h-3 w-3" />
                 <span>CC</span>
@@ -424,7 +408,7 @@ export function CourseCard({
         )}
 
         {/* Tags */}
-        {course.tags && course.tags.length > 0 && !isCompact && (
+        {course.tags != null && course.tags.length > 0 && !isCompact && (
           <div className="flex flex-wrap gap-1 mt-3">
             {course.tags.slice(0, 3).map((tag, index) => (
               <span
@@ -464,19 +448,22 @@ export function CourseCard({
                     ? vietnameseTranslations.payment.free
                     : formatPrice(
                         getDiscountedPrice(),
-                        course.currency ?? 'VND',
+                        (course.currency ?? 'VND') as 'VND' | 'USD' | 'EUR',
                       )}
                 </span>
                 {(course.discount_percentage ?? 0) > 0 &&
                   (course.price ?? 0) > 0 &&
                   course.is_free !== true && (
                     <span className="text-xs text-muted-foreground line-through">
-                      {formatPrice(course.price, course.currency)}
+                      {formatPrice(
+                        course.price ?? 0,
+                        (course.currency ?? 'VND') as 'VND' | 'USD' | 'EUR',
+                      )}
                     </span>
                   )}
                 {(course.discount_percentage ?? 0) > 0 && (
                   <Badge variant="destructive" className="text-xs">
-                    -{course.discount_percentage}%
+                    -{course.discount_percentage ?? 0}%
                   </Badge>
                 )}
               </div>
@@ -494,8 +481,8 @@ export function CourseCard({
             {/* Secondary Action (Share/Preview) */}
             {!isCompact &&
               accessStatus === 'locked' &&
-              course.preview_video_url &&
-              course.preview_video_url.length > 0 && (
+              course.preview_video_url != null &&
+              course.preview_video_url !== '' && (
                 <Button
                   size="sm"
                   variant="outline"

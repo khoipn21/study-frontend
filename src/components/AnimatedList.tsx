@@ -123,8 +123,8 @@ const AnimatedList: React.FC<AnimatedListProps> = ({
       const extraMargin = 50
       const containerScrollTop = container.scrollTop
       const containerHeight = container.clientHeight
-      const itemTop = selectedItem.offsetTop
-      const itemBottom = itemTop + selectedItem.offsetHeight
+      const itemTop = (selectedItem as HTMLElement).offsetTop
+      const itemBottom = itemTop + (selectedItem as HTMLElement).offsetHeight
       if (itemTop < containerScrollTop + extraMargin) {
         container.scrollTo({ top: itemTop - extraMargin, behavior: 'smooth' })
       } else if (

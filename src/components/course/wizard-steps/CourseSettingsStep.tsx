@@ -1,9 +1,8 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Controller, useFormContext } from 'react-hook-form'
-import { Award, Calendar, Shield, Users } from 'lucide-react'
+import { Award, Shield, Users } from 'lucide-react'
 
 // UI Components
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -36,16 +35,10 @@ interface CourseSettingsStepProps {
 }
 
 export function CourseSettingsStep({
-  formData,
   onUpdate,
   errors,
 }: CourseSettingsStepProps) {
-  const {
-    control,
-    watch,
-    setValue,
-    formState: { errors: formErrors },
-  } = useFormContext<CourseCreationData>()
+  const { control, watch, setValue } = useFormContext<CourseCreationData>()
 
   // Watch form values
   const watchedStatus = watch('status')
@@ -59,7 +52,7 @@ export function CourseSettingsStep({
     Boolean(watch('start_date')),
   )
 
-  const updateField = (field: keyof CourseCreationData, value: unknown) => {
+  const updateField = (field: keyof CourseCreationData, value: any) => {
     setValue(field, value)
     onUpdate({ [field]: value } as Partial<CourseCreationData>)
   }
@@ -173,7 +166,7 @@ export function CourseSettingsStep({
                         <FormControl>
                           <DatePicker
                             date={
-                              field.value !== ''
+                              field.value && field.value !== ''
                                 ? new Date(field.value)
                                 : undefined
                             }
@@ -203,7 +196,7 @@ export function CourseSettingsStep({
                         <FormControl>
                           <DatePicker
                             date={
-                              field.value !== ''
+                              field.value && field.value !== ''
                                 ? new Date(field.value)
                                 : undefined
                             }

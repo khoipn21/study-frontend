@@ -5,19 +5,12 @@ import {
   Filter,
   MessageSquare,
   Plus,
-  Send,
   Settings,
   Users,
 } from 'lucide-react'
 import InstructorDashboardLayout from '@/components/instructor/InstructorDashboardLayout'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import CommunicationCenter from '@/components/instructor/CommunicationCenter'

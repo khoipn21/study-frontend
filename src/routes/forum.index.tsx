@@ -1,16 +1,13 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import {
   ArrowUp,
   Award,
   BookOpen,
   Calendar,
   CheckCircle,
-  Clock,
   Code,
   Eye,
-  Filter,
   HelpCircle,
   Lightbulb,
   Lock,
@@ -36,7 +33,6 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Select,
   SelectContent,

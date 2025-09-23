@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   flexRender,
@@ -17,22 +17,17 @@ import {
   ChevronDown,
   Clock,
   DollarSign,
-  Download,
   Edit,
   Eye,
-  Filter,
   MoreHorizontal,
   Plus,
   Search,
-  Settings,
   Star,
   Trash2,
-  Upload,
   Users,
   XCircle,
 } from 'lucide-react'
 
-import { Link } from '@tanstack/react-router'
 import {
   Table,
   TableBody,
@@ -50,9 +45,6 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuSubMenu,
-  DropdownMenuSubMenuContent,
-  DropdownMenuSubMenuTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
@@ -65,25 +57,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import { Progress } from '@/components/ui/progress'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 import { instructorDashboardService } from '@/lib/instructor-dashboard'
 import { useAuth } from '@/lib/auth-context'
@@ -94,17 +68,6 @@ import type {
   SortingState,
   VisibilityState,
 } from '@tanstack/react-table'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
 
 // Status badge variants
 const getStatusBadge = (status: InstructorCourse['status']) => {
@@ -205,7 +168,7 @@ function createColumns(): Array<ColumnDef<InstructorCourse>> {
         return (
           <div className="flex items-center">
             <Users className="mr-2 h-4 w-4 text-muted-foreground" />
-            {enrollmentCount || 0}
+            {(enrollmentCount as number) || 0}
           </div>
         )
       },
@@ -286,18 +249,16 @@ function createColumns(): Array<ColumnDef<InstructorCourse>> {
                 View Details
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Link to={`/dashboard/instructor/courses/${course.id}/edit`}>
+                <div className="flex items-center">
                   <Edit className="mr-2 h-4 w-4" />
                   Edit Course
-                </Link>
+                </div>
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Link
-                  to={`/dashboard/instructor/courses/${course.id}/lectures`}
-                >
+                <div className="flex items-center">
                   <BookOpen className="mr-2 h-4 w-4" />
                   Manage Content
-                </Link>
+                </div>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               {course.status === 'draft' && (
@@ -333,7 +294,9 @@ interface BulkActionsBarProps {
 function BulkActionsBar({ selectedRows, onBulkAction }: BulkActionsBarProps) {
   if (selectedRows.length === 0) return null
 
-  const courseIds = selectedRows.map((row) => row.original.id)
+  const courseIds = selectedRows.map(
+    (row) => (row as { original: { id: string } }).original.id,
+  )
 
   return (
     <div className="flex items-center justify-between p-4 bg-muted/50 border border-border rounded-lg">
@@ -440,7 +403,6 @@ export default function CoursesDataTable({
         },
         token || undefined,
       ),
-    keepPreviousData: true,
     enabled: !!token,
   })
 
@@ -465,7 +427,9 @@ export default function CoursesDataTable({
         title: 'Bulk operation completed',
         description: 'The selected courses have been updated successfully.',
       })
-      queryClient.invalidateQueries(['instructor', 'courses'])
+      queryClient.invalidateQueries({
+        queryKey: ['instructor', 'courses'],
+      })
       setRowSelection({})
     },
     onError: () => {
@@ -480,9 +444,13 @@ export default function CoursesDataTable({
   const columns = useMemo(() => createColumns(), [])
 
   const table = useReactTable({
-    data: coursesData?.courses || [],
+    data:
+      (coursesData as { courses?: Array<any>; totalPages?: number })?.courses ||
+      [],
     columns,
-    pageCount: coursesData?.totalPages || 0,
+    pageCount:
+      (coursesData as { courses?: Array<any>; totalPages?: number })
+        ?.totalPages || 0,
     state: {
       sorting,
       columnFilters,
@@ -521,7 +489,9 @@ export default function CoursesDataTable({
             </p>
             <Button
               onClick={() =>
-                queryClient.invalidateQueries(['instructor', 'courses'])
+                queryClient.invalidateQueries({
+                  queryKey: ['instructor', 'courses'],
+                })
               }
               className="mt-4"
             >
@@ -603,11 +573,9 @@ export default function CoursesDataTable({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button asChild>
-            <Link to="/dashboard/instructor/courses/new">
-              <Plus className="mr-2 h-4 w-4" />
-              New Course
-            </Link>
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            New Course
           </Button>
         </div>
       </div>
@@ -685,12 +653,23 @@ export default function CoursesDataTable({
         <div className="flex-1 text-sm text-muted-foreground">
           {selectedRows.length} of {table.getFilteredRowModel().rows.length}{' '}
           row(s) selected.
-          {coursesData && (
-            <span className="ml-2">
-              Showing {coursesData.courses.length} of {coursesData.total} total
-              courses.
-            </span>
-          )}
+          {coursesData &&
+            (coursesData as { courses?: Array<any>; total?: number })
+              ?.courses && (
+              <span className="ml-2">
+                Showing{' '}
+                {
+                  (coursesData as { courses?: Array<any>; total?: number })
+                    .courses!.length
+                }{' '}
+                of{' '}
+                {
+                  (coursesData as { courses?: Array<any>; total?: number })
+                    .total
+                }{' '}
+                total courses.
+              </span>
+            )}
         </div>
         <div className="flex items-center space-x-6 lg:space-x-8">
           <div className="flex items-center space-x-2">

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   Award,
@@ -8,11 +8,7 @@ import {
   Brain,
   Calendar,
   CheckCircle,
-  ChevronDown,
-  ChevronUp,
   Clock,
-  DollarSign,
-  Download,
   Eye,
   FileText,
   Flag,
@@ -33,19 +29,11 @@ import {
   TrendingUp,
   Users,
   Video,
-  Volume2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Separator } from '@/components/ui/separator'
 import { api } from '@/lib/api-client'
 import {
   formatCoursePrice,
@@ -59,7 +47,7 @@ import {
 } from '@/lib/vietnamese-locale'
 import { useCourseAccess } from '@/lib/course-marketplace-context'
 import { cn } from '@/lib/utils'
-import type { Course, Enrollment, Lecture } from '@/lib/types'
+import type { Course } from '@/lib/types'
 
 interface CourseDetailPageProps {
   courseId: string
@@ -106,9 +94,6 @@ export function CourseDetailPage({
   onAddToWishlist,
 }: CourseDetailPageProps) {
   const [isWishlisted, setIsWishlisted] = useState(false)
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(['curriculum']),
-  )
   const [selectedTab, setSelectedTab] = useState('overview')
   const videoRef = useRef<HTMLVideoElement>(null)
 
@@ -203,16 +188,6 @@ export function CourseDetailPage({
     course.discount_percentage && course.price
       ? formatPriceWithDiscount(course.price, course.discount_percentage, 'VND')
       : null
-
-  const toggleSection = (sectionId: string) => {
-    const newExpanded = new Set(expandedSections)
-    if (newExpanded.has(sectionId)) {
-      newExpanded.delete(sectionId)
-    } else {
-      newExpanded.add(sectionId)
-    }
-    setExpandedSections(newExpanded)
-  }
 
   const handleWishlist = () => {
     setIsWishlisted(!isWishlisted)

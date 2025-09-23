@@ -1,4 +1,5 @@
 // Error handling utilities for the instructor dashboard
+import React from 'react'
 
 export interface ApiError {
   message: string
@@ -57,13 +58,19 @@ export const ErrorMessages: Record<ErrorType, string> = {
 
 // Parse API errors
 export function parseApiError(error: any): ApiError {
-  if (error.response) {
+  const errorObj = error as {
+    response?: { status: number; data: any }
+    request?: any
+    message?: string
+  }
+  if (errorObj.response != null) {
     // HTTP error response
-    const status = error.response.status
-    const data = error.response.data
+    const response = errorObj.response
+    const status = response.status
+    const data = response.data
 
     let message = 'An error occurred'
-    let code = ErrorTypes.UNKNOWN_ERROR
+    let code: string = ErrorTypes.UNKNOWN_ERROR
 
     if (status === 401) {
       code = ErrorTypes.AUTHENTICATION_ERROR
@@ -73,12 +80,14 @@ export function parseApiError(error: any): ApiError {
       message = ErrorMessages[ErrorTypes.AUTHORIZATION_ERROR]
     } else if (status === 422) {
       code = ErrorTypes.VALIDATION_ERROR
-      message = data.message || ErrorMessages[ErrorTypes.VALIDATION_ERROR]
+      message =
+        (data as { message?: string }).message ||
+        ErrorMessages[ErrorTypes.VALIDATION_ERROR]
     } else if (status >= 500) {
       code = ErrorTypes.SERVER_ERROR
       message = ErrorMessages[ErrorTypes.SERVER_ERROR]
-    } else if (data.message) {
-      message = data.message
+    } else if ((data as { message?: string }).message) {
+      message = (data as { message: string }).message
     }
 
     return {
@@ -87,17 +96,18 @@ export function parseApiError(error: any): ApiError {
       status,
       details: data,
     }
-  } else if (error.request) {
+  } else if (errorObj.request != null) {
     // Network error
+    const request = errorObj.request
     return {
       message: ErrorMessages[ErrorTypes.NETWORK_ERROR],
       code: ErrorTypes.NETWORK_ERROR,
-      details: error.request,
+      details: request,
     }
   } else {
     // Other error
     return {
-      message: error.message || ErrorMessages[ErrorTypes.UNKNOWN_ERROR],
+      message: errorObj.message ?? ErrorMessages[ErrorTypes.UNKNOWN_ERROR],
       code: ErrorTypes.UNKNOWN_ERROR,
       details: error,
     }

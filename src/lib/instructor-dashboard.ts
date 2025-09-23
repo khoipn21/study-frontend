@@ -276,9 +276,7 @@ export class InstructorDashboardService {
   private static instance: InstructorDashboardService
 
   public static getInstance(): InstructorDashboardService {
-    if (!InstructorDashboardService.instance) {
-      InstructorDashboardService.instance = new InstructorDashboardService()
-    }
+    InstructorDashboardService.instance ??= new InstructorDashboardService()
     return InstructorDashboardService.instance
   }
 
@@ -289,7 +287,7 @@ export class InstructorDashboardService {
     const response = await apiClient.get('/instructor/dashboard/overview', {
       token,
     })
-    return response.data
+    return (response as { data: InstructorDashboardStats }).data
   }
 
   async getRevenueMetrics(
@@ -300,7 +298,7 @@ export class InstructorDashboardService {
       `/instructor/analytics/revenue?period=${period}`,
       { token },
     )
-    return response.data
+    return (response as { data: Array<RevenueMetrics> }).data
   }
 
   async getStudentEngagement(
@@ -309,7 +307,7 @@ export class InstructorDashboardService {
     const response = await apiClient.get('/instructor/analytics/engagement', {
       token,
     })
-    return response.data
+    return (response as { data: Array<StudentEngagement> }).data
   }
 
   // Course Management
@@ -341,7 +339,17 @@ export class InstructorDashboardService {
     }
 
     const response = await apiClient.get(`/courses?${searchParams}`, { token })
-    return response.data
+    return (
+      response as {
+        data: {
+          courses: Array<InstructorCourse>
+          total: number
+          page: number
+          limit: number
+          totalPages: number
+        }
+      }
+    ).data
   }
 
   async getCourseById(
@@ -351,7 +359,7 @@ export class InstructorDashboardService {
     const response = await apiClient.get(`/instructor/courses/${courseId}`, {
       token,
     })
-    return response.data
+    return (response as { data: InstructorCourse }).data
   }
 
   async createCourse(
@@ -361,7 +369,7 @@ export class InstructorDashboardService {
     const response = await apiClient.post('/instructor/courses', courseData, {
       token,
     })
-    return response.data
+    return (response as { data: InstructorCourse }).data
   }
 
   async updateCourse(
@@ -374,7 +382,7 @@ export class InstructorDashboardService {
       courseData,
       { token },
     )
-    return response.data
+    return (response as { data: InstructorCourse }).data
   }
 
   async deleteCourse(courseId: string, token?: string): Promise<void> {
@@ -385,7 +393,7 @@ export class InstructorDashboardService {
     operation: {
       type: BulkOperation['type']
       courseIds: Array<string>
-      data?: any
+      data?: unknown
     },
     token?: string,
   ): Promise<BulkOperation> {
@@ -394,7 +402,7 @@ export class InstructorDashboardService {
       operation,
       { token },
     )
-    return response.data
+    return (response as { data: BulkOperation }).data
   }
 
   async getBulkOperationStatus(
@@ -405,7 +413,7 @@ export class InstructorDashboardService {
       `/instructor/bulk-operations/${operationId}`,
       { token },
     )
-    return response.data
+    return (response as { data: BulkOperation }).data
   }
 
   // Analytics
@@ -414,12 +422,15 @@ export class InstructorDashboardService {
     period?: string,
     token?: string,
   ): Promise<CourseAnalytics> {
-    const params = period ? `?period=${period}` : ''
+    const params =
+      period !== undefined && period !== null && period !== ''
+        ? `?period=${period}`
+        : ''
     const response = await apiClient.get(
       `/instructor/analytics/courses/${courseId}${params}`,
       { token },
     )
-    return response.data
+    return (response as { data: CourseAnalytics }).data
   }
 
   async getRevenueAnalytics(
@@ -453,7 +464,24 @@ export class InstructorDashboardService {
       `/instructor/analytics/revenue?${searchParams}`,
       { token },
     )
-    return response.data
+    return (
+      response as {
+        data: {
+          revenue: Array<{ date: string; amount: number; enrollments: number }>
+          forecast: Array<{
+            date: string
+            predicted: number
+            confidence: number
+          }>
+          summary: {
+            total: number
+            growth: number
+            avgPerStudent: number
+            topCourse: { id: string; title: string; revenue: number }
+          }
+        }
+      }
+    ).data
   }
 
   // Student Management
@@ -488,7 +516,17 @@ export class InstructorDashboardService {
       `/instructor/students?${searchParams}`,
       { token },
     )
-    return response.data
+    return (
+      response as {
+        data: {
+          students: Array<InstructorStudent>
+          total: number
+          page: number
+          limit: number
+          totalPages: number
+        }
+      }
+    ).data
   }
 
   async getStudentById(
@@ -498,14 +536,14 @@ export class InstructorDashboardService {
     const response = await apiClient.get(`/instructor/students/${studentId}`, {
       token,
     })
-    return response.data
+    return (response as { data: InstructorStudent }).data
   }
 
   async getAtRiskStudents(token?: string): Promise<Array<InstructorStudent>> {
     const response = await apiClient.get('/instructor/students/at-risk', {
       token,
     })
-    return response.data
+    return (response as { data: Array<InstructorStudent> }).data
   }
 
   // Video Management
@@ -524,11 +562,14 @@ export class InstructorDashboardService {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
-      onUploadProgress: (progressEvent) => {
-        if (progressEvent.total && onProgress) {
-          const progress = Math.round(
-            (progressEvent.loaded * 100) / progressEvent.total,
-          )
+      onUploadProgress: (progressEvent: unknown) => {
+        const event = progressEvent as { loaded: number; total?: number }
+        if (
+          event.total !== undefined &&
+          event.total !== null &&
+          onProgress !== undefined
+        ) {
+          const progress = Math.round((event.loaded * 100) / event.total)
           onProgress(progress)
         }
       },
@@ -543,7 +584,7 @@ export class InstructorDashboardService {
       `/instructor/videos/status/${lectureId}`,
       { token },
     )
-    return response.data
+    return (response as { data: VideoProcessingStatus }).data
   }
 
   // Communications
@@ -573,7 +614,15 @@ export class InstructorDashboardService {
       `/instructor/notifications?${searchParams}`,
       { token },
     )
-    return response.data
+    return (
+      response as {
+        data: {
+          notifications: Array<InstructorNotification>
+          total: number
+          unreadCount: number
+        }
+      }
+    ).data
   }
 
   async markNotificationAsRead(
@@ -619,7 +668,15 @@ export class InstructorDashboardService {
       `/instructor/messages/threads?${searchParams}`,
       { token },
     )
-    return response.data
+    return (
+      response as {
+        data: {
+          threads: Array<MessageThread>
+          total: number
+          unreadCount: number
+        }
+      }
+    ).data
   }
 
   async getMessages(
@@ -646,7 +703,14 @@ export class InstructorDashboardService {
       `/instructor/messages/${threadId}?${searchParams}`,
       { token },
     )
-    return response.data
+    return (
+      response as {
+        data: {
+          messages: Array<InstructorMessage>
+          total: number
+        }
+      }
+    ).data
   }
 
   async sendMessage(
@@ -674,7 +738,7 @@ export class InstructorDashboardService {
         },
       },
     )
-    return response.data
+    return (response as { data: InstructorMessage }).data
   }
 
   async sendBulkMessage(
@@ -698,31 +762,38 @@ export class InstructorDashboardService {
     onNewNotification?: (notification: InstructorNotification) => void
     onNewMessage?: (message: InstructorMessage) => void
     onBulkOperationUpdate?: (operation: BulkOperation) => void
-    onStudentActivity?: (activity: any) => void
+    onStudentActivity?: (activity: unknown) => void
   }): WebSocket | null {
     if (typeof window === 'undefined') return null
 
     try {
       const ws = new WebSocket(
-        `${process.env.VITE_WS_URL || 'ws://localhost:8080'}/instructor/ws`,
+        `${process.env.VITE_WS_URL ?? 'ws://localhost:8080'}/instructor/ws`,
       )
 
       ws.onmessage = (event) => {
         try {
-          const data = JSON.parse(event.data)
+          const data = JSON.parse(event.data) as {
+            type: string
+            payload: unknown
+          }
 
           switch (data.type) {
             case 'video_processing_update':
-              callbacks.onVideoProcessingUpdate?.(data.payload)
+              callbacks.onVideoProcessingUpdate?.(
+                data.payload as VideoProcessingStatus,
+              )
               break
             case 'new_notification':
-              callbacks.onNewNotification?.(data.payload)
+              callbacks.onNewNotification?.(
+                data.payload as InstructorNotification,
+              )
               break
             case 'new_message':
-              callbacks.onNewMessage?.(data.payload)
+              callbacks.onNewMessage?.(data.payload as InstructorMessage)
               break
             case 'bulk_operation_update':
-              callbacks.onBulkOperationUpdate?.(data.payload)
+              callbacks.onBulkOperationUpdate?.(data.payload as BulkOperation)
               break
             case 'student_activity':
               callbacks.onStudentActivity?.(data.payload)

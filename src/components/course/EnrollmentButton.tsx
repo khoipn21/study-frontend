@@ -1,4 +1,3 @@
-import React from 'react'
 import { BookOpen, CheckCircle, CreditCard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PaymentModal } from '@/components/payment/PaymentModal'

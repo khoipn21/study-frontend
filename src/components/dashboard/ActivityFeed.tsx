@@ -1,4 +1,3 @@
-import React from 'react'
 import { Link } from '@tanstack/react-router'
 import {
   Award,
@@ -18,7 +17,7 @@ interface ActivityFeedProps {
   className?: string
 }
 
-export function ActivityFeed({ activities, className }: ActivityFeedProps) {
+export function ActivityFeed({ activities }: ActivityFeedProps) {
   const getActivityIcon = (type: string) => {
     switch (type) {
       case 'course_started':

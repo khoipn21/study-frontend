@@ -1,11 +1,10 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Controller, useFormContext } from 'react-hook-form'
 import { Check, Plus, X } from 'lucide-react'
 
 // UI Components
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -26,7 +25,6 @@ import {
   FormDescription,
   FormItem,
   FormLabel,
-  FormMessage,
 } from '@/components/ui/form'
 import type { CourseCreationData } from '@/lib/course-management-types'
 
@@ -90,7 +88,6 @@ const commonRequirements = [
 ]
 
 export function CourseDetailsStep({
-  formData,
   onUpdate,
   errors,
 }: CourseDetailsStepProps) {
@@ -98,12 +95,7 @@ export function CourseDetailsStep({
   const [newRequirement, setNewRequirement] = useState('')
   const [newTag, setNewTag] = useState('')
 
-  const {
-    control,
-    watch,
-    setValue,
-    formState: { errors: formErrors },
-  } = useFormContext<CourseCreationData>()
+  const { control, watch, setValue } = useFormContext<CourseCreationData>()
 
   // Watch form values
   const watchedOutcomes = watch('learning_outcomes')

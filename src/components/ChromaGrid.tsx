@@ -94,7 +94,7 @@ const ChromaGrid: React.FC<ChromaGridProps> = ({
     },
   ]
 
-  const data = items?.length ? items : demo
+  const data = items != null && items.length > 0 ? items : demo
 
   useEffect(() => {
     const el = rootRef.current
@@ -122,7 +122,8 @@ const ChromaGrid: React.FC<ChromaGridProps> = ({
   }
 
   const handleMove = (e: React.PointerEvent) => {
-    const r = rootRef.current!.getBoundingClientRect()
+    const r = rootRef.current?.getBoundingClientRect()
+    if (!r) return
     moveTo(e.clientX - r.left, e.clientY - r.top)
     gsap.to(fadeRef.current, { opacity: 0, duration: 0.25, overwrite: true })
   }
@@ -136,7 +137,8 @@ const ChromaGrid: React.FC<ChromaGridProps> = ({
   }
 
   const handleCardClick = (url?: string) => {
-    if (url) window.open(url, '_blank', 'noopener,noreferrer')
+    if (url != null && url !== '')
+      window.open(url, '_blank', 'noopener,noreferrer')
   }
 
   const handleCardMove: React.MouseEventHandler<HTMLElement> = (e) => {
@@ -168,7 +170,7 @@ const ChromaGrid: React.FC<ChromaGridProps> = ({
           className="group relative flex flex-col w-[300px] rounded-[20px] overflow-hidden border-2 border-transparent transition-colors duration-300 cursor-pointer"
           style={
             {
-              '--card-border': c.borderColor || 'transparent',
+              '--card-border': c.borderColor ?? 'transparent',
               background: c.gradient,
               '--spotlight-color': 'rgba(255,255,255,0.3)',
             } as React.CSSProperties
@@ -191,13 +193,13 @@ const ChromaGrid: React.FC<ChromaGridProps> = ({
           </div>
           <footer className="relative z-10 p-3 text-white font-sans grid grid-cols-[1fr_auto] gap-x-3 gap-y-1">
             <h3 className="m-0 text-[1.05rem] font-semibold">{c.title}</h3>
-            {c.handle && (
+            {c.handle != null && c.handle !== '' && (
               <span className="text-[0.95rem] opacity-80 text-right">
                 {c.handle}
               </span>
             )}
             <p className="m-0 text-[0.85rem] opacity-85">{c.subtitle}</p>
-            {c.location && (
+            {c.location != null && c.location !== '' && (
               <span className="text-[0.85rem] opacity-85 text-right">
                 {c.location}
               </span>

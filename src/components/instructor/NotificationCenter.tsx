@@ -1,23 +1,18 @@
-import React, { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   AlertTriangle,
   Bell,
   BookOpen,
   CheckCircle,
-  Clock,
   DollarSign,
   Eye,
-  EyeOff,
-  Filter,
   Mail,
   MessageSquare,
   MoreHorizontal,
   Search,
-  Settings,
   Star,
   Trash2,
-  Users,
 } from 'lucide-react'
 
 import {
@@ -41,13 +36,10 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Separator } from '@/components/ui/separator'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useToast } from '@/hooks/use-toast'
 import { instructorDashboardService } from '@/lib/instructor-dashboard'
@@ -368,14 +360,17 @@ export default function NotificationCenter() {
   const allNotifications =
     realTimeNotifications.notifications.length > 0
       ? realTimeNotifications.notifications
-      : notificationsData?.notifications || []
+      : (notificationsData as { notifications?: Array<any> })?.notifications ||
+        []
 
   // Mark notification as read mutation
   const markAsReadMutation = useMutation({
     mutationFn: (notificationId: string) =>
       instructorDashboardService.markNotificationAsRead(notificationId),
     onSuccess: () => {
-      queryClient.invalidateQueries(['instructor', 'notifications'])
+      queryClient.invalidateQueries({
+        queryKey: ['instructor', 'notifications'],
+      })
     },
   })
 
@@ -384,7 +379,9 @@ export default function NotificationCenter() {
     mutationFn: () => instructorDashboardService.markAllNotificationsAsRead(),
     onSuccess: () => {
       realTimeNotifications.markAllAsRead()
-      queryClient.invalidateQueries(['instructor', 'notifications'])
+      queryClient.invalidateQueries({
+        queryKey: ['instructor', 'notifications'],
+      })
       toast({
         title: 'Success',
         description: 'All notifications marked as read.',
@@ -394,29 +391,31 @@ export default function NotificationCenter() {
 
   // Filter notifications
   const filteredNotifications = useMemo(() => {
-    return allNotifications.filter((notification) => {
-      // Search filter
-      if (searchQuery) {
-        const searchLower = searchQuery.toLowerCase()
-        if (
-          !notification.title.toLowerCase().includes(searchLower) &&
-          !notification.message.toLowerCase().includes(searchLower)
-        ) {
+    return (allNotifications as Array<InstructorNotification>).filter(
+      (notification: InstructorNotification) => {
+        // Search filter
+        if (searchQuery) {
+          const searchLower = searchQuery.toLowerCase()
+          if (
+            !notification.title.toLowerCase().includes(searchLower) &&
+            !notification.message.toLowerCase().includes(searchLower)
+          ) {
+            return false
+          }
+        }
+
+        // Type filter
+        if (typeFilter !== 'all' && notification.type !== typeFilter) {
           return false
         }
-      }
 
-      // Type filter
-      if (typeFilter !== 'all' && notification.type !== typeFilter) {
-        return false
-      }
+        // Read filter
+        if (readFilter === 'unread' && notification.isRead) return false
+        if (readFilter === 'read' && !notification.isRead) return false
 
-      // Read filter
-      if (readFilter === 'unread' && notification.isRead) return false
-      if (readFilter === 'read' && !notification.isRead) return false
-
-      return true
-    })
+        return true
+      },
+    )
   }, [allNotifications, searchQuery, typeFilter, readFilter])
 
   // Calculate stats
@@ -427,10 +426,13 @@ export default function NotificationCenter() {
 
     return {
       totalNotifications: allNotifications.length,
-      unreadCount: allNotifications.filter((n) => !n.isRead).length,
-      todayCount: allNotifications.filter((n) => new Date(n.createdAt) >= today)
-        .length,
-      weekCount: allNotifications.filter(
+      unreadCount: (allNotifications as Array<InstructorNotification>).filter(
+        (n) => !n.isRead,
+      ).length,
+      todayCount: (allNotifications as Array<InstructorNotification>).filter(
+        (n) => new Date(n.createdAt) >= today,
+      ).length,
+      weekCount: (allNotifications as Array<InstructorNotification>).filter(
         (n) => new Date(n.createdAt) >= weekAgo,
       ).length,
     }
@@ -442,7 +444,7 @@ export default function NotificationCenter() {
     markAsReadMutation.mutate(notificationId)
   }
 
-  const handleDelete = (notificationId: string) => {
+  const handleDelete = (_notificationId: string) => {
     // Note: Implement delete functionality in the service
     toast({
       title: 'Success',

@@ -6,20 +6,17 @@
  * user-facing text throughout the application.
  */
 
-import React, { createContext, useContext } from 'react'
+import { createContext, useContext } from 'react'
 import { microcopy } from '../../lib/microcopy'
-import { errorMessages, getErrorMessage } from '../../lib/error-messages'
+import { getErrorMessage } from '../../lib/error-messages'
 import {
   getFunLoadingMessage,
   getRandomLoadingMessage,
   getSequentialLoadingMessages,
-  loadingMessages,
 } from '../../lib/loading-states'
 import {
-  accessibilityText,
   getAccessibilityText,
   getAnnouncement,
-  liveAnnouncements,
   screenReaderUtils,
 } from '../../lib/accessibility-text'
 import type { ErrorMessage } from '../../lib/error-messages'
@@ -35,12 +32,9 @@ interface MicrocopyContextType {
   getError: (code: string) => ErrorMessage
 
   // Loading state functions
-  getLoadingMessage: (
-    category: LoadingCategory,
-    subcategory: string,
-  ) => LoadingState
+  getLoadingMessage: (category: string, subcategory: string) => LoadingState
   getLoadingSequence: (
-    category: LoadingCategory,
+    category: string,
     subcategory: string,
   ) => Array<LoadingState>
   getFunMessage: () => LoadingState
@@ -72,11 +66,24 @@ export function MicrocopyProvider({ children }: MicrocopyProviderProps) {
   const contextValue: MicrocopyContextType = {
     text: microcopy,
     getError: getErrorMessage,
-    getLoadingMessage: getRandomLoadingMessage,
-    getLoadingSequence: getSequentialLoadingMessages,
+    getLoadingMessage: getRandomLoadingMessage as (
+      category: string,
+      subcategory: string,
+    ) => LoadingState,
+    getLoadingSequence: getSequentialLoadingMessages as (
+      category: string,
+      subcategory: string,
+    ) => Array<LoadingState>,
     getFunMessage: getFunLoadingMessage,
-    getA11yText: getAccessibilityText,
-    announce: getAnnouncement,
+    getA11yText: getAccessibilityText as (
+      path: string,
+      variables?: Record<string, string | number>,
+    ) => AccessibilityText,
+    announce: getAnnouncement as (
+      category: string,
+      type: string,
+      variables?: Record<string, string | number>,
+    ) => string,
     screenReader: screenReaderUtils,
   }
 
@@ -144,16 +151,16 @@ export function useLoadingText() {
 
   return {
     video: {
-      processing: () => getLoadingMessage('videoProcessing', 'uploading'),
-      streaming: () => getLoadingMessage('videoProcessing', 'streaming'),
+      processing: () => getLoadingMessage('video', 'processing'),
+      streaming: () => getLoadingMessage('video', 'streaming'),
     },
     course: {
-      loading: () => getLoadingMessage('courseContent', 'loading'),
-      enrollment: () => getLoadingMessage('courseContent', 'enrollment'),
+      loading: () => getLoadingMessage('course', 'loading'),
+      enrollment: () => getLoadingMessage('course', 'enrollment'),
     },
     ai: {
-      thinking: () => getLoadingMessage('aiAssistant', 'thinking'),
-      processing: () => getLoadingMessage('aiAssistant', 'processing'),
+      thinking: () => getLoadingMessage('ai', 'thinking'),
+      processing: () => getLoadingMessage('ai', 'processing'),
     },
     fun: getFunMessage,
     sequence: getLoadingSequence,
@@ -211,7 +218,7 @@ export function useAIText() {
     prompts: text.ai.prompts,
     tips: text.ai.tips,
     errors: text.ai.errors,
-    loading: () => getLoadingMessage('aiAssistant', 'thinking'),
+    loading: () => getLoadingMessage('ai', 'thinking'),
     accessibility: {
       chat: getA11yText('aiAssistant.chat'),
       input: getA11yText('aiAssistant.input'),

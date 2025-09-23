@@ -1,10 +1,9 @@
-import React, { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft,
   Award,
-  BarChart3,
   BookOpen,
   Calendar,
   CheckCircle,
@@ -20,7 +19,6 @@ import {
   MessageSquare,
   Play,
   Share2,
-  ShoppingCart,
   Star,
   Target,
   Users,
@@ -30,11 +28,6 @@ import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
 import { PaymentModal } from '@/components/payment/PaymentModal'
 import { cn } from '@/lib/utils'
 
@@ -46,7 +39,6 @@ function CourseDetailPage() {
   const { courseId } = Route.useParams()
   const { token, user } = useAuth()
   const qc = useQueryClient()
-  const [isEnrolled, setIsEnrolled] = useState(false)
   const [showFullDescription, setShowFullDescription] = useState(false)
   const [selectedTab, setSelectedTab] = useState('overview')
 
@@ -71,8 +63,11 @@ function CourseDetailPage() {
     queryFn: async () => {
       if (!token) return null
       try {
-        const res = await api.getEnrollment(token, courseId)
-        return res.data
+        const res = await api.listEnrollments(token)
+        const enrollment = res.data?.enrollments?.find(
+          (e) => e.course_id === courseId,
+        )
+        return enrollment
       } catch {
         return null
       }
@@ -95,7 +90,6 @@ function CourseDetailPage() {
     try {
       await api.enroll(token, courseId)
       await qc.invalidateQueries({ queryKey: ['enrollment', courseId] })
-      setIsEnrolled(true)
       alert('Successfully enrolled!')
     } catch (error) {
       alert('Enrollment failed. Please try again.')
@@ -109,7 +103,6 @@ function CourseDetailPage() {
       if (token) {
         await api.enroll(token, courseId)
         await qc.invalidateQueries({ queryKey: ['enrollment', courseId] })
-        setIsEnrolled(true)
       }
     } catch (error) {
       console.error('Post-payment enrollment failed:', error)

@@ -1,30 +1,18 @@
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  Award,
-  BookOpen,
   Bookmark,
-  Brain,
-  Calendar,
   CheckCircle,
   ChevronLeft,
   ChevronRight,
   Clock,
   Download,
-  Edit3,
   FileText,
-  Filter,
-  Flag,
-  Grid3X3,
-  Layers,
   List,
   Lock,
   Maximize,
-  MessageCircle,
   Minimize,
-  Monitor,
   MoreVertical,
-  Note,
   Pause,
   Play,
   PlayCircle,
@@ -35,18 +23,11 @@ import {
   Share2,
   SkipBack,
   SkipForward,
-  Smartphone,
   Star,
   Subtitles,
-  Tablet,
-  Tag,
-  Target,
-  ThumbsUp,
-  Users,
   Volume2,
   VolumeX,
   X,
-  Zap,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -68,11 +49,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
@@ -81,7 +57,6 @@ import { api } from '@/lib/api-client'
 import {
   formatVietnameseDate,
   formatVietnameseDuration,
-  vietnameseTranslations,
 } from '@/lib/vietnamese-locale'
 import { cn } from '@/lib/utils'
 import type { Course, Lecture, User } from '@/lib/types'
@@ -125,14 +100,6 @@ interface Bookmark {
   createdAt: string
 }
 
-interface CourseProgress {
-  lectureId: string
-  watchedSeconds: number
-  totalSeconds: number
-  isCompleted: boolean
-  lastWatchedAt: string
-}
-
 const DEFAULT_SETTINGS: PlayerSettings = {
   playbackRate: 1.0,
   quality: 'auto',
@@ -156,7 +123,7 @@ export function CoursePlayer({
   onComplete,
 }: CoursePlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const progressIntervalRef = useRef<NodeJS.Timeout>()
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
@@ -187,7 +154,7 @@ export function CoursePlayer({
   // Fetch course progress
   const { data: progressData } = useQuery({
     queryKey: ['course-progress', course.id, user.id],
-    queryFn: () => api.getCourseProgress('user-token', course.id),
+    queryFn: () => api.getCourseProgress('token', course.id),
   })
 
   // Update progress mutation
@@ -197,7 +164,7 @@ export function CoursePlayer({
       progressPercentage: number
       watchTimeSeconds: number
     }) =>
-      api.updateProgress('user-token', {
+      api.updateProgress('token', {
         course_id: course.id,
         lecture_id: data.lectureId,
         progress_percentage: data.progressPercentage,
@@ -610,7 +577,7 @@ export function CoursePlayer({
                     onClick={() => setShowNoteDialog(true)}
                     className="text-white hover:bg-white/20"
                   >
-                    <Note className="h-4 w-4" />
+                    <FileText className="h-4 w-4" />
                   </Button>
 
                   {/* Add Bookmark */}
@@ -733,7 +700,7 @@ export function CoursePlayer({
                     Bài học
                   </TabsTrigger>
                   <TabsTrigger value="notes" className="text-xs">
-                    <Note className="h-3 w-3 mr-1" />
+                    <FileText className="h-3 w-3 mr-1" />
                     Ghi chú
                   </TabsTrigger>
                   <TabsTrigger value="bookmarks" className="text-xs">
@@ -790,7 +757,13 @@ export function CoursePlayer({
                                 <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
                                   <Play className="h-3 w-3 text-white" />
                                 </div>
-                              ) : progressData?.completed_lectures?.includes(
+                              ) : (
+                                  progressData as {
+                                    data?: {
+                                      completed_lectures?: Array<string>
+                                    }
+                                  }
+                                )?.data?.completed_lectures?.includes(
                                   lecture.id,
                                 ) ? (
                                 <CheckCircle className="w-6 h-6 text-green-500" />
@@ -833,7 +806,13 @@ export function CoursePlayer({
 
                               {/* Progress Bar for Current/Completed Lectures */}
                               {(lecture.id === currentLectureId ||
-                                progressData?.completed_lectures?.includes(
+                                (
+                                  progressData as {
+                                    data?: {
+                                      completed_lectures?: Array<string>
+                                    }
+                                  }
+                                )?.data?.completed_lectures?.includes(
                                   lecture.id,
                                 )) && (
                                 <div className="mt-2">
@@ -896,7 +875,7 @@ export function CoursePlayer({
 
                     {currentLectureNotes.length === 0 && (
                       <div className="text-center py-8 text-muted-foreground">
-                        <Note className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                        <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
                         <p className="text-sm">Chưa có ghi chú nào</p>
                         <p className="text-xs">
                           Nhấn nút "Thêm" để tạo ghi chú đầu tiên

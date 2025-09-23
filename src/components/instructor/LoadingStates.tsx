@@ -1,20 +1,6 @@
 import React from 'react'
-import {
-  BarChart3,
-  BookOpen,
-  Calendar,
-  Loader2,
-  MessageSquare,
-  Upload,
-  Users,
-} from 'lucide-react'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { BarChart3, BookOpen, Loader2, Upload } from 'lucide-react'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Progress } from '@/components/ui/progress'
 
@@ -524,7 +510,9 @@ export function ComponentLoading({
       <CardContent className="p-6">
         <div className="text-center space-y-4">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-            <Icon className="h-6 w-6 text-muted-foreground" />
+            {React.createElement(Icon, {
+              className: 'h-6 w-6 text-muted-foreground',
+            })}
           </div>
           <div className="space-y-2">
             {title && <h3 className="text-lg font-semibold">{title}</h3>}

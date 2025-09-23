@@ -1,17 +1,14 @@
 import { useEffect, useState } from 'react'
 import {
-  Award,
   BookOpen,
   Check,
   Clock,
   CreditCard,
   Crown,
-  Globe,
   Heart,
   Lock,
   RefreshCw,
   ShoppingCart,
-  Smartphone,
   Star,
   Users,
   X,
@@ -31,8 +28,7 @@ import {
   usePaymentFlow,
 } from '@/lib/course-marketplace-context'
 import { lemonSqueezyService } from '@/lib/lemon-squeezy'
-import { useAuthContext } from '@/lib/auth-context'
-import { cn } from '@/lib/utils'
+import { useAuth } from '@/lib/auth-context'
 import type { Course } from '@/lib/types'
 
 interface PurchaseModalProps {
@@ -46,9 +42,9 @@ export function PurchaseModal({
   course,
   isOpen,
   onClose,
-  onSuccess,
+  onSuccess: _onSuccess,
 }: PurchaseModalProps) {
-  const { user } = useAuthContext()
+  const { user } = useAuth()
   const { paymentFlow, startPayment, setCheckoutUrl, resetPayment } =
     usePaymentFlow()
   const { getAccessStatus } = useCourseAccess()

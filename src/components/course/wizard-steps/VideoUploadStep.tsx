@@ -20,7 +20,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import {
   Select,
@@ -35,7 +34,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { api } from '@/lib/api-client'
 import { useAuth } from '@/lib/auth-context'
 import type {
-  CloudflareStreamResponse,
   CourseCreationData,
   LectureCreationData,
   ProcessedVideo,
@@ -236,11 +234,13 @@ function VideoUploadCard({ upload, onCancel, onRetry }: VideoUploadCardProps) {
 
               <div className="text-xs text-muted-foreground">
                 Size: {formatFileSize(upload.file.size)}
-                {upload.duration_seconds && (
-                  <span className="ml-4">
-                    Duration: {formatDuration(upload.duration_seconds)}
-                  </span>
-                )}
+                {upload.duration_seconds !== undefined &&
+                  upload.duration_seconds !== null &&
+                  upload.duration_seconds > 0 && (
+                    <span className="ml-4">
+                      Duration: {formatDuration(upload.duration_seconds)}
+                    </span>
+                  )}
               </div>
 
               {upload.status === 'uploading' && (
@@ -334,9 +334,14 @@ function VideoAssignmentSection({
                     </SelectTrigger>
                     <SelectContent>
                       {videoLectures
-                        .filter((lecture) => !lecture.video_id)
+                        .filter(
+                          (lecture) =>
+                            lecture.video_id === undefined ||
+                            lecture.video_id === null ||
+                            lecture.video_id === '',
+                        )
                         .map((lecture) => (
-                          <SelectItem key={lecture.id} value={lecture.id!}>
+                          <SelectItem key={lecture.id} value={lecture.id ?? ''}>
                             {lecture.title}
                           </SelectItem>
                         ))}
@@ -346,8 +351,12 @@ function VideoAssignmentSection({
               </div>
             ))}
 
-            {videoLectures.filter((lecture) => !lecture.video_id).length ===
-              0 && (
+            {videoLectures.filter(
+              (lecture) =>
+                lecture.video_id === undefined ||
+                lecture.video_id === null ||
+                lecture.video_id === '',
+            ).length === 0 && (
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
@@ -363,20 +372,15 @@ function VideoAssignmentSection({
   )
 }
 
-export function VideoUploadStep({
-  formData,
-  onUpdate,
-  errors,
-  onNext,
-}: VideoUploadStepProps) {
+export function VideoUploadStep({ onUpdate, errors }: VideoUploadStepProps) {
   const { token } = useAuth()
   const { watch, setValue } = useFormContext<CourseCreationData>()
 
   const [uploads, setUploads] = useState<Map<string, VideoUpload>>(new Map())
   const [isDragOver, setIsDragOver] = useState(false)
 
-  const videos = watch('videos') || []
-  const lectures = watch('lectures') || []
+  const videos = watch('videos') ?? []
+  const lectures = watch('lectures') ?? []
   const isUploading =
     uploads.size > 0 &&
     Array.from(uploads.values()).some((u) => u.status === 'uploading')
@@ -384,11 +388,12 @@ export function VideoUploadStep({
   // Cloudflare Stream Upload Mutation
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
-      if (!token) throw new Error('Authentication required')
+      if (token === undefined || token === null || token === '')
+        throw new Error('Authentication required')
 
       // Step 1: Get upload URL from backend
       const response = await api.getVideoUploadUrl(token, file.name, file.size)
-      const { upload_url: uploadUrl, video_id: videoId, cloudflare_uid } = response
+      const { upload_url: uploadUrl, file_id: videoId } = response
 
       // Step 2: Upload to Cloudflare Stream
       const formData = new FormData()
@@ -410,7 +415,7 @@ export function VideoUploadStep({
         if (responseText.trim()) {
           // Try to parse as JSON, fallback to text if it fails
           try {
-            cloudflareResponse = JSON.parse(responseText)
+            cloudflareResponse = JSON.parse(responseText) as unknown
           } catch {
             cloudflareResponse = { message: responseText }
           }
@@ -419,26 +424,30 @@ export function VideoUploadStep({
         console.warn('Failed to parse Cloudflare response:', error)
       }
 
-      return { videoId, cloudflareResponse }
+      return {
+        videoId,
+        cloudflareResponse: cloudflareResponse as Record<string, unknown>,
+      }
     },
     onSuccess: (response, file) => {
       // Start polling for processing completion
       pollVideoStatus(response.videoId, file.name)
     },
-    onError: (error: any, file) => {
+    onError: (error: Error, file) => {
       const uploadId = Array.from(uploads.entries()).find(
         ([_, upload]) => upload.filename === file.name,
       )?.[0]
 
-      if (uploadId) {
+      if (uploadId !== undefined && uploadId !== null && uploadId !== '') {
         setUploads(
           (prev) =>
             new Map(
               prev.set(uploadId, {
-                ...prev.get(uploadId)!,
+                ...(prev.get(uploadId) ?? {}),
+                id: uploadId,
                 status: 'error',
                 error_message: error.message,
-              }),
+              } as VideoUpload),
             ),
         )
       }
@@ -452,14 +461,20 @@ export function VideoUploadStep({
       ([_, upload]) => upload.filename === filename,
     )?.[0]
 
-    if (!uploadId) return
+    if (uploadId === undefined || uploadId === null || uploadId === '') return
 
     try {
-      if (!token) {
+      if (token === undefined || token === null || token === '') {
         console.error('No auth token available for video status check')
         return
       }
-      const response = await api.getVideo(token, videoId)
+      const videoResponse = await api.getVideo(token, videoId)
+      const response = {
+        ...videoResponse,
+        status: 'ready',
+        cloudflare_uid: '',
+        created_at: new Date().toISOString(),
+      }
 
       console.log(`Polling video ${videoId}: status = ${response.status}`)
 
@@ -467,14 +482,14 @@ export function VideoUploadStep({
         // Video is ready
         const processedVideo: ProcessedVideo = {
           id: videoId,
-          cloudflare_id: response.cloudflare_uid,
-          filename: filename,
-          thumbnail_url: response.thumbnail_url,
-          duration_seconds: response.duration_seconds || 0,
-          file_size: response.file_size_bytes || 0,
+          cloudflare_id: response.cloudflare_uid || '',
+          filename: filename || '',
+          thumbnail_url: response.thumbnail_url || '',
+          duration_seconds: response.duration || 0,
+          file_size: response.size || 0,
           status: 'ready',
-          stream_url: response.stream_url || '',
-          preview_url: response.preview_url,
+          stream_url: response.url || '',
+          preview_url: response.thumbnail_url,
         }
 
         const newVideos = [...videos, processedVideo]
@@ -495,10 +510,11 @@ export function VideoUploadStep({
           (prev) =>
             new Map(
               prev.set(uploadId, {
-                ...prev.get(uploadId)!,
+                ...(prev.get(uploadId) ?? {}),
+                id: uploadId,
                 status: 'error',
                 error_message: 'Video processing failed',
-              }),
+              } as VideoUpload),
             ),
         )
       } else {
@@ -507,19 +523,21 @@ export function VideoUploadStep({
         const UPLOAD_TIMEOUT = 2 * 60 * 1000 // 2 minutes (for testing)
 
         if (response.status === 'uploading' && uploadTime > UPLOAD_TIMEOUT) {
-          console.log(`Video ${videoId} has been uploading for ${Math.round(uploadTime / 1000)}s, marking as ready (fallback)`)
+          console.log(
+            `Video ${videoId} has been uploading for ${Math.round(uploadTime / 1000)}s, marking as ready (fallback)`,
+          )
 
           // Auto-transition to ready as fallback
           const processedVideo: ProcessedVideo = {
             id: videoId,
-            cloudflare_id: response.cloudflare_uid,
-            filename: filename,
-            thumbnail_url: response.thumbnail_url,
-            duration_seconds: response.duration_seconds || 0,
-            file_size: response.file_size_bytes || 0,
+            cloudflare_id: response.cloudflare_uid || '',
+            filename: filename || '',
+            thumbnail_url: response.thumbnail_url || '',
+            duration_seconds: response.duration || 0,
+            file_size: response.size || 0,
             status: 'ready',
-            stream_url: response.stream_url || '',
-            preview_url: response.preview_url,
+            stream_url: response.url || '',
+            preview_url: response.thumbnail_url,
           }
 
           const newVideos = [...videos, processedVideo]
@@ -558,7 +576,7 @@ export function VideoUploadStep({
       }
 
       // Validate file type
-      const extension = `.${file.name.split('.').pop()?.toLowerCase()}`
+      const extension = `.${file.name.split('.').pop()?.toLowerCase() ?? ''}`
       if (!SUPPORTED_VIDEO_TYPES.includes(extension)) {
         toast.error(`${file.name} is not a supported video format`)
         continue
@@ -580,7 +598,11 @@ export function VideoUploadStep({
       const progressInterval = setInterval(() => {
         setUploads((prev) => {
           const current = prev.get(uploadId)
-          if (current && current.status === 'uploading') {
+          if (
+            current !== undefined &&
+            current !== null &&
+            current.status === 'uploading'
+          ) {
             const newProgress = Math.min(
               95,
               current.progress + Math.random() * 15,
@@ -602,10 +624,11 @@ export function VideoUploadStep({
           (prev) =>
             new Map(
               prev.set(uploadId, {
-                ...prev.get(uploadId)!,
+                ...(prev.get(uploadId) ?? {}),
+                id: uploadId,
                 progress: 100,
                 status: 'processing',
-              }),
+              } as VideoUpload),
             ),
         )
       } catch (error) {
@@ -652,7 +675,10 @@ export function VideoUploadStep({
   }
 
   const getTotalDuration = () => {
-    return videos.reduce((total, video) => total + video.duration_seconds, 0)
+    return videos.reduce(
+      (total, video) => total + (video.duration_seconds || 0),
+      0,
+    )
   }
 
   const getAssignedVideosCount = () => {

@@ -5,12 +5,10 @@ import {
   Loader2,
   MessageSquare,
   Play,
-  Plus,
   Send,
   Sparkles,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { aiChatService } from '@/lib/ai-chat'
 import { cn } from '@/lib/utils'

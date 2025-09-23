@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import {
   AlertCircle,
   CheckCircle,
@@ -20,13 +20,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -65,7 +58,7 @@ export function PaymentModal({
   courseData,
   subscriptionData,
   onSuccess,
-  onCancel,
+  onCancel: _onCancel,
 }: PaymentModalProps) {
   const { user } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
@@ -188,15 +181,6 @@ export function PaymentModal({
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const handleClose = () => {
-    setIsOpen(false)
-    onCancel?.()
-    setError('')
-    setCouponCode('')
-    setAppliedCoupon(null)
-    setAcceptTerms(false)
   }
 
   return (

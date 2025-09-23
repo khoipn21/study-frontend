@@ -12,7 +12,6 @@ import {
 import type {
   Checkout,
   Customer,
-  NewCheckout,
   Product,
   Subscription,
   Variant,
@@ -70,7 +69,7 @@ export class LemonSqueezyService {
    */
   async createCourseCheckout(data: CourseCheckoutData): Promise<string> {
     try {
-      const checkoutData: NewCheckout = {
+      const checkoutData = {
         data: {
           type: 'checkouts',
           attributes: {
@@ -113,14 +112,17 @@ export class LemonSqueezyService {
 
       const checkout = await createCheckout(
         LEMON_SQUEEZY_STORE_ID || '',
-        checkoutData,
+        checkoutData as any,
       )
 
       if (checkout.error) {
         throw new Error(checkout.error.message)
       }
 
-      return checkout.data.data.attributes.url || ''
+      return (
+        (checkout.data as { data: { attributes: { url: string } } }).data
+          .attributes.url || ''
+      )
     } catch (error) {
       console.error('Error creating course checkout:', error)
       throw new Error('Failed to create checkout session')
@@ -134,7 +136,7 @@ export class LemonSqueezyService {
     data: SubscriptionCheckoutData,
   ): Promise<string> {
     try {
-      const checkoutData: NewCheckout = {
+      const checkoutData = {
         data: {
           type: 'checkouts',
           attributes: {
@@ -177,14 +179,17 @@ export class LemonSqueezyService {
 
       const checkout = await createCheckout(
         LEMON_SQUEEZY_STORE_ID || '',
-        checkoutData,
+        checkoutData as any,
       )
 
       if (checkout.error) {
         throw new Error(checkout.error.message)
       }
 
-      return checkout.data.data.attributes.url || ''
+      return (
+        (checkout.data as { data: { attributes: { url: string } } }).data
+          .attributes.url || ''
+      )
     } catch (error) {
       console.error('Error creating subscription checkout:', error)
       throw new Error('Failed to create checkout session')
@@ -202,7 +207,7 @@ export class LemonSqueezyService {
         throw new Error(checkout.error.message)
       }
 
-      return checkout.data.data ?? null
+      return (checkout.data as { data: any }).data ?? null
     } catch (error) {
       console.error('Error fetching checkout:', error)
       return null
@@ -222,7 +227,7 @@ export class LemonSqueezyService {
         throw new Error(products.error.message)
       }
 
-      return products.data.data ?? []
+      return (products.data as { data: any }).data ?? []
     } catch (error) {
       console.error('Error fetching products:', error)
       return []
@@ -242,7 +247,7 @@ export class LemonSqueezyService {
         throw new Error(variants.error.message)
       }
 
-      return variants.data.data ?? []
+      return (variants.data as { data: any }).data ?? []
     } catch (error) {
       console.error('Error fetching variants:', error)
       return []
@@ -262,7 +267,7 @@ export class LemonSqueezyService {
         throw new Error(subscription.error.message)
       }
 
-      return subscription.data.data ?? null
+      return (subscription.data as { data: any }).data ?? null
     } catch (error) {
       console.error('Error fetching subscription:', error)
       return null
@@ -305,13 +310,13 @@ export class LemonSqueezyService {
           id: subscriptionId,
           attributes: updates,
         },
-      })
+      } as any)
 
       if (result.error) {
         throw new Error(result.error.message)
       }
 
-      return result.data.data ?? null
+      return (result.data as { data: any }).data ?? null
     } catch (error) {
       console.error('Error updating subscription:', error)
       return null
@@ -329,7 +334,7 @@ export class LemonSqueezyService {
         throw new Error(customer.error.message)
       }
 
-      return customer.data.data ?? null
+      return (customer.data as { data: any }).data ?? null
     } catch (error) {
       console.error('Error fetching customer:', error)
       return null
@@ -354,9 +359,9 @@ export class LemonSqueezyService {
    * Validate webhook signature (to be implemented on backend)
    */
   static validateWebhookSignature(
-    payload: string,
-    signature: string,
-    secret: string,
+    _payload: string,
+    _signature: string,
+    _secret: string,
   ): boolean {
     // This should be implemented on your backend for security
     // Using crypto.createHmac('sha256', secret).update(payload).digest('hex')

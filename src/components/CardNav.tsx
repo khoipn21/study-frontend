@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useState } from 'react'
+import React, { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 // use your own icon import if react-icons is not available
 import { GoArrowUpRight } from 'react-icons/go'
@@ -51,8 +51,8 @@ const CardNav: React.FC<CardNavProps> = ({
 
     const isMobile = window.matchMedia('(max-width: 768px)').matches
     if (isMobile) {
-      const contentEl = navEl.querySelector('.card-nav-content') as HTMLElement
-      if (contentEl !== null) {
+      const contentEl = navEl.querySelector('.card-nav-content')
+      if (contentEl instanceof HTMLElement) {
         const wasVisible = contentEl.style.visibility
         const wasPointerEvents = contentEl.style.pointerEvents
         const wasPosition = contentEl.style.position
@@ -80,7 +80,7 @@ const CardNav: React.FC<CardNavProps> = ({
     return 260
   }
 
-  const createTimeline = () => {
+  const createTimeline = useCallback(() => {
     const navEl = navRef.current
     if (!navEl) return null
 
@@ -102,7 +102,7 @@ const CardNav: React.FC<CardNavProps> = ({
     )
 
     return tl
-  }
+  }, [ease])
 
   useLayoutEffect(() => {
     const tl = createTimeline()
@@ -112,7 +112,7 @@ const CardNav: React.FC<CardNavProps> = ({
       tl?.kill()
       tlRef.current = null
     }
-  }, [ease, items])
+  }, [ease, items, createTimeline])
 
   useLayoutEffect(() => {
     const handleResize = () => {
@@ -139,7 +139,7 @@ const CardNav: React.FC<CardNavProps> = ({
 
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
-  }, [isExpanded])
+  }, [isExpanded, createTimeline])
 
   const toggleMenu = () => {
     const tl = tlRef.current
@@ -175,7 +175,7 @@ const CardNav: React.FC<CardNavProps> = ({
             role="button"
             aria-label={isExpanded ? 'Close menu' : 'Open menu'}
             tabIndex={0}
-            style={{ color: menuColor || '#000' }}
+            style={{ color: menuColor ?? '#000' }}
           >
             <div
               className={`hamburger-line w-[30px] h-[2px] bg-current transition-[transform,opacity,margin] duration-300 ease-linear origin-[50%_50%] ${

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   Bar,
@@ -21,10 +21,8 @@ import {
   ArrowUpRight,
   Award,
   BookOpen,
-  Calendar,
   Clock,
   DollarSign,
-  Eye,
   MessageSquare,
   PlayCircle,
   Star,
@@ -32,7 +30,6 @@ import {
   Users,
 } from 'lucide-react'
 
-import { Link } from '@tanstack/react-router'
 import {
   Card,
   CardContent,
@@ -42,13 +39,9 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { instructorDashboardService } from '@/lib/instructor-dashboard'
 import { useAuthenticatedApi } from '@/lib/auth-context'
 import type {
-  InstructorDashboardStats,
   RevenueMetrics,
   StudentEngagement,
 } from '@/lib/instructor-dashboard'
@@ -121,7 +114,9 @@ function MetricCard({
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
+        {React.createElement(Icon, {
+          className: 'h-4 w-4 text-muted-foreground',
+        })}
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
@@ -223,9 +218,10 @@ function EngagementChart({ data }: EngagementChartProps) {
               outerRadius={80}
               fill="#8884d8"
               dataKey="value"
-              label={({ name, percent }) =>
-                `${name}: ${(percent * 100).toFixed(0)}%`
-              }
+              label={(props: any) => {
+                const { name, percent } = props
+                return `${name}: ${(percent * 100).toFixed(0)}%`
+              }}
             >
               {pieData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />
@@ -418,7 +414,6 @@ function QuickActions({
 
 export default function DashboardOverview() {
   const {
-    token,
     isAuthenticated,
     isLoading: authLoading,
     callWithAuth,

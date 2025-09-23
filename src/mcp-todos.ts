@@ -2,9 +2,14 @@ import fs from 'node:fs'
 
 const todosPath = './mcp-todos.json'
 
+export type Todo = {
+  id: number
+  title: string
+}
+
 // In-memory todos storage
-const todos = fs.existsSync(todosPath)
-  ? JSON.parse(fs.readFileSync(todosPath, 'utf8'))
+const todos: Array<Todo> = fs.existsSync(todosPath)
+  ? (JSON.parse(fs.readFileSync(todosPath, 'utf8')) as Array<Todo>)
   : [
       {
         id: 1,
@@ -14,11 +19,6 @@ const todos = fs.existsSync(todosPath)
 
 // Subscription callbacks per userID
 let subscribers: Array<(todos: Array<Todo>) => void> = []
-
-export type Todo = {
-  id: number
-  title: string
-}
 
 // Get the todos for a user
 export function getTodos(): Array<Todo> {

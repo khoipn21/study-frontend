@@ -38,7 +38,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
 )
 Card.displayName = 'Card'
 
-type CardRef = RefObject<HTMLDivElement>
+type CardRef = RefObject<HTMLDivElement | null>
 interface Slot {
   x: number
   y: number
@@ -108,7 +108,7 @@ const CardSwap: React.FC<CardSwapProps> = ({
   )
   const refs = useMemo<Array<CardRef>>(
     () => childArr.map(() => React.createRef<HTMLDivElement>()),
-    [childArr.length],
+    [childArr],
   )
 
   const order = useRef<Array<number>>(
@@ -116,17 +116,19 @@ const CardSwap: React.FC<CardSwapProps> = ({
   )
 
   const tlRef = useRef<gsap.core.Timeline | null>(null)
-  const intervalRef = useRef<number>()
+  const intervalRef = useRef<number | undefined>(undefined)
   const container = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const total = refs.length
     refs.forEach((r, i) => {
-      void placeNow(
-        r.current,
-        makeSlot(i, cardDistance, verticalDistance, total),
-        skewAmount,
-      )
+      if (r.current) {
+        void placeNow(
+          r.current,
+          makeSlot(i, cardDistance, verticalDistance, total),
+          skewAmount,
+        )
+      }
     })
 
     const swap = () => {
@@ -199,7 +201,7 @@ const CardSwap: React.FC<CardSwapProps> = ({
       const node = container.current
       const pause = () => {
         tlRef.current?.pause()
-        clearInterval(intervalRef.current)
+        if (intervalRef.current != null) clearInterval(intervalRef.current)
       }
       const resume = () => {
         tlRef.current?.play()
@@ -210,11 +212,27 @@ const CardSwap: React.FC<CardSwapProps> = ({
       return () => {
         node.removeEventListener('mouseenter', pause)
         node.removeEventListener('mouseleave', resume)
-        clearInterval(intervalRef.current)
+        if (intervalRef.current != null) clearInterval(intervalRef.current)
       }
     }
-    return () => clearInterval(intervalRef.current)
-  }, [cardDistance, verticalDistance, delay, pauseOnHover, skewAmount, easing])
+    return () => {
+      if (intervalRef.current != null) clearInterval(intervalRef.current)
+    }
+  }, [
+    config.durDrop,
+    config.durMove,
+    config.durReturn,
+    config.ease,
+    config.promoteOverlap,
+    config.returnDelay,
+    refs,
+    cardDistance,
+    verticalDistance,
+    delay,
+    pauseOnHover,
+    skewAmount,
+    easing,
+  ])
 
   const rendered = childArr.map((child, i) =>
     isValidElement<CardProps>(child)

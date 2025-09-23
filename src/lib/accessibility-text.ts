@@ -496,7 +496,7 @@ export function getAccessibilityText(
   // Navigate to the nested property
   for (const key of keys) {
     if (text && typeof text === 'object' && key in text) {
-      text = text[key]
+      text = (text as Record<string, any>)[key]
     } else {
       return {
         label: 'Content not found',
@@ -586,7 +586,9 @@ export function getAnnouncement(
   type: string,
   variables: Record<string, string | number> = {},
 ): string {
-  const announcement = liveAnnouncements[category][type]
+  const announcement = (liveAnnouncements[category] as Record<string, string>)[
+    type
+  ]
   if (!announcement) {
     return 'Status updated'
   }

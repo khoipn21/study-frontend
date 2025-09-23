@@ -6,10 +6,7 @@ import { cn } from '@/lib/utils'
 // Use the standard Radix provider/components to avoid custom ref/state churn
 const TooltipProvider = TooltipPrimitive.Provider
 
-const Tooltip = React.forwardRef<
-  React.ElementRef<typeof TooltipPrimitive.Root>,
-  React.ComponentProps<typeof TooltipPrimitive.Root>
->(({ ...props }, ref) => <TooltipPrimitive.Root ref={ref} {...props} />)
+const Tooltip = TooltipPrimitive.Root
 Tooltip.displayName = 'Tooltip'
 
 const TooltipTrigger = React.forwardRef<

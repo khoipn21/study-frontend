@@ -194,7 +194,10 @@ const Shuffle: React.FC<ShuffleProps> = ({
           }
 
           gsap.set(inner, { x: startX, force3D: true })
-          if (colorFrom) (inner.style as any).color = colorFrom
+          if (colorFrom) {
+            const style = inner.style
+            style.color = colorFrom
+          }
 
           inner.setAttribute('data-final-x', String(finalX))
           inner.setAttribute('data-start-x', String(startX))
@@ -245,7 +248,7 @@ const Shuffle: React.FC<ShuffleProps> = ({
           onRepeat: () => {
             if (scrambleCharset) randomizeScrambles()
             gsap.set(strips, {
-              x: (i, t: HTMLElement) =>
+              x: (_, t: HTMLElement) =>
                 parseFloat(t.getAttribute('data-start-x') || '0'),
             })
             onShuffleComplete?.()
@@ -265,7 +268,7 @@ const Shuffle: React.FC<ShuffleProps> = ({
           tl.to(
             targets,
             {
-              x: (i, t: HTMLElement) =>
+              x: (_, t: HTMLElement) =>
                 parseFloat(t.getAttribute('data-final-x') || '0'),
               duration,
               ease,
@@ -382,10 +385,10 @@ const Shuffle: React.FC<ShuffleProps> = ({
 
   const classes =
     `${baseTw} ${ready ? 'visible' : 'invisible'} ${className}`.trim()
-  const Tag = (tag || 'p') as keyof JSX.IntrinsicElements
+  const Tag = (tag || 'p') as keyof React.JSX.IntrinsicElements
 
   return React.createElement(
-    Tag,
+    Tag as string,
     { ref: ref as any, className: classes, style: commonStyle },
     text,
   )

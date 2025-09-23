@@ -1,9 +1,8 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   Calendar,
   CheckCircle,
   Clock,
-  Edit3,
   Plus,
   Target,
   Trash2,
@@ -38,7 +37,6 @@ interface StudyGoalsProps {
   onCreateGoal?: (
     goal: Omit<StudyGoal, 'id' | 'current' | 'isCompleted' | 'createdAt'>,
   ) => void
-  onUpdateGoal?: (goalId: string, progress: number) => void
   onDeleteGoal?: (goalId: string) => void
   className?: string
 }
@@ -46,7 +44,6 @@ interface StudyGoalsProps {
 export function StudyGoals({
   goals,
   onCreateGoal,
-  onUpdateGoal,
   onDeleteGoal,
   className,
 }: StudyGoalsProps) {

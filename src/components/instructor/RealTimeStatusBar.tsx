@@ -24,13 +24,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { IsolatedTooltip } from '@/components/ui/isolated-tooltip'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -39,7 +33,6 @@ import {
   useInstructorRealTime,
   useRealTimeNotifications,
   useStudentActivityFeed,
-  useVideoProcessingStatus,
 } from '@/lib/instructor-realtime-context'
 
 interface ConnectionStatusProps {
@@ -338,17 +331,25 @@ function StudentActivityFeed({ compact = false }: StudentActivityFeedProps) {
       <CardContent>
         <ScrollArea className="h-32">
           <div className="space-y-2">
-            {activities.slice(0, 10).map((activity, index) => (
-              <div key={index} className="text-sm p-2 border rounded">
-                <div className="font-medium">{activity.type}</div>
-                <div className="text-muted-foreground">
-                  {activity.description}
+            {(
+              activities as Array<{
+                type: string
+                description: string
+                timestamp: string
+              }>
+            )
+              .slice(0, 10)
+              .map((activity, index) => (
+                <div key={index} className="text-sm p-2 border rounded">
+                  <div className="font-medium">{activity.type}</div>
+                  <div className="text-muted-foreground">
+                    {activity.description}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {new Date(activity.timestamp).toLocaleTimeString()}
+                  </div>
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  {new Date(activity.timestamp).toLocaleTimeString()}
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
         </ScrollArea>
       </CardContent>

@@ -72,14 +72,15 @@ interface TitleProps {
   font?: string
 }
 
-class Title {
+class Title implements Record<string, unknown> {
   gl: GL
   plane: Mesh
   renderer: Renderer
   text: string
   textColor: string
   font: string
-  mesh!: Mesh
+  mesh!: Mesh;
+  [key: string]: unknown
 
   constructor({
     gl,
@@ -383,7 +384,10 @@ class Media {
     if (screen) this.screen = screen
     if (viewport) {
       this.viewport = viewport
-      if (this.plane.program.uniforms.uViewportSizes) {
+      if (
+        this.plane.program.uniforms.uViewportSizes !== null &&
+        this.plane.program.uniforms.uViewportSizes !== undefined
+      ) {
         ;(
           this.plane.program.uniforms.uViewportSizes as { value: Array<number> }
         ).value = [this.viewport.width, this.viewport.height]
@@ -424,7 +428,7 @@ class App {
     last: number
     position?: number
   }
-  onCheckDebounce: (...args: Array<any>) => void
+  onCheckDebounce: (...args: Array<unknown>) => void
   renderer!: Renderer
   gl!: GL
   camera!: Camera
@@ -557,7 +561,8 @@ class App {
         text: 'Palm Trees',
       },
     ]
-    const galleryItems = items?.length ? items : defaultItems
+    const galleryItems =
+      items != null && items.length > 0 ? items : defaultItems
     this.mediasImages = galleryItems.concat(galleryItems)
     this.medias = this.mediasImages.map((data, index) => {
       return new Media({
@@ -604,7 +609,7 @@ class App {
       (wheelEvent as WheelEvent & { wheelDelta?: number }).wheelDelta ||
       (wheelEvent as WheelEvent & { detail?: number }).detail
     this.scroll.target +=
-      (delta > 0 ? this.scrollSpeed : -this.scrollSpeed) * 0.2
+      ((delta || 0) > 0 ? this.scrollSpeed : -this.scrollSpeed) * 0.2
     this.onCheckDebounce()
   }
 

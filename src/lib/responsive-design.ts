@@ -250,6 +250,12 @@ export const MOBILE_OPTIMIZATIONS = {
       format: 'webp',
       sizes: '(max-width: 1280px) 33vw, 25vw',
     },
+    'large-desktop': {
+      loading: 'lazy',
+      quality: 95,
+      format: 'webp',
+      sizes: '25vw',
+    },
   },
 
   // Video streaming optimization
@@ -268,6 +274,12 @@ export const MOBILE_OPTIMIZATIONS = {
     },
     desktop: {
       defaultQuality: '1080p',
+      preload: 'auto',
+      autoplay: false,
+      controls: 'advanced',
+    },
+    'large-desktop': {
+      defaultQuality: '4K',
       preload: 'auto',
       autoplay: false,
       controls: 'advanced',

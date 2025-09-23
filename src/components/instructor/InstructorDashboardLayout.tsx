@@ -1,25 +1,23 @@
-import React, { useEffect, useState } from 'react'
-import { Link, useLocation } from '@tanstack/react-router'
+import React, { useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import {
   BarChart3,
   Bell,
   BookOpen,
   Calendar,
   ChevronDown,
-  DollarSign,
   FileText,
   HelpCircle,
   Home,
   LogOut,
-  Menu,
   MessageSquare,
   Search,
   Settings,
   TrendingUp,
-  Upload,
   User,
   Users,
   Video,
+  X,
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -39,12 +37,12 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSkeleton,
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarProvider,
   SidebarTrigger,
+  useSidebar,
 } from '@/components/ui/sidebar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -60,6 +58,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import {
   Sheet,
   SheetContent,
@@ -180,12 +179,8 @@ const toolsItems = [
   },
 ]
 
-interface InstructorSidebarProps {
-  children?: React.ReactNode
-}
-
-function InstructorSidebar({ children }: InstructorSidebarProps) {
-  const location = useLocation()
+function InstructorSidebar() {
+  const { setOpenMobile, setOpen } = useSidebar()
 
   // Fetch notifications for unread count
   const { data: notificationsData } = useQuery({
@@ -194,21 +189,37 @@ function InstructorSidebar({ children }: InstructorSidebarProps) {
     refetchInterval: 30000, // Refetch every 30 seconds
   })
 
-  const unreadNotifications = notificationsData?.unreadCount || 0
+  const unreadNotifications = notificationsData?.unreadCount ?? 0
 
   return (
-    <Sidebar variant="inset" className="border-r-0">
+    <Sidebar collapsible="offcanvas" className="border-r">
       <SidebarHeader className="border-b">
-        <div className="flex items-center gap-2 px-4 py-2">
-          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <TrendingUp className="size-4" />
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-2">
+            <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <TrendingUp className="size-4" />
+            </div>
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate font-semibold">
+                Instructor Dashboard
+              </span>
+              <span className="truncate text-xs text-muted-foreground">
+                Manage your courses
+              </span>
+            </div>
           </div>
-          <div className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-semibold">Instructor Dashboard</span>
-            <span className="truncate text-xs text-muted-foreground">
-              Manage your courses
-            </span>
-          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => {
+              setOpenMobile(false)
+              setOpen(false)
+            }}
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close sidebar</span>
+          </Button>
         </div>
       </SidebarHeader>
 
@@ -263,7 +274,7 @@ function InstructorSidebar({ children }: InstructorSidebarProps) {
                         <item.icon className="size-4" />
                         <span>{item.title}</span>
                         {item.title === 'Messages' &&
-                          unreadNotifications > 0 && (
+                          (unreadNotifications ?? 0) > 0 && (
                             <Badge
                               variant="destructive"
                               className="ml-auto size-5 flex items-center justify-center text-xs"
@@ -413,11 +424,11 @@ function InstructorDashboardHeader({
   })
 
   const unreadNotifications =
-    realTimeNotifications.unreadCount || notificationsData?.unreadCount || 0
+    realTimeNotifications.unreadCount ?? notificationsData?.unreadCount ?? 0
   const recentNotifications =
     realTimeNotifications.notifications.length > 0
       ? realTimeNotifications.notifications.slice(0, 5)
-      : notificationsData?.notifications || []
+      : (notificationsData?.notifications ?? [])
 
   return (
     <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
@@ -448,7 +459,7 @@ function InstructorDashboardHeader({
           <SheetTrigger asChild>
             <Button variant="outline" size="icon" className="relative">
               <Bell className="h-4 w-4" />
-              {unreadNotifications > 0 && (
+              {(unreadNotifications ?? 0) > 0 && (
                 <Badge
                   variant="destructive"
                   className="absolute -top-2 -right-2 size-5 flex items-center justify-center text-xs p-0"
@@ -467,7 +478,7 @@ function InstructorDashboardHeader({
             </SheetHeader>
             <ScrollArea className="h-full">
               <div className="space-y-4 mt-4">
-                {recentNotifications.length === 0 ? (
+                {(recentNotifications?.length ?? 0) === 0 ? (
                   <div className="text-center text-muted-foreground py-8">
                     <Bell className="h-8 w-8 mx-auto mb-2" />
                     <p>No new notifications</p>
@@ -555,24 +566,34 @@ export default function InstructorDashboardLayout({
   headerContent,
 }: InstructorDashboardLayoutProps) {
   return (
-    <InstructorRealTimeProvider>
-      <SidebarProvider
-        style={
-          {
-            '--sidebar-width': '16rem',
-            '--sidebar-width-mobile': '18rem',
-          } as React.CSSProperties
-        }
-      >
-        <InstructorSidebar />
-        <SidebarInset>
-          <InstructorDashboardHeader title={title} description={description}>
-            {headerContent}
-          </InstructorDashboardHeader>
-          <div className="flex flex-1 flex-col gap-4 p-4 pb-24">{children}</div>
-          {/* Real-time status bar removed per request to stop render loop on analytics */}
-        </SidebarInset>
-      </SidebarProvider>
+    <InstructorRealTimeProvider enabled={false}>
+      <TooltipProvider>
+        <SidebarProvider
+          defaultOpen={false}
+          style={
+            {
+              '--sidebar-width': '16rem',
+              '--sidebar-width-mobile': '18rem',
+            } as React.CSSProperties
+          }
+        >
+          <div data-dashboard="true" className="flex h-screen w-full">
+            <InstructorSidebar />
+            <SidebarInset className="flex flex-1 flex-col overflow-hidden">
+              <InstructorDashboardHeader
+                title={title}
+                description={description}
+              >
+                {headerContent}
+              </InstructorDashboardHeader>
+              <div className="flex flex-1 flex-col gap-4 p-4 pb-24 overflow-auto">
+                {children}
+              </div>
+              {/* Real-time status bar removed per request to stop render loop on analytics */}
+            </SidebarInset>
+          </div>
+        </SidebarProvider>
+      </TooltipProvider>
     </InstructorRealTimeProvider>
   )
 }

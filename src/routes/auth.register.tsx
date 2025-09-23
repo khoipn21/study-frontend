@@ -85,11 +85,15 @@ function RegisterPage() {
         setError('Đăng ký thành công nhưng không nhận được dữ liệu người dùng')
       }
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Registration error:', error)
+      const errorObj = error as {
+        response?: { data?: { message?: string } }
+        message?: string
+      }
       setError(
-        error?.response?.data?.message ||
-          error?.message ||
+        errorObj?.response?.data?.message ||
+          errorObj?.message ||
           'Đăng ký thất bại. Vui lòng thử lại sau.',
       )
     },
@@ -376,16 +380,27 @@ function RegisterPage() {
                     className="text-sm text-muted-foreground cursor-pointer leading-relaxed"
                   >
                     Tôi đồng ý với{' '}
-                    <Link to="/terms" className="text-primary hover:underline">
-                      Điều khoản dịch vụ
-                    </Link>{' '}
-                    và{' '}
-                    <Link
-                      to="/privacy"
+                    <a
+                      href="#"
                       className="text-primary hover:underline"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        alert('Điều khoản dịch vụ đang được cập nhật')
+                      }}
+                    >
+                      Điều khoản dịch vụ
+                    </a>{' '}
+                    và{' '}
+                    <a
+                      href="#"
+                      className="text-primary hover:underline"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        alert('Chính sách bảo mật đang được cập nhật')
+                      }}
                     >
                       Chính sách bảo mật
-                    </Link>
+                    </a>
                   </Label>
                 </div>
 

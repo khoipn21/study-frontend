@@ -60,7 +60,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
-      if (this.props.fallback) {
+      if (this.props.fallback != null) {
         return this.props.fallback
       }
 
@@ -75,7 +75,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
                 Oops! Something went wrong
               </CardTitle>
               <CardDescription>
-                An unexpected error occurred while loading the page. Don't
+                An unexpected error occurred while loading the page. Don&apos;t
                 worry, our team has been notified and is working on it.
               </CardDescription>
             </CardHeader>
@@ -161,7 +161,7 @@ export function withErrorBoundary<TProps extends object>(
   )
 
   ComponentWithErrorBoundary.displayName = `withErrorBoundary(${
-    WrappedComponent.displayName || WrappedComponent.name
+    WrappedComponent.displayName ?? WrappedComponent.name
   })`
 
   return ComponentWithErrorBoundary
@@ -171,10 +171,10 @@ export function withErrorBoundary<TProps extends object>(
 export function useErrorHandler() {
   const [error, setError] = React.useState<Error | null>(null)
 
-  const handleError = React.useCallback((error: Error) => {
-    console.error('Async Error:', error)
-    setError(error)
-    throw error // Re-throw to be caught by error boundary
+  const handleError = React.useCallback((err: Error) => {
+    console.error('Async Error:', err)
+    setError(err)
+    throw err // Re-throw to be caught by error boundary
   }, [])
 
   const clearError = React.useCallback(() => {

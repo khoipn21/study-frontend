@@ -797,11 +797,11 @@ The StudyPlatform Team
 
         <p>Hi {{instructorName}},</p>
 
-        <p>Fantastic milestone! You've reached your first <strong>${{ totalRevenue }}</strong> in course revenue. This proves that students value your expertise and are willing to invest in learning from you.</p>
+        <p>Fantastic milestone! You've reached your first <strong>\${{ totalRevenue }}</strong> in course revenue. This proves that students value your expertise and are willing to invest in learning from you.</p>
 
         <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #f59e0b;">
           <h3 style="margin: 0 0 15px 0; color: #92400e;">📊 Your Teaching Impact:</h3>
-          <p style="margin: 5px 0; color: #92400e;"><strong>Total Revenue:</strong> ${{ totalRevenue }}</p>
+          <p style="margin: 5px 0; color: #92400e;"><strong>Total Revenue:</strong> \${{ totalRevenue }}</p>
           <p style="margin: 5px 0; color: #92400e;"><strong>Courses Published:</strong> {{courseCount}}</p>
           <p style="margin: 5px 0; color: #92400e;"><strong>Students Taught:</strong> {{studentCount}}</p>
           <p style="margin: 5px 0; color: #92400e;"><strong>Next Payout:</strong> {{nextPayoutDate}}</p>
@@ -832,10 +832,10 @@ The StudyPlatform Team
 
 Hi {{instructorName}},
 
-Fantastic milestone! You've reached your first ${{ totalRevenue }} in course revenue.
+Fantastic milestone! You've reached your first \${{ totalRevenue }} in course revenue.
 
 📊 Your Teaching Impact:
-• Total Revenue: ${{ totalRevenue }}
+• Total Revenue: \${{ totalRevenue }}
 • Courses Published: {{courseCount}}
 • Students Taught: {{studentCount}}
 • Next Payout: {{nextPayoutDate}}

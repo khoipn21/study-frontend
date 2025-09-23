@@ -381,4 +381,26 @@ code {
   body {
     @apply bg-background text-foreground;
   }
+
+  .container {
+    @apply mx-auto px-4;
+  }
+
+  /* Dashboard layouts have their own layout system */
+  [data-dashboard='true'] {
+    @apply h-screen overflow-hidden;
+  }
+
+  [data-dashboard='true'] .container {
+    @apply mx-0 px-0;
+  }
+
+  /* Ensure sidebar doesn't get affected by global container styles */
+  [data-sidebar] {
+    @apply relative;
+  }
+
+  [data-sidebar] .container {
+    @apply mx-0 px-0;
+  }
 }

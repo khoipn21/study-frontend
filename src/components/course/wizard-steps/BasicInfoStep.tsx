@@ -1,6 +1,4 @@
-import React from 'react'
 import { Controller, useFormContext } from 'react-hook-form'
-import { z } from 'zod'
 
 // UI Components
 import {
@@ -73,11 +71,7 @@ const difficultyLevels = [
   },
 ]
 
-export function BasicInfoStep({
-  formData,
-  onUpdate,
-  errors,
-}: BasicInfoStepProps) {
+export function BasicInfoStep({ onUpdate, errors }: BasicInfoStepProps) {
   const {
     control,
     watch,
@@ -86,7 +80,6 @@ export function BasicInfoStep({
 
   // Watch form values for UI feedback
   const watchedPrice = watch('price')
-  const watchedTitle = watch('title')
 
   // Check if all required fields are completed
   const isFormValid = () => {

@@ -1,15 +1,13 @@
-import React, { useEffect, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import React, { useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   AlertCircle,
   ArrowLeft,
   Award,
   BookOpen,
-  Calendar,
   Check,
   Clock,
   CreditCard,
-  DollarSign,
   Download,
   Globe,
   Loader2,
@@ -31,19 +29,9 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { api } from '@/lib/api-client'
-import {
-  CurrencyConverter,
-  formatPriceWithDiscount,
-  formatVND,
-  usdToVND,
-} from '@/lib/currency'
-import {
-  formatVietnameseDate,
-  vietnameseTranslations,
-} from '@/lib/vietnamese-locale'
-import { lemonSqueezyService } from '@/lib/lemon-squeezy'
+import { formatVND, usdToVND } from '@/lib/currency'
+import { formatVietnameseDate } from '@/lib/vietnamese-locale'
 import { cn } from '@/lib/utils'
-import type { CourseCheckoutData, WebhookEvents } from '@/lib/lemon-squeezy'
 import type { Course, User } from '@/lib/types'
 
 interface VNDPaymentFlowProps {
@@ -146,7 +134,7 @@ const VIETNAMESE_PAYMENT_METHODS: Array<PaymentMethod> = [
 export function VNDPaymentFlow({
   course,
   user,
-  onSuccess,
+  onSuccess: _onSuccess,
   onCancel,
   onError,
 }: VNDPaymentFlowProps) {
@@ -156,10 +144,10 @@ export function VNDPaymentFlow({
   const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [processingProgress, setProcessingProgress] = useState(0)
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null)
-  const [enrollmentId, setEnrollmentId] = useState<string | null>(null)
+  const [enrollmentId, _setEnrollmentId] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  const queryClient = useQueryClient()
+  useQueryClient()
 
   // Calculate order summary
   const orderSummary: OrderSummary = React.useMemo(() => {
@@ -206,35 +194,23 @@ export function VNDPaymentFlow({
   // Create checkout session
   const createCheckoutMutation = useMutation({
     mutationFn: async () => {
-      const checkoutData: CourseCheckoutData = {
-        courseId: course.id,
-        courseTitle: course.title,
-        price: orderSummary.total,
-        currency: 'VND',
-        userId: user.id,
-        userEmail: user.email,
-        userName: user.username,
-      }
-
       // For VND payments, we'll use the backend payment endpoint
       const response = await api.purchaseCourse(
         'user-token', // This should come from auth context
         course.id,
         {
-          payment_method: selectedPaymentMethod,
+          payment_method_id: selectedPaymentMethod,
           amount: orderSummary.total,
-          currency: 'VND',
-          return_url: `${window.location.origin}/payment/success`,
-          cancel_url: `${window.location.origin}/payment/cancel`,
         },
       )
 
       return response
     },
     onSuccess: (data) => {
-      if (data.checkout_url) {
-        setCheckoutUrl(data.checkout_url)
-        setCurrentStep('payment')
+      if (data.transaction) {
+        // For VND payments, transaction is created directly
+        setCheckoutUrl('/payment/success') // Set a success URL
+        setCurrentStep('success')
       } else {
         setErrorMessage('Không thể tạo phiên thanh toán')
         setCurrentStep('error')
@@ -246,51 +222,6 @@ export function VNDPaymentFlow({
       onError?.(errorMessage || 'Payment failed')
     },
   })
-
-  // Check payment status
-  const checkPaymentStatus = async (paymentId: string) => {
-    const maxAttempts = 30 // 5 minutes with 10-second intervals
-    let attempts = 0
-
-    const checkStatus = async (): Promise<void> => {
-      try {
-        const response = await api.listTransactions('user-token', {
-          payment_id: paymentId,
-        })
-
-        if (response.status === 'completed') {
-          setCurrentStep('success')
-          if (response.enrollment_id) {
-            setEnrollmentId(response.enrollment_id)
-            onSuccess?.(response.enrollment_id)
-          }
-          return
-        }
-
-        if (response.status === 'failed') {
-          setErrorMessage('Thanh toán thất bại')
-          setCurrentStep('error')
-          return
-        }
-
-        // Continue checking if still pending
-        attempts++
-        setProcessingProgress((attempts / maxAttempts) * 100)
-
-        if (attempts < maxAttempts) {
-          setTimeout(checkStatus, 10000) // Check again in 10 seconds
-        } else {
-          setErrorMessage('Quá thời gian chờ thanh toán')
-          setCurrentStep('error')
-        }
-      } catch (error) {
-        setErrorMessage('Không thể kiểm tra trạng thái thanh toán')
-        setCurrentStep('error')
-      }
-    }
-
-    await checkStatus()
-  }
 
   const handlePayment = () => {
     if (!acceptedTerms) {
@@ -416,7 +347,9 @@ export function VNDPaymentFlow({
                 <Checkbox
                   id="terms"
                   checked={acceptedTerms}
-                  onCheckedChange={setAcceptedTerms}
+                  onCheckedChange={(checked) =>
+                    setAcceptedTerms(checked === true)
+                  }
                 />
                 <Label htmlFor="terms" className="text-sm leading-relaxed">
                   Tôi đồng ý với{' '}

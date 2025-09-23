@@ -1,8 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useState } from 'react'
 import { useInstructorWebSocket } from '@/hooks/useInstructorWebSocket'
 import type {
   BulkOperation,
-  InstructorMessage,
   InstructorNotification,
   VideoProcessingStatus,
 } from './instructor-dashboard'
@@ -94,7 +93,7 @@ export function InstructorRealTimeProvider({
         return [notification, ...filtered].slice(0, 10) // Keep only latest 10
       })
     },
-    onNewMessage: (message) => {
+    onNewMessage: () => {
       setUnreadMessageCount((prev) => prev + 1)
     },
     onBulkOperationUpdate: (operation) => {

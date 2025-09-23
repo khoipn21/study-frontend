@@ -313,7 +313,7 @@ export class ForumService {
     }
   }
 
-  private getMockPosts(params: any): {
+  private getMockPosts(_params: any): {
     posts: Array<ForumPost>
     total: number
   } {

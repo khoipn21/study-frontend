@@ -117,7 +117,7 @@ const GooeyNav: React.FC<GooeyNavProps> = ({
     updateEffectPosition(liEl)
     if (filterRef.current) {
       const particles = filterRef.current.querySelectorAll('.particle')
-      particles.forEach((p) => filterRef.current!.removeChild(p))
+      particles.forEach((p) => filterRef.current?.removeChild(p))
     }
     if (textRef.current) {
       textRef.current.classList.remove('active')

@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import {
   Award,
-  BookOpen,
   ChevronDown,
   Clock,
   DollarSign,
@@ -10,16 +9,11 @@ import {
   Search,
   SlidersHorizontal,
   Star,
-  TrendingUp,
-  Users,
   X,
   Zap,
 } from 'lucide-react'
-import { PRICE_RANGES, formatPriceRange, formatVND } from '@/lib/currency'
-import {
-  formatVietnameseCount,
-  vietnameseTranslations,
-} from '@/lib/vietnamese-locale'
+import { PRICE_RANGES, formatVND } from '@/lib/currency'
+import { formatVietnameseCount } from '@/lib/vietnamese-locale'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -150,12 +144,11 @@ export function CourseFilters({
   className,
 }: CourseFiltersProps) {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false)
-  const [showMobileFilters, setShowMobileFilters] = useState(false)
 
-  const updateFilter = (key: keyof CourseFilters, value: any) => {
+  const updateFilter = (key: keyof CourseFilters, value: unknown) => {
     onFiltersChange({
       ...filters,
-      [key]: value,
+      [key]: value as CourseFilters[typeof key],
     })
   }
 
@@ -181,7 +174,7 @@ export function CourseFilters({
   }: {
     children: React.ReactNode
     title: string
-    icon: any
+    icon: React.ComponentType<{ className?: string }>
   }) => (
     <div className="space-y-3">
       <Label className="text-sm font-medium text-foreground flex items-center gap-2">
@@ -419,7 +412,7 @@ export function CourseFilters({
                           htmlFor={`rating-${rating}`}
                           className="flex items-center text-sm"
                         >
-                          {[...Array(5)].map((_, i) => (
+                          {Array.from({ length: 5 }, (_, i) => (
                             <Star
                               key={i}
                               className={cn(

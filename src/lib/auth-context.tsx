@@ -40,7 +40,7 @@ function isTokenValid(token: string | null): boolean {
     if (parts.length !== 3) return false
 
     // Decode the payload to check expiry
-    const payload = JSON.parse(atob(parts[1]))
+    const payload = JSON.parse(atob(parts[1])) as { exp?: number }
     const now = Math.floor(Date.now() / 1000)
 
     // Check if token is expired (with 1 minute buffer for early refresh)
@@ -84,7 +84,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (event.key === STORAGE_KEY) {
         if (event.newValue) {
           try {
-            const parsed = JSON.parse(event.newValue)
+            const parsed = JSON.parse(event.newValue) as {
+              user: User | null
+              token: string | null
+            }
             if (isTokenValid(parsed.token)) {
               setState({ ...parsed, isLoading: false })
             } else {
