@@ -25,6 +25,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { ThumbnailUpload } from '../ThumbnailUpload'
 import type { CourseCreationData } from '@/lib/course-management-types'
 
 // Types
@@ -324,6 +325,24 @@ export function BasicInfoStep({ onUpdate, errors }: BasicInfoStepProps) {
               </div>
             </CardContent>
           </Card>
+
+          {/* Thumbnail Upload */}
+          <Controller
+            name="thumbnail_url"
+            control={control}
+            render={({ field }) => (
+              <ThumbnailUpload
+                value={field.value || ''}
+                onChange={(url) => {
+                  field.onChange(url)
+                  onUpdate({ thumbnail_url: url })
+                }}
+                onError={(error) => {
+                  console.error('Thumbnail upload error:', error)
+                }}
+              />
+            )}
+          />
 
           {/* Pricing Card */}
           <Card>

@@ -29,6 +29,7 @@ export interface CourseCreationData {
   difficulty_level: 'beginner' | 'intermediate' | 'advanced' | 'expert'
   price: number
   currency: 'VND' | 'USD'
+  thumbnail_url?: string
 
   // Step 2: Course Details
   learning_outcomes: Array<string>

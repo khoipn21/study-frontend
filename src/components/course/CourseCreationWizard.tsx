@@ -41,6 +41,7 @@ const courseCreationSchema = z.object({
   difficulty_level: z.enum(['beginner', 'intermediate', 'advanced', 'expert']),
   price: z.number().min(0).max(10000000),
   currency: z.enum(['VND', 'USD']),
+  thumbnail_url: z.string().optional(),
 
   // Course Details (Step 2)
   learning_outcomes: z.array(z.string()).default([]),
@@ -88,6 +89,7 @@ export function CourseCreationWizard({
       difficulty_level: editingCourse?.difficulty_level || 'beginner',
       price: editingCourse?.price || 0,
       currency: editingCourse?.currency || 'VND',
+      thumbnail_url: editingCourse?.thumbnail_url || '',
       learning_outcomes: editingCourse?.learning_outcomes || [],
       requirements: editingCourse?.requirements || [],
       language: editingCourse?.language || 'vi',
@@ -230,6 +232,7 @@ export function CourseCreationWizard({
         status: data.status,
         difficulty_level: data.difficulty_level,
         language: data.language,
+        thumbnail_url: data.thumbnail_url,
         // Convert arrays to JSON strings for backend
         learning_outcomes: data.learning_outcomes,
         requirements: data.requirements,
@@ -341,6 +344,7 @@ export function CourseCreationWizard({
         price: formData.price,
         currency: formData.currency,
         language: formData.language,
+        thumbnail_url: formData.thumbnail_url,
         learning_outcomes: formData.learning_outcomes,
         requirements: formData.requirements,
         tags: formData.tags,
@@ -392,6 +396,7 @@ export function CourseCreationWizard({
         price: formData.price,
         currency: formData.currency,
         language: formData.language,
+        thumbnail_url: formData.thumbnail_url,
         learning_outcomes: formData.learning_outcomes,
         requirements: formData.requirements,
         tags: formData.tags,
