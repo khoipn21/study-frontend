@@ -48,10 +48,10 @@ const courseCreationSchema = z.object({
   requirements: z.array(z.string()).default([]),
   language: z.string().min(1, 'Please select a language'),
   tags: z.array(z.string()).default([]),
-  estimated_duration_hours: z.number().min(0.5).max(1000),
+  estimated_duration_hours: z.number().min(0).max(1000),
 
   // Course Settings (Step 3)
-  status: z.enum(['draft', 'published']).default('draft'),
+  status: z.enum(['draft', 'published', 'under_review']).default('draft'),
   start_date: z.string().optional(),
   end_date: z.string().optional(),
   max_students: z.number().optional(),
@@ -69,7 +69,7 @@ const courseCreationSchema = z.object({
 type CourseFormData = z.infer<typeof courseCreationSchema>
 
 interface CourseCreationWizardProps {
-  editingCourse?: Partial<CourseCreationData>
+  editingCourse?: Partial<CourseCreationData> & { id?: string }
 }
 
 export function CourseCreationWizard({
@@ -83,26 +83,29 @@ export function CourseCreationWizard({
   const form = useForm<CourseFormData>({
     resolver: zodResolver(courseCreationSchema) as any,
     defaultValues: {
-      title: editingCourse?.title || '',
-      description: editingCourse?.description || '',
-      category: editingCourse?.category || '',
-      difficulty_level: editingCourse?.difficulty_level || 'beginner',
-      price: editingCourse?.price || 0,
-      currency: editingCourse?.currency || 'VND',
-      thumbnail_url: editingCourse?.thumbnail_url || '',
-      learning_outcomes: editingCourse?.learning_outcomes || [],
-      requirements: editingCourse?.requirements || [],
-      language: editingCourse?.language || 'vi',
-      tags: editingCourse?.tags || [],
-      estimated_duration_hours: editingCourse?.estimated_duration_hours || 10,
-      status: editingCourse?.status || 'draft',
+      title: editingCourse?.title ?? '',
+      description: editingCourse?.description ?? '',
+      category: editingCourse?.category ?? '',
+      difficulty_level: editingCourse?.difficulty_level ?? 'beginner',
+      price: typeof editingCourse?.price === 'number' ? editingCourse.price : 0,
+      currency: editingCourse?.currency ?? 'VND',
+      thumbnail_url: editingCourse?.thumbnail_url ?? '',
+      learning_outcomes: editingCourse?.learning_outcomes ?? [],
+      requirements: editingCourse?.requirements ?? [],
+      language: editingCourse?.language ?? 'vi',
+      tags: editingCourse?.tags ?? [],
+      estimated_duration_hours:
+        typeof editingCourse?.estimated_duration_hours === 'number'
+          ? editingCourse.estimated_duration_hours
+          : 10,
+      status: editingCourse?.status ?? 'draft',
       auto_approve_enrollment: editingCourse?.auto_approve_enrollment ?? true,
       allow_previews: editingCourse?.allow_previews ?? true,
       has_certificate: editingCourse?.has_certificate ?? false,
       mobile_access: editingCourse?.mobile_access ?? true,
-      lectures: editingCourse?.lectures || [],
-      resources: editingCourse?.resources || [],
-      videos: editingCourse?.videos || [],
+      lectures: editingCourse?.lectures ?? [],
+      resources: editingCourse?.resources ?? [],
+      videos: editingCourse?.videos ?? [],
       ...(editingCourse?.start_date && {
         start_date: editingCourse.start_date,
       }),
@@ -121,13 +124,13 @@ export function CourseCreationWizard({
     {},
   )
 
-  // Auto-save functionality
+  // Auto-save functionality (only for new courses)
   const debouncedSave = useMemo(() => {
     let timeoutId: NodeJS.Timeout
     return (data: CourseFormData) => {
       clearTimeout(timeoutId)
       timeoutId = setTimeout(() => {
-        if (user?.id != null) {
+        if (user?.id != null && !editingCourse) {
           try {
             localStorage.setItem(
               `course-draft-${user.id}`,
@@ -139,7 +142,7 @@ export function CourseCreationWizard({
         }
       }, 2000)
     }
-  }, [user?.id])
+  }, [user?.id, editingCourse])
 
   // Watch form changes for auto-save
   const watchedFormData = form.watch()
@@ -147,13 +150,13 @@ export function CourseCreationWizard({
     debouncedSave(watchedFormData)
   }, [watchedFormData, debouncedSave])
 
-  // Load saved draft on component mount
+  // Load saved draft on component mount (only if not editing)
   useEffect(() => {
     if (user?.id != null && editingCourse == null) {
       try {
         const savedDraft = localStorage.getItem(`course-draft-${user.id}`)
         if (savedDraft != null && savedDraft.length > 0) {
-          const draftData = JSON.parse(savedDraft) as CourseFormData
+          const draftData = courseCreationSchema.parse(JSON.parse(savedDraft))
           form.reset(draftData)
         }
       } catch (error) {
@@ -161,6 +164,13 @@ export function CourseCreationWizard({
       }
     }
   }, [user?.id, editingCourse, form])
+
+  // Clear draft when switching to edit mode
+  useEffect(() => {
+    if (editingCourse && user?.id) {
+      localStorage.removeItem(`course-draft-${user.id}`)
+    }
+  }, [editingCourse, user?.id])
 
   // Define wizard steps with proper component typing
   const steps: Array<WizardStep & { component: React.ComponentType<any> }> = [
@@ -214,7 +224,7 @@ export function CourseCreationWizard({
     },
   ]
 
-  // Course Creation Mutation
+  // Course Creation/Update Mutation
   const createCourseMutation = useMutation({
     mutationFn: async (data: CourseCreationData) => {
       if (token == null || user?.id == null) {
@@ -250,7 +260,12 @@ export function CourseCreationWizard({
         resources: data.resources || [],
       }
 
-      return api.createCourse(token, courseData)
+      // Use update if editing, create if new
+      if (editingCourse?.id) {
+        return api.updateCourse(token, editingCourse.id, courseData)
+      } else {
+        return api.createCourse(token, courseData)
+      }
     },
     onSuccess: (response) => {
       // Clear saved draft
@@ -260,18 +275,27 @@ export function CourseCreationWizard({
 
       // Invalidate courses query
       queryClient.invalidateQueries({ queryKey: ['courses'] })
+      queryClient.invalidateQueries({ queryKey: ['instructor', 'courses'] })
 
-      toast.success('Course created successfully!')
+      toast.success(
+        editingCourse
+          ? 'Course updated successfully!'
+          : 'Course created successfully!',
+      )
 
       // Navigate to course management
       router.navigate({
         to: '/dashboard/instructor/courses',
-        search: { created: response.data?.id },
+        search: editingCourse
+          ? { updated: response.data?.id }
+          : { created: response.data?.id },
       })
     },
     onError: (error: Error) => {
       const errorMessage =
-        error instanceof Error ? error.message : 'Failed to create course'
+        error instanceof Error
+          ? error.message
+          : `Failed to ${editingCourse ? 'update' : 'create'} course`
       toast.error(errorMessage)
       setIsSubmitting(false)
     },
@@ -501,7 +525,7 @@ export function CourseCreationWizard({
                         </p>
                         {stepErrors[index]?.length ? (
                           <p className="text-xs text-destructive mt-1">
-                            {stepErrors[index]?.[0]}
+                            {stepErrors[index][0]}
                           </p>
                         ) : null}
                       </div>
@@ -550,7 +574,13 @@ export function CourseCreationWizard({
 
                 {currentStep === steps.length - 1 ? (
                   <Button onClick={publishCourse} disabled={isSubmitting}>
-                    {isSubmitting ? 'Publishing...' : 'Publish Course'}
+                    {isSubmitting
+                      ? editingCourse
+                        ? 'Updating...'
+                        : 'Publishing...'
+                      : editingCourse
+                        ? 'Update Course'
+                        : 'Publish Course'}
                   </Button>
                 ) : (
                   <Button onClick={nextStep}>Continue</Button>

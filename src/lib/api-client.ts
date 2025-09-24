@@ -317,6 +317,21 @@ export const api = {
       body: JSON.stringify(payload),
       token,
     }),
+  updateCourseWithFile: (token: string, id: string, formData: FormData) =>
+    fetch(`${config.apiBaseUrl}/courses/${id}/upload`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    }).then(async (r) => {
+      if (!r.ok) throw new ApiError(r.statusText, r.status)
+      const response = (await r.json()) as GatewayResponse<Course>
+      if (!response.success) {
+        throw new ApiError(
+          response.error || response.message || 'Request failed',
+        )
+      }
+      return response
+    }),
   deleteCourse: (token: string, id: string) =>
     requestGateway<null>(`/courses/${id}`, { method: 'DELETE', token }),
   createLecture: (

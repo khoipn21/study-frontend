@@ -393,7 +393,39 @@ export function VideoUploadStep({ onUpdate, errors }: VideoUploadStepProps) {
 
       // Step 1: Get upload URL from backend
       const response = await api.getVideoUploadUrl(token, file.name, file.size)
-      const { upload_url: uploadUrl, file_id: videoId } = response
+
+      // Check if response is wrapped in gateway format
+      let actualData: any = response
+      if (
+        response &&
+        typeof response === 'object' &&
+        'data' in response &&
+        (response as any).success === true
+      ) {
+        actualData = (response as any).data
+      }
+
+      // Try multiple possible field names for the video ID
+      const videoId =
+        actualData.file_id ||
+        actualData.id ||
+        actualData.video_id ||
+        actualData.fileId
+
+      if (!videoId) {
+        console.error(
+          'No video ID found in response. Available fields:',
+          Object.keys(actualData),
+        )
+        throw new Error(
+          `No video ID received from backend. Response keys: ${Object.keys(actualData).join(', ')}`,
+        )
+      }
+
+      const uploadUrl = actualData.upload_url || actualData.uploadUrl
+      if (!uploadUrl) {
+        throw new Error('No upload URL received from backend')
+      }
 
       // Step 2: Upload to Cloudflare Stream
       const formData = new FormData()
@@ -457,6 +489,12 @@ export function VideoUploadStep({ onUpdate, errors }: VideoUploadStepProps) {
   })
 
   const pollVideoStatus = async (videoId: string, filename: string) => {
+    if (!videoId || videoId === 'undefined' || videoId === 'null') {
+      console.error('pollVideoStatus called with invalid videoId:', videoId)
+      toast.error(`Video processing failed: Invalid video ID (${videoId})`)
+      return
+    }
+
     const uploadId = Array.from(uploads.entries()).find(
       ([_, upload]) => upload.filename === filename,
     )?.[0]

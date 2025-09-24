@@ -39,7 +39,7 @@ export interface CourseCreationData {
   estimated_duration_hours: number
 
   // Step 3: Course Settings
-  status: 'draft' | 'published'
+  status: 'draft' | 'published' | 'under_review'
   start_date?: string
   end_date?: string
   max_students?: number

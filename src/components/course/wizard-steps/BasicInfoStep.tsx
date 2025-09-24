@@ -359,13 +359,12 @@ export function BasicInfoStep({ onUpdate, errors }: BasicInfoStepProps) {
                   name="price"
                   control={control}
                   rules={{
-                    min: {
-                      value: 0,
-                      message: 'Price cannot be negative',
-                    },
-                    max: {
-                      value: 10000000,
-                      message: 'Price is too high',
+                    validate: (value) => {
+                      const num = Number(value)
+                      if (isNaN(num)) return 'Price must be a valid number'
+                      if (num < 0) return 'Price cannot be negative'
+                      if (num > 10000000) return 'Price is too high'
+                      return true
                     },
                   }}
                   render={({ field }) => (
@@ -380,11 +379,15 @@ export function BasicInfoStep({ onUpdate, errors }: BasicInfoStepProps) {
                             placeholder="0"
                             min="0"
                             step="1000"
-                            value={field.value || 0}
+                            value={field.value ?? 0}
                             onChange={(e) => {
-                              const value = parseInt(e.target.value) || 0
-                              field.onChange(value)
-                              onUpdate({ price: value })
+                              const value =
+                                e.target.value === ''
+                                  ? 0
+                                  : parseInt(e.target.value, 10)
+                              const numericValue = isNaN(value) ? 0 : value
+                              field.onChange(numericValue)
+                              onUpdate({ price: numericValue })
                             }}
                             onBlur={field.onBlur}
                             className="text-base"

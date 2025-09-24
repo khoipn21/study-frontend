@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useRouter } from '@tanstack/react-router'
 import {
   flexRender,
   getCoreRowModel,
@@ -61,6 +62,14 @@ import { Card, CardContent } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 import { instructorDashboardService } from '@/lib/instructor-dashboard'
 import { useAuth } from '@/lib/auth-context'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import type { InstructorCourse } from '@/lib/instructor-dashboard'
 import type {
   ColumnDef,
@@ -102,7 +111,10 @@ const getStatusBadge = (status: InstructorCourse['status']) => {
 }
 
 // Course data table columns
-function createColumns(): Array<ColumnDef<InstructorCourse>> {
+function createColumns(
+  onEdit: (course: InstructorCourse) => void,
+  onDelete: (course: InstructorCourse) => void,
+): Array<ColumnDef<InstructorCourse>> {
   return [
     {
       id: 'select',
@@ -248,7 +260,7 @@ function createColumns(): Array<ColumnDef<InstructorCourse>> {
                 <Eye className="mr-2 h-4 w-4" />
                 View Details
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEdit(course)}>
                 <div className="flex items-center">
                   <Edit className="mr-2 h-4 w-4" />
                   Edit Course
@@ -274,7 +286,10 @@ function createColumns(): Array<ColumnDef<InstructorCourse>> {
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-red-600">
+              <DropdownMenuItem
+                className="text-red-600"
+                onClick={() => onDelete(course)}
+              >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete Course
               </DropdownMenuItem>
@@ -351,6 +366,7 @@ export default function CoursesDataTable({
   const { toast } = useToast()
   const queryClient = useQueryClient()
   const { token } = useAuth()
+  const router = useRouter()
 
   // Table state
   const [sorting, setSorting] = useState<SortingState>([])
@@ -370,6 +386,17 @@ export default function CoursesDataTable({
   const [categoryFilter, setCategoryFilter] = useState(
     initialFilters?.category || 'all',
   )
+
+  // Delete confirmation state
+  const [deleteConfirmDialog, setDeleteConfirmDialog] = useState<{
+    isOpen: boolean
+    courseId: string
+    courseTitle: string
+  }>({
+    isOpen: false,
+    courseId: '',
+    courseTitle: '',
+  })
 
   // Fetch courses data
   const {
@@ -404,6 +431,33 @@ export default function CoursesDataTable({
         token || undefined,
       ),
     enabled: !!token,
+  })
+
+  // Delete course mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (courseId: string) => {
+      if (!token) throw new Error('Authentication required')
+      return instructorDashboardService.deleteCourse(courseId, token)
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Course deleted',
+        description:
+          'The course has been successfully deleted (soft delete). It is now hidden from students but data is preserved.',
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['instructor', 'courses'],
+      })
+      setDeleteConfirmDialog({ isOpen: false, courseId: '', courseTitle: '' })
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description:
+          error instanceof Error ? error.message : 'Failed to delete course',
+        variant: 'destructive',
+      })
+    },
   })
 
   // Bulk operations mutation
@@ -441,7 +495,33 @@ export default function CoursesDataTable({
     },
   })
 
-  const columns = useMemo(() => createColumns(), [])
+  const handleBulkAction = (action: string, courseIds: Array<string>) => {
+    bulkOperationMutation.mutate({ type: action, courseIds })
+  }
+
+  const handleEditCourse = useCallback(
+    (course: InstructorCourse) => {
+      // Navigate to course edit page with course data
+      router.navigate({
+        to: '/dashboard/instructor/courses/$courseId/edit',
+        params: { courseId: course.id },
+      })
+    },
+    [router],
+  )
+
+  const handleDeleteCourse = useCallback((course: InstructorCourse) => {
+    setDeleteConfirmDialog({
+      isOpen: true,
+      courseId: course.id,
+      courseTitle: course.title,
+    })
+  }, [])
+
+  const columns = useMemo(
+    () => createColumns(handleEditCourse, handleDeleteCourse),
+    [handleEditCourse, handleDeleteCourse],
+  )
 
   const table = useReactTable({
     data:
@@ -471,8 +551,10 @@ export default function CoursesDataTable({
     manualPagination: true,
   })
 
-  const handleBulkAction = (action: string, courseIds: Array<string>) => {
-    bulkOperationMutation.mutate({ type: action, courseIds })
+  const confirmDelete = () => {
+    if (deleteConfirmDialog.courseId) {
+      deleteMutation.mutate(deleteConfirmDialog.courseId)
+    }
   }
 
   const selectedRows = table.getFilteredSelectedRowModel().rows
@@ -738,6 +820,45 @@ export default function CoursesDataTable({
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteConfirmDialog.isOpen}
+        onOpenChange={(open: boolean) =>
+          setDeleteConfirmDialog((prev) => ({ ...prev, isOpen: open }))
+        }
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Course</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete "{deleteConfirmDialog.courseTitle}
+              "? This will soft delete the course, which means it will be hidden
+              from students and marked as deleted, but all data including
+              enrollments and billing information will be preserved for
+              administrative purposes. This action can be reversed by restoring
+              the course later.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() =>
+                setDeleteConfirmDialog((prev) => ({ ...prev, isOpen: false }))
+              }
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete Course'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
