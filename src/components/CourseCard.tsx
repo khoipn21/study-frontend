@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils'
 import { useCourseAccess } from '@/lib/course-marketplace-context'
 import { formatCoursePrice, formatVietnameseDuration } from '@/lib/currency'
 import { vietnameseTranslations } from '@/lib/vietnamese-locale'
+import { CompactCoursePaymentButton } from '@/components/payment/CoursePaymentButton'
 import type { Course } from '@/lib/types'
 
 interface CourseCardProps {
@@ -497,37 +498,58 @@ export function CourseCard({
               )}
 
             {/* Primary Action Button */}
-            <Button
-              size={isCompact ? 'sm' : 'default'}
-              variant={accessStatus === 'locked' ? 'default' : 'secondary'}
-              className={cn(
-                accessStatus === 'locked' && 'bg-primary hover:bg-primary/90',
-                accessStatus === 'free' &&
-                  'bg-green-600 hover:bg-green-700 text-white',
-                accessStatus === 'purchased' &&
-                  'bg-blue-600 hover:bg-blue-700 text-white',
-              )}
-              onClick={(e) => {
-                e.preventDefault()
-                const action = getButtonAction()
-                if (accessStatus === 'free' || accessStatus === 'purchased') {
-                  // Navigate to course
-                  window.location.href = `/courses/${course.id}`
-                } else {
-                  action()
+            {accessStatus === 'locked' && !course.is_free && showPricing ? (
+              <CompactCoursePaymentButton
+                courseId={course.id}
+                courseTitle={course.title}
+                price={(course.price ?? 0) * 100} // Convert to cents
+                currency={(course.currency ?? 'USD').toUpperCase()}
+                originalPrice={
+                  course.discount_percentage && course.price
+                    ? Math.round(
+                        course.price / (1 - course.discount_percentage / 100),
+                      ) * 100
+                    : undefined
                 }
-              }}
-            >
-              {accessStatus === 'locked' && (
-                <ShoppingCart className="h-4 w-4 mr-1" />
-              )}
-              {accessStatus === 'free' && <Play className="h-4 w-4 mr-1" />}
-              {accessStatus === 'purchased' && (
-                <Check className="h-4 w-4 mr-1" />
-              )}
-              {accessStatus === 'preview' && <Eye className="h-4 w-4 mr-1" />}
-              {getButtonText()}
-            </Button>
+                discountPercentage={course.discount_percentage}
+                onSuccess={() => {
+                  // Refresh or redirect after successful payment
+                  window.location.reload()
+                }}
+              />
+            ) : (
+              <Button
+                size={isCompact ? 'sm' : 'default'}
+                variant={accessStatus === 'locked' ? 'default' : 'secondary'}
+                className={cn(
+                  accessStatus === 'locked' && 'bg-primary hover:bg-primary/90',
+                  accessStatus === 'free' &&
+                    'bg-green-600 hover:bg-green-700 text-white',
+                  accessStatus === 'purchased' &&
+                    'bg-blue-600 hover:bg-blue-700 text-white',
+                )}
+                onClick={(e) => {
+                  e.preventDefault()
+                  const action = getButtonAction()
+                  if (accessStatus === 'free' || accessStatus === 'purchased') {
+                    // Navigate to course
+                    window.location.href = `/courses/${course.id}`
+                  } else {
+                    action()
+                  }
+                }}
+              >
+                {accessStatus === 'locked' && (
+                  <ShoppingCart className="h-4 w-4 mr-1" />
+                )}
+                {accessStatus === 'free' && <Play className="h-4 w-4 mr-1" />}
+                {accessStatus === 'purchased' && (
+                  <Check className="h-4 w-4 mr-1" />
+                )}
+                {accessStatus === 'preview' && <Eye className="h-4 w-4 mr-1" />}
+                {getButtonText()}
+              </Button>
+            )}
           </div>
         </div>
 

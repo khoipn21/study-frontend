@@ -9,6 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PaymentSuccessRouteImport } from './routes/payment-success'
+import { Route as PaymentErrorRouteImport } from './routes/payment-error'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ForumIndexRouteImport } from './routes/forum.index'
@@ -46,6 +48,16 @@ import { Route as DashboardInstructorCoursesNewRouteImport } from './routes/dash
 import { Route as DashboardInstructorCoursesCourseIdLecturesRouteImport } from './routes/dashboard.instructor.courses.$courseId.lectures'
 import { Route as DashboardInstructorCoursesCourseIdEditRouteImport } from './routes/dashboard.instructor.courses.$courseId.edit'
 
+const PaymentSuccessRoute = PaymentSuccessRouteImport.update({
+  id: '/payment-success',
+  path: '/payment-success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentErrorRoute = PaymentErrorRouteImport.update({
+  id: '/payment-error',
+  path: '/payment-error',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const McpRoute = McpRouteImport.update({
   id: '/mcp',
   path: '/mcp',
@@ -240,6 +252,8 @@ const DashboardInstructorCoursesCourseIdEditRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/mcp': typeof McpRoute
+  '/payment-error': typeof PaymentErrorRoute
+  '/payment-success': typeof PaymentSuccessRoute
   '/api/demo-names': typeof ApiDemoNamesRoute
   '/api/demo-tq-todos': typeof ApiDemoTqTodosRoute
   '/api/mcp-todos': typeof ApiMcpTodosRoute
@@ -278,6 +292,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/mcp': typeof McpRoute
+  '/payment-error': typeof PaymentErrorRoute
+  '/payment-success': typeof PaymentSuccessRoute
   '/api/demo-names': typeof ApiDemoNamesRoute
   '/api/demo-tq-todos': typeof ApiDemoTqTodosRoute
   '/api/mcp-todos': typeof ApiMcpTodosRoute
@@ -317,6 +333,8 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/mcp': typeof McpRoute
+  '/payment-error': typeof PaymentErrorRoute
+  '/payment-success': typeof PaymentSuccessRoute
   '/api/demo-names': typeof ApiDemoNamesRoute
   '/api/demo-tq-todos': typeof ApiDemoTqTodosRoute
   '/api/mcp-todos': typeof ApiMcpTodosRoute
@@ -357,6 +375,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/mcp'
+    | '/payment-error'
+    | '/payment-success'
     | '/api/demo-names'
     | '/api/demo-tq-todos'
     | '/api/mcp-todos'
@@ -395,6 +415,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/mcp'
+    | '/payment-error'
+    | '/payment-success'
     | '/api/demo-names'
     | '/api/demo-tq-todos'
     | '/api/mcp-todos'
@@ -433,6 +455,8 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/mcp'
+    | '/payment-error'
+    | '/payment-success'
     | '/api/demo-names'
     | '/api/demo-tq-todos'
     | '/api/mcp-todos'
@@ -472,6 +496,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   McpRoute: typeof McpRoute
+  PaymentErrorRoute: typeof PaymentErrorRoute
+  PaymentSuccessRoute: typeof PaymentSuccessRoute
   ApiDemoNamesRoute: typeof ApiDemoNamesRoute
   ApiDemoTqTodosRoute: typeof ApiDemoTqTodosRoute
   ApiMcpTodosRoute: typeof ApiMcpTodosRoute
@@ -510,6 +536,20 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/payment-success': {
+      id: '/payment-success'
+      path: '/payment-success'
+      fullPath: '/payment-success'
+      preLoaderRoute: typeof PaymentSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payment-error': {
+      id: '/payment-error'
+      path: '/payment-error'
+      fullPath: '/payment-error'
+      preLoaderRoute: typeof PaymentErrorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mcp': {
       id: '/mcp'
       path: '/mcp'
@@ -768,6 +808,8 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   McpRoute: McpRoute,
+  PaymentErrorRoute: PaymentErrorRoute,
+  PaymentSuccessRoute: PaymentSuccessRoute,
   ApiDemoNamesRoute: ApiDemoNamesRoute,
   ApiDemoTqTodosRoute: ApiDemoTqTodosRoute,
   ApiMcpTodosRoute: ApiMcpTodosRoute,

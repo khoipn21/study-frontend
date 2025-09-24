@@ -9,6 +9,7 @@ import { TanstackDevtools } from '@tanstack/react-devtools'
 import { config } from '@/lib/config'
 import Header from '../components/Header'
 import { ThemeProvider } from '../lib/theme-context'
+import { StripeProvider } from '../lib/stripe-context'
 import { GlobalErrorBoundary } from '../components/GlobalErrorBoundary'
 
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
@@ -63,22 +64,24 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body>
         <GlobalErrorBoundary>
           <ThemeProvider>
-            <div className="min-h-screen bg-background font-sans antialiased">
-              <Header />
-              <main className="relative">{children}</main>
-            </div>
-            <TanstackDevtools
-              config={{
-                position: 'bottom-left',
-              }}
-              plugins={[
-                {
-                  name: 'Tanstack Router',
-                  render: <TanStackRouterDevtoolsPanel />,
-                },
-                TanStackQueryDevtools,
-              ]}
-            />
+            <StripeProvider>
+              <div className="min-h-screen bg-background font-sans antialiased">
+                <Header />
+                <main className="relative">{children}</main>
+              </div>
+              <TanstackDevtools
+                config={{
+                  position: 'bottom-left',
+                }}
+                plugins={[
+                  {
+                    name: 'Tanstack Router',
+                    render: <TanStackRouterDevtoolsPanel />,
+                  },
+                  TanStackQueryDevtools,
+                ]}
+              />
+            </StripeProvider>
           </ThemeProvider>
         </GlobalErrorBoundary>
         <Scripts />
