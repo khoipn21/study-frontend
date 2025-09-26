@@ -8,16 +8,11 @@ import {
   ChevronRight,
   Clock,
   Download,
-  Maximize,
   Menu,
   MessageSquare,
-  Pause,
   Play,
-  Settings,
   Star,
   Users,
-  Volume2,
-  VolumeX,
   X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -44,6 +39,13 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { api } from '@/lib/api-client'
+import { VideoPlayer } from '@/components/VideoPlayer'
+import {
+  useCourseAccess,
+  useProgressTracking,
+  useStudentNotes,
+  useVideoStream,
+} from '@/lib/learning-hooks'
 
 export const Route = createFileRoute('/learn/$courseId/$lectureId')({
   component: LearningEnvironment,
@@ -84,24 +86,24 @@ interface Course {
   tags?: Array<string>
 }
 
-interface Note {
-  id: string
-  content: string
-  timestamp: number
-  created_at: string
-}
-
 function LearningEnvironment() {
   const { courseId, lectureId } = Route.useParams()
   const navigate = useNavigate()
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [isMuted, setIsMuted] = useState(false)
-  const [currentTime] = useState(0)
-  const [duration] = useState(0)
-  const [playbackRate, setPlaybackRate] = useState(1)
   const [showSidebar, setShowSidebar] = useState(true)
   const [newNote, setNewNote] = useState('')
-  const [notes, setNotes] = useState<Array<Note>>([])
+
+  // Check course access
+  const { data: accessData } = useCourseAccess(courseId)
+  const hasAccess = accessData?.data?.has_access ?? false
+
+  // Video streaming
+  const { data: streamData } = useVideoStream(lectureId, hasAccess)
+
+  // Progress tracking
+  const progressTracking = useProgressTracking(courseId, lectureId)
+
+  // Notes management
+  const { notes, addNote, isCreating } = useStudentNotes(courseId, lectureId)
 
   // Fetch course data with lectures
   const {
@@ -164,21 +166,28 @@ function LearningEnvironment() {
   const courseProgress =
     totalLectures > 0 ? (completedLectures / totalLectures) * 100 : 0
 
-  // Video controls
-  const togglePlayback = () => setIsPlaying(!isPlaying)
-  const toggleMute = () => setIsMuted(!isMuted)
-  const handlePlaybackRateChange = (rate: number) => setPlaybackRate(rate)
+  // Video event handlers
+  const handleVideoPlay = () => {
+    progressTracking.startTracking()
+  }
+
+  const handleVideoPause = () => {
+    progressTracking.stopTracking()
+  }
+
+  const handleVideoProgress = (percentage: number) => {
+    progressTracking.updateProgress(percentage)
+  }
+
+  const handleVideoEnded = () => {
+    progressTracking.completeLecture()
+    progressTracking.stopTracking()
+  }
 
   // Notes functionality
-  const addNote = () => {
+  const handleAddNote = () => {
     if (newNote.trim()) {
-      const note: Note = {
-        id: Date.now().toString(),
-        content: newNote,
-        timestamp: currentTime,
-        created_at: new Date().toISOString(),
-      }
-      setNotes([...notes, note])
+      addNote(newNote, progressTracking.watchTime)
       setNewNote('')
     }
   }
@@ -188,6 +197,9 @@ function LearningEnvironment() {
     const secs = Math.floor(seconds % 60)
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
+
+  // Get video URL from stream data or fallback to lecture video_url
+  const videoUrl = streamData?.data?.stream_url || currentLecture?.video_url
 
   if (courseLoading) {
     return (
@@ -296,120 +308,17 @@ function LearningEnvironment() {
         {/* Main Content */}
         <div className="flex-1 min-w-0">
           {/* Video Player */}
-          <div className="relative bg-black aspect-video">
-            {currentLecture.video_url ? (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center text-white">
-                  <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-4 mx-auto">
-                    <Play className="h-8 w-8" />
-                  </div>
-                  <p className="text-lg font-medium mb-2">
-                    {currentLecture.title}
-                  </p>
-                  <p className="text-sm opacity-75">
-                    Thời lượng: {currentLecture.duration_minutes} phút
-                  </p>
-                  <p className="text-xs opacity-50 mt-2">
-                    Video player sẽ được tích hợp ở đây
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center text-white">
-                  <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mb-4 mx-auto">
-                    <Play className="h-8 w-8 opacity-50" />
-                  </div>
-                  <p className="text-lg font-medium mb-2">
-                    {currentLecture.title}
-                  </p>
-                  <p className="text-sm opacity-75">Video chưa sẵn sàng</p>
-                </div>
-              </div>
-            )}
-
-            {/* Video Controls */}
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-4">
-              <div className="space-y-2">
-                {/* Progress Bar */}
-                <div className="relative">
-                  <Progress
-                    value={duration > 0 ? (currentTime / duration) * 100 : 0}
-                    className="h-1"
-                  />
-                </div>
-
-                {/* Controls */}
-                <div className="flex items-center justify-between text-white">
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={togglePlayback}
-                      className="text-white hover:bg-white/20"
-                    >
-                      {isPlaying ? (
-                        <Pause className="h-4 w-4" />
-                      ) : (
-                        <Play className="h-4 w-4" />
-                      )}
-                    </Button>
-
-                    <div className="flex items-center space-x-1">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={toggleMute}
-                        className="text-white hover:bg-white/20"
-                      >
-                        {isMuted ? (
-                          <VolumeX className="h-4 w-4" />
-                        ) : (
-                          <Volume2 className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
-
-                    <span className="text-sm">
-                      {formatTime(currentTime)} / {formatTime(duration)}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <select
-                      value={playbackRate}
-                      onChange={(e) =>
-                        handlePlaybackRateChange(Number(e.target.value))
-                      }
-                      className="bg-black/50 text-white text-sm rounded px-2 py-1"
-                    >
-                      <option value={0.5}>0.5x</option>
-                      <option value={0.75}>0.75x</option>
-                      <option value={1}>1x</option>
-                      <option value={1.25}>1.25x</option>
-                      <option value={1.5}>1.5x</option>
-                      <option value={2}>2x</option>
-                    </select>
-
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-white hover:bg-white/20"
-                    >
-                      <Settings className="h-4 w-4" />
-                    </Button>
-
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-white hover:bg-white/20"
-                    >
-                      <Maximize className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="aspect-video">
+            <VideoPlayer
+              src={videoUrl}
+              title={currentLecture.title}
+              poster={course.thumbnail_url}
+              onPlay={handleVideoPlay}
+              onPause={handleVideoPause}
+              onProgress={handleVideoProgress}
+              onEnded={handleVideoEnded}
+              className="w-full h-full"
+            />
           </div>
 
           {/* Lecture Content */}
@@ -599,7 +508,7 @@ function LearningEnvironment() {
                       <CardTitle>Ghi chú của bạn</CardTitle>
                       <CardDescription>
                         Tạo ghi chú cho thời điểm hiện tại:{' '}
-                        {formatTime(currentTime)}
+                        {formatTime(progressTracking.watchTime)}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -610,8 +519,11 @@ function LearningEnvironment() {
                             value={newNote}
                             onChange={(e) => setNewNote(e.target.value)}
                           />
-                          <Button onClick={addNote} disabled={!newNote.trim()}>
-                            Thêm ghi chú
+                          <Button
+                            onClick={handleAddNote}
+                            disabled={!newNote.trim() || isCreating}
+                          >
+                            {isCreating ? 'Đang lưu...' : 'Thêm ghi chú'}
                           </Button>
                         </div>
 
@@ -623,7 +535,9 @@ function LearningEnvironment() {
                             >
                               <div className="flex items-center justify-between mb-2">
                                 <Badge variant="outline">
-                                  {formatTime(note.timestamp)}
+                                  {note.video_timestamp
+                                    ? formatTime(note.video_timestamp)
+                                    : 'N/A'}
                                 </Badge>
                                 <span className="text-xs text-muted-foreground">
                                   {new Date(note.created_at).toLocaleDateString(

@@ -63,11 +63,11 @@ function CourseDetailPage() {
     queryFn: async () => {
       if (!token) return null
       try {
-        const res = await api.listEnrollments(token)
-        const enrollment = res.data?.enrollments?.find(
-          (e) => e.course_id === courseId,
+        const res = await api.getMyEnrolledCourses(token)
+        const enrolledCourse = res.data?.courses?.find(
+          (course) => course.id === courseId,
         )
-        return enrollment
+        return enrolledCourse?.enrollment
       } catch {
         return null
       }
@@ -584,8 +584,20 @@ function CourseDetailPage() {
                         <CheckCircle className="h-4 w-4" />
                         <span className="font-medium">Enrolled</span>
                       </div>
-                      <Button className="w-full" asChild>
-                        <Link to="/me/enrollments">Continue Learning</Link>
+                      <Button
+                        className="w-full"
+                        onClick={() => {
+                          // Navigate to first lecture or course overview
+                          const firstLecture = lectures[0]
+                          if (firstLecture) {
+                            window.location.href = `/learn/${courseId}/${firstLecture.id}`
+                          } else {
+                            // Fallback to course overview if no lectures
+                            window.location.href = `/courses/${courseId}`
+                          }
+                        }}
+                      >
+                        Continue Learning
                       </Button>
                     </div>
                   )}

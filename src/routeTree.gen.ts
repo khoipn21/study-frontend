@@ -19,6 +19,7 @@ import { Route as CoursesIndexRouteImport } from './routes/courses.index'
 import { Route as ChatIndexRouteImport } from './routes/chat.index'
 import { Route as MeEnrollmentsRouteImport } from './routes/me.enrollments'
 import { Route as MeDashboardRouteImport } from './routes/me.dashboard'
+import { Route as MeCoursesRouteImport } from './routes/me.courses'
 import { Route as DemoTanstackQueryRouteImport } from './routes/demo.tanstack-query'
 import { Route as DemoMcpTodosRouteImport } from './routes/demo.mcp-todos'
 import { Route as CoursesCourseIdRouteImport } from './routes/courses.$courseId'
@@ -96,6 +97,11 @@ const MeEnrollmentsRoute = MeEnrollmentsRouteImport.update({
 const MeDashboardRoute = MeDashboardRouteImport.update({
   id: '/me/dashboard',
   path: '/me/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeCoursesRoute = MeCoursesRouteImport.update({
+  id: '/me/courses',
+  path: '/me/courses',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoTanstackQueryRoute = DemoTanstackQueryRouteImport.update({
@@ -265,6 +271,7 @@ export interface FileRoutesByFullPath {
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/demo/mcp-todos': typeof DemoMcpTodosRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
+  '/me/courses': typeof MeCoursesRoute
   '/me/dashboard': typeof MeDashboardRoute
   '/me/enrollments': typeof MeEnrollmentsRoute
   '/chat': typeof ChatIndexRoute
@@ -305,6 +312,7 @@ export interface FileRoutesByTo {
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/demo/mcp-todos': typeof DemoMcpTodosRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
+  '/me/courses': typeof MeCoursesRoute
   '/me/dashboard': typeof MeDashboardRoute
   '/me/enrollments': typeof MeEnrollmentsRoute
   '/chat': typeof ChatIndexRoute
@@ -346,6 +354,7 @@ export interface FileRoutesById {
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/demo/mcp-todos': typeof DemoMcpTodosRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
+  '/me/courses': typeof MeCoursesRoute
   '/me/dashboard': typeof MeDashboardRoute
   '/me/enrollments': typeof MeEnrollmentsRoute
   '/chat/': typeof ChatIndexRoute
@@ -388,6 +397,7 @@ export interface FileRouteTypes {
     | '/courses/$courseId'
     | '/demo/mcp-todos'
     | '/demo/tanstack-query'
+    | '/me/courses'
     | '/me/dashboard'
     | '/me/enrollments'
     | '/chat'
@@ -428,6 +438,7 @@ export interface FileRouteTypes {
     | '/courses/$courseId'
     | '/demo/mcp-todos'
     | '/demo/tanstack-query'
+    | '/me/courses'
     | '/me/dashboard'
     | '/me/enrollments'
     | '/chat'
@@ -468,6 +479,7 @@ export interface FileRouteTypes {
     | '/courses/$courseId'
     | '/demo/mcp-todos'
     | '/demo/tanstack-query'
+    | '/me/courses'
     | '/me/dashboard'
     | '/me/enrollments'
     | '/chat/'
@@ -509,6 +521,7 @@ export interface RootRouteChildren {
   CoursesCourseIdRoute: typeof CoursesCourseIdRoute
   DemoMcpTodosRoute: typeof DemoMcpTodosRoute
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
+  MeCoursesRoute: typeof MeCoursesRoute
   MeDashboardRoute: typeof MeDashboardRoute
   MeEnrollmentsRoute: typeof MeEnrollmentsRoute
   ChatIndexRoute: typeof ChatIndexRoute
@@ -604,6 +617,13 @@ declare module '@tanstack/react-router' {
       path: '/me/dashboard'
       fullPath: '/me/dashboard'
       preLoaderRoute: typeof MeDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/me/courses': {
+      id: '/me/courses'
+      path: '/me/courses'
+      fullPath: '/me/courses'
+      preLoaderRoute: typeof MeCoursesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo/tanstack-query': {
@@ -821,6 +841,7 @@ const rootRouteChildren: RootRouteChildren = {
   CoursesCourseIdRoute: CoursesCourseIdRoute,
   DemoMcpTodosRoute: DemoMcpTodosRoute,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
+  MeCoursesRoute: MeCoursesRoute,
   MeDashboardRoute: MeDashboardRoute,
   MeEnrollmentsRoute: MeEnrollmentsRoute,
   ChatIndexRoute: ChatIndexRoute,

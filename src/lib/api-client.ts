@@ -1,5 +1,12 @@
 import { config } from './config'
-import type { AuthResponse, Course, Enrollment, Lecture } from './types'
+import type {
+  AuthResponse,
+  Course,
+  CoursePurchase,
+  Enrollment,
+  Lecture,
+  Video,
+} from './types'
 
 // Choose implementation (mock or real)
 
@@ -116,6 +123,17 @@ type ChatMessage = {
   role: 'user' | 'assistant'
   content: string
   created_at: string
+}
+
+type StudentNote = {
+  id: string
+  user_id: string
+  course_id: string
+  lecture_id: string
+  content: string
+  video_timestamp?: number
+  created_at: string
+  updated_at: string
 }
 
 type AnalyticsData = {
@@ -295,6 +313,35 @@ export const api = {
     }>(`/enrollments${qs ? `?${qs}` : ''}`, { token })
   },
 
+  // My enrolled courses (for academic dashboard)
+  getMyEnrolledCourses: (token: string) =>
+    requestGateway<{
+      courses: Array<
+        Course & {
+          enrollment: Enrollment
+          progress: number
+          last_accessed?: string
+          next_lecture_id?: string
+        }
+      >
+    }>('/enrollments/my-courses', { token }),
+
+  // Course access control
+  checkCourseAccess: (token: string, courseId: string) =>
+    requestGateway<{
+      has_access: boolean
+      access_level: 'none' | 'preview' | 'full'
+      enrollment?: Enrollment
+      purchase?: CoursePurchase
+    }>(`/courses/${courseId}/access`, { token }),
+
+  // Video streaming
+  getLectureStream: (token: string, lectureId: string) =>
+    requestGateway<{
+      stream_url: string
+      video_data: Video
+    }>(`/lectures/${lectureId}/stream`, { token }),
+
   // Course management (instructor)
   createCourse: (
     token: string,
@@ -364,7 +411,23 @@ export const api = {
       token,
       body: JSON.stringify({ filename, size }),
     }),
-  // Progress
+  // Progress tracking
+  trackProgress: (
+    token: string,
+    payload: {
+      course_id: string
+      lecture_id: string
+      progress_percentage: number
+      watch_time_seconds: number
+      is_completed: boolean
+    },
+  ) =>
+    request<GatewayResponse<ProgressData>>('/progress/track', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      token,
+    }),
+
   updateProgress: (
     token: string,
     payload: {
@@ -661,6 +724,43 @@ export const api = {
     request<ChatMessage>(`/chat/sessions/${sessionId}/messages`, {
       method: 'POST',
       body: JSON.stringify(payload),
+      token,
+    }),
+
+  // Student Notes
+  createNote: (
+    token: string,
+    payload: {
+      course_id: string
+      lecture_id: string
+      content: string
+      video_timestamp?: number
+    },
+  ) =>
+    request<StudentNote>('/notes', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      token,
+    }),
+
+  getLectureNotes: (token: string, courseId: string, lectureId: string) =>
+    request<{ notes: Array<StudentNote> }>(
+      `/notes/courses/${courseId}/lectures/${lectureId}`,
+      {
+        token,
+      },
+    ),
+
+  updateNote: (token: string, noteId: string, content: string) =>
+    request<StudentNote>(`/notes/${noteId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ content }),
+      token,
+    }),
+
+  deleteNote: (token: string, noteId: string) =>
+    request<{ success: boolean }>(`/notes/${noteId}`, {
+      method: 'DELETE',
       token,
     }),
 }

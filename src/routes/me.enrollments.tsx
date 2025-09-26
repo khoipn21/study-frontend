@@ -1,6 +1,19 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
-import { Award, BookOpen, Clock, Grid, List, Play, Search } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import {
+  Award,
+  BookOpen,
+  Calendar,
+  ChevronRight,
+  Clock,
+  GraduationCap,
+  Grid,
+  List,
+  Play,
+  Search,
+  TrendingUp,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -20,136 +33,62 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { CourseCard } from '@/components/CourseCard'
-import type { Course } from '@/lib/types'
+import {
+  CourseMarketplaceProvider,
+  useCourseMarketplace,
+} from '@/lib/course-marketplace-context'
+import { useAuth } from '@/lib/auth-context'
+import { api } from '@/lib/api-client'
+import type { CourseAccess } from '@/lib/types'
 
 export const Route = createFileRoute('/me/enrollments')({
-  component: MyEnrollments,
+  component: MyEnrollmentsPage,
 })
 
-function MyEnrollments() {
+function MyEnrollmentsContent() {
+  const { token } = useAuth()
+  const { dispatch } = useCourseMarketplace()
   const [searchQuery, setSearchQuery] = useState('')
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [sortBy, setSortBy] = useState<string>('recent')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
-  // Mock enrolled courses with progress data
-  const enrolledCourses: Array<
-    Course & {
-      progress: number
-      enrollmentDate: string
-      lastAccessed: string
+  // Fetch enrolled courses from API
+  const {
+    data: enrolledCoursesData,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['my-enrolled-courses'],
+    queryFn: () =>
+      token ? api.getMyEnrolledCourses(token) : Promise.reject('No token'),
+    enabled: !!token,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
+  })
+
+  // Get enrolled courses from API or fallback to empty array
+  const enrolledCourses = enrolledCoursesData?.data?.courses ?? []
+
+  // Update course access status in context when enrollment data changes
+  useEffect(() => {
+    if (enrolledCoursesData?.data?.courses) {
+      const courseAccess: Array<CourseAccess> =
+        enrolledCoursesData.data.courses.map((course: any) => ({
+          user_id: course.enrollment?.user_id || '',
+          course_id: course.id,
+          access_level: 'full' as const,
+          purchase_id: course.enrollment?.id || '',
+          granted_at:
+            course.enrollment?.enrolled_at || new Date().toISOString(),
+        }))
+
+      dispatch({
+        type: 'SET_USER_ACCESS',
+        payload: courseAccess,
+      })
     }
-  > = [
-    {
-      id: '1',
-      title: 'Lập trình React từ cơ bản đến nâng cao',
-      description:
-        'Học React một cách toàn diện từ những khái niệm cơ bản đến các kỹ thuật nâng cao',
-      instructor_name: 'Nguyễn Văn A',
-      duration_minutes: 1200,
-      rating: 4.8,
-      rating_count: 256,
-      enrollment_count: 1540,
-      price: 899000,
-      currency: 'VND',
-      is_free: false,
-      difficulty_level: 'intermediate',
-      category: 'Programming',
-      language: 'Tiếng Việt',
-      total_lectures: 45,
-      certificate_available: true,
-      mobile_access: true,
-      lifetime_access: true,
-      tags: ['React', 'JavaScript', 'Frontend'],
-      is_featured: true,
-      access_type: 'paid' as const,
-      thumbnail_url: '/api/placeholder/400/225',
-      progress: 75,
-      enrollmentDate: '2024-01-15',
-      lastAccessed: '2024-01-20',
-    },
-    {
-      id: '2',
-      title: 'Node.js và Express.js cho Backend',
-      description: 'Xây dựng API và ứng dụng backend với Node.js và Express.js',
-      instructor_name: 'Trần Thị B',
-      duration_minutes: 900,
-      rating: 4.6,
-      rating_count: 189,
-      enrollment_count: 987,
-      price: 799000,
-      currency: 'VND',
-      is_free: false,
-      difficulty_level: 'intermediate',
-      category: 'Programming',
-      language: 'Tiếng Việt',
-      total_lectures: 38,
-      certificate_available: true,
-      mobile_access: true,
-      lifetime_access: true,
-      tags: ['Node.js', 'Express', 'Backend'],
-      is_featured: false,
-      access_type: 'paid' as const,
-      thumbnail_url: '/api/placeholder/400/225',
-      progress: 45,
-      enrollmentDate: '2024-01-10',
-      lastAccessed: '2024-01-18',
-    },
-    {
-      id: '3',
-      title: 'TypeScript cho JavaScript Developer',
-      description: 'Nâng cao kỹ năng JavaScript với TypeScript',
-      instructor_name: 'Lê Văn C',
-      duration_minutes: 600,
-      rating: 4.9,
-      rating_count: 324,
-      enrollment_count: 2156,
-      price: 0,
-      currency: 'VND',
-      is_free: true,
-      difficulty_level: 'beginner',
-      category: 'Programming',
-      language: 'Tiếng Việt',
-      total_lectures: 25,
-      certificate_available: true,
-      mobile_access: true,
-      lifetime_access: true,
-      tags: ['TypeScript', 'JavaScript'],
-      is_featured: false,
-      access_type: 'free' as const,
-      thumbnail_url: '/api/placeholder/400/225',
-      progress: 100,
-      enrollmentDate: '2023-12-20',
-      lastAccessed: '2024-01-15',
-    },
-    {
-      id: '4',
-      title: 'Python cho Data Science',
-      description: 'Học Python để phân tích dữ liệu và machine learning',
-      instructor_name: 'Phạm Văn D',
-      duration_minutes: 1500,
-      rating: 4.7,
-      rating_count: 412,
-      enrollment_count: 2890,
-      price: 1200000,
-      currency: 'VND',
-      is_free: false,
-      difficulty_level: 'beginner',
-      category: 'Data Science',
-      language: 'Tiếng Việt',
-      total_lectures: 60,
-      certificate_available: true,
-      mobile_access: true,
-      lifetime_access: true,
-      tags: ['Python', 'Data Science', 'Machine Learning'],
-      is_featured: false,
-      access_type: 'paid' as const,
-      thumbnail_url: '/api/placeholder/400/225',
-      progress: 20,
-      enrollmentDate: '2024-01-05',
-      lastAccessed: '2024-01-12',
-    },
-  ]
+  }, [enrolledCoursesData, dispatch])
 
   // Filter and sort courses
   const filteredCourses = enrolledCourses
@@ -162,35 +101,19 @@ function MyEnrollments() {
 
       if (filterStatus === 'all') return matchesSearch
       if (filterStatus === 'in-progress')
-        return (
-          matchesSearch &&
-          course.progress !== null &&
-          course.progress !== undefined &&
-          course.progress > 0 &&
-          course.progress < 100
-        )
+        return matchesSearch && course.progress > 0 && course.progress < 100
       if (filterStatus === 'completed')
-        return (
-          matchesSearch &&
-          course.progress !== null &&
-          course.progress !== undefined &&
-          course.progress === 100
-        )
+        return matchesSearch && course.progress === 100
       if (filterStatus === 'not-started')
-        return (
-          matchesSearch &&
-          course.progress !== null &&
-          course.progress !== undefined &&
-          course.progress === 0
-        )
+        return matchesSearch && course.progress === 0
 
       return matchesSearch
     })
     .sort((a, b) => {
       if (sortBy === 'recent')
         return (
-          new Date(b.lastAccessed).getTime() -
-          new Date(a.lastAccessed).getTime()
+          new Date(b.last_accessed ?? 0).getTime() -
+          new Date(a.last_accessed ?? 0).getTime()
         )
       if (sortBy === 'progress') return b.progress - a.progress
       if (sortBy === 'title') return a.title.localeCompare(b.title)
@@ -217,66 +140,230 @@ function MyEnrollments() {
     notStarted: enrolledCourses.filter((c) => c.progress === 0).length,
   }
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="container py-8">
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <div className="h-8 bg-muted rounded w-64 animate-pulse" />
+            <div className="h-4 bg-muted rounded w-96 animate-pulse" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-24 bg-muted rounded animate-pulse" />
+            ))}
+          </div>
+          <div className="h-64 bg-muted rounded animate-pulse" />
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="container py-8">
+        <Card>
+          <CardContent className="text-center py-12">
+            <BookOpen className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2 text-destructive">
+              Không thể tải khóa học
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              {error instanceof Error
+                ? error.message
+                : 'Đã xảy ra lỗi không xác định'}
+            </p>
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              Thử lại
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="container py-8">
-      {/* Header */}
+      {/* Academic Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">Khóa học của tôi</h1>
-        <p className="text-muted-foreground">
-          Quản lý và theo dõi tiến độ học tập của bạn
+        <div className="flex items-center space-x-2 mb-2">
+          <GraduationCap className="h-8 w-8 text-primary" />
+          <h1 className="text-3xl font-bold tracking-tight">
+            Bảng điều khiển học tập
+          </h1>
+        </div>
+        <p className="text-muted-foreground text-lg">
+          Theo dõi tiến độ và quản lý hành trình học tập của bạn
         </p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <Card>
+      {/* Enhanced Academic Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Card className="border-l-4 border-l-primary">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Tổng số khóa học
             </CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <BookOpen className="h-5 w-5 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
+            <div className="text-3xl font-bold tracking-tight">
+              {stats.total}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Khóa học đã đăng ký
+            </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-l-4 border-l-blue-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Đang học</CardTitle>
-            <Play className="h-4 w-4 text-blue-500" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Đang học
+            </CardTitle>
+            <div className="p-2 bg-blue-50 dark:bg-blue-950 rounded-lg">
+              <Play className="h-5 w-5 text-blue-500" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-3xl font-bold text-blue-600 tracking-tight">
               {stats.inProgress}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Tiến độ đang diễn ra
+            </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-l-4 border-l-green-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Hoàn thành</CardTitle>
-            <Award className="h-4 w-4 text-green-500" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Hoàn thành
+            </CardTitle>
+            <div className="p-2 bg-green-50 dark:bg-green-950 rounded-lg">
+              <Award className="h-5 w-5 text-green-500" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-3xl font-bold text-green-600 tracking-tight">
               {stats.completed}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Chứng chỉ có thể nhận
+            </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-l-4 border-l-orange-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Chưa bắt đầu</CardTitle>
-            <Clock className="h-4 w-4 text-orange-500" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Chưa bắt đầu
+            </CardTitle>
+            <div className="p-2 bg-orange-50 dark:bg-orange-950 rounded-lg">
+              <Clock className="h-5 w-5 text-orange-500" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
+            <div className="text-3xl font-bold text-orange-600 tracking-tight">
               {stats.notStarted}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Chờ bạn khám phá
+            </p>
           </CardContent>
         </Card>
       </div>
+
+      {/* Study Progress Overview */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <TrendingUp className="h-5 w-5" />
+            <span>Tổng quan tiến độ học tập</span>
+          </CardTitle>
+          <CardDescription>
+            Theo dõi sự tiến bộ của bạn qua thời gian
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {/* Overall completion rate */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">
+                  Tỷ lệ hoàn thành tổng thể
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  {stats.total > 0
+                    ? Math.round((stats.completed / stats.total) * 100)
+                    : 0}
+                  %
+                </span>
+              </div>
+              <Progress
+                value={
+                  stats.total > 0 ? (stats.completed / stats.total) * 100 : 0
+                }
+                className="h-2"
+              />
+            </div>
+
+            {/* Quick access to continue learning */}
+            {stats.inProgress > 0 && (
+              <div className="pt-4 border-t">
+                <h4 className="font-medium mb-3 flex items-center space-x-2">
+                  <Play className="h-4 w-4" />
+                  <span>Tiếp tục học</span>
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {filteredCourses
+                    .filter(
+                      (course) => course.progress > 0 && course.progress < 100,
+                    )
+                    .slice(0, 2)
+                    .map((course) => (
+                      <div
+                        key={course.id}
+                        className="flex items-center space-x-3 p-3 bg-muted/30 rounded-lg"
+                      >
+                        <div className="w-12 h-8 bg-primary/10 rounded flex items-center justify-center">
+                          <BookOpen className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            {course.title}
+                          </p>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <Progress
+                              value={course.progress}
+                              className="h-1 flex-1"
+                            />
+                            <span className="text-xs text-muted-foreground">
+                              {course.progress}%
+                            </span>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            const lectureId = course.next_lecture_id ?? 'first'
+                            window.location.href = `/learn/${course.id}/${lectureId}`
+                          }}
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Filters and Controls */}
       <Card className="mb-8">
@@ -405,17 +492,20 @@ function MyEnrollments() {
 
                         {/* Meta */}
                         <div className="flex items-center space-x-4 text-xs text-muted-foreground">
-                          <span>
-                            Đăng ký:{' '}
-                            {new Date(course.enrollmentDate).toLocaleDateString(
-                              'vi-VN',
-                            )}
+                          <span className="flex items-center space-x-1">
+                            <Calendar className="h-3 w-3" />
+                            <span>
+                              Đăng ký:{' '}
+                              {new Date(
+                                course.enrollment?.enrolled_at ?? 0,
+                              ).toLocaleDateString('vi-VN')}
+                            </span>
                           </span>
                           <span>
                             Học lần cuối:{' '}
-                            {new Date(course.lastAccessed).toLocaleDateString(
-                              'vi-VN',
-                            )}
+                            {new Date(
+                              course.last_accessed ?? 0,
+                            ).toLocaleDateString('vi-VN')}
                           </span>
                           <span>{course.total_lectures} bài học</span>
                           <span>
@@ -427,23 +517,24 @@ function MyEnrollments() {
 
                       {/* Actions */}
                       <div className="flex flex-col gap-2">
-                        <Button asChild size="sm">
-                          <Link
-                            to="/courses/$courseId"
-                            params={{ courseId: course.id }}
-                          >
-                            {course.progress === 100
-                              ? 'Xem lại'
-                              : course.progress > 0
-                                ? 'Tiếp tục'
-                                : 'Bắt đầu'}
-                          </Link>
+                        <Button
+                          size="sm"
+                          className="min-w-[100px]"
+                          onClick={() => {
+                            const url = course.next_lecture_id
+                              ? `/learn/${course.id}/${course.next_lecture_id}`
+                              : `/courses/${course.id}`
+                            window.location.href = url
+                          }}
+                        >
+                          {course.progress === 100
+                            ? 'Xem lại'
+                            : course.progress > 0
+                              ? 'Tiếp tục'
+                              : 'Bắt đầu'}
+                          <ChevronRight className="h-4 w-4 ml-1" />
                         </Button>
-                        {course.progress !== null &&
-                          course.progress !== undefined &&
-                          course.progress === 100 &&
-                          course.certificate_available !== null &&
-                          course.certificate_available !== undefined &&
+                        {course.progress === 100 &&
                           course.certificate_available && (
                             <Button variant="outline" size="sm">
                               <Award className="h-4 w-4 mr-1" />
@@ -493,5 +584,14 @@ function MyEnrollments() {
         </Card>
       )}
     </div>
+  )
+}
+
+// Wrapper component that provides the Course Marketplace context
+function MyEnrollmentsPage() {
+  return (
+    <CourseMarketplaceProvider>
+      <MyEnrollmentsContent />
+    </CourseMarketplaceProvider>
   )
 }

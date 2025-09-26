@@ -1,20 +1,27 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Filter, Grid, List, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { CourseCard } from '@/components/CourseCard'
 import { CourseFilters } from '@/components/CourseFilters'
-import { CourseMarketplaceProvider } from '@/lib/course-marketplace-context'
+import {
+  CourseMarketplaceProvider,
+  useCourseMarketplace,
+} from '@/lib/course-marketplace-context'
 import { api } from '@/lib/api-client'
-import type { Course } from '@/lib/types'
+import { useAuth } from '@/lib/auth-context'
+import type { Course, CourseAccess } from '@/lib/types'
 
 export const Route = createFileRoute('/courses/')({
   component: CoursesPage,
 })
 
-function CoursesPage() {
+// Inner component that uses the context
+function CoursesPageContent() {
+  const { token } = useAuth()
+  const { dispatch } = useCourseMarketplace()
   const [searchQuery, setSearchQuery] = useState('')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [showFilters, setShowFilters] = useState(false)
@@ -28,6 +35,39 @@ function CoursesPage() {
     queryKey: ['courses', searchQuery],
     queryFn: () => api.listCourses({ q: searchQuery || undefined }),
   })
+
+  // Fetch user's enrolled courses to determine access status
+  const { data: enrolledCoursesData } = useQuery({
+    queryKey: ['my-enrolled-courses'],
+    queryFn: async () => {
+      if (!token) {
+        return { success: true, message: 'No token', data: { courses: [] } }
+      }
+      return api.getMyEnrolledCourses(token)
+    },
+    enabled: !!token,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+
+  // Update course access status in context when enrollment data changes
+  useEffect(() => {
+    if (enrolledCoursesData?.data?.courses) {
+      const courseAccess: Array<CourseAccess> =
+        enrolledCoursesData.data.courses.map((course: any) => ({
+          user_id: course.enrollment?.user_id || '',
+          course_id: course.id,
+          access_level: 'full' as const,
+          purchase_id: course.enrollment?.id || '',
+          granted_at:
+            course.enrollment?.enrolled_at || new Date().toISOString(),
+        }))
+
+      dispatch({
+        type: 'SET_USER_ACCESS',
+        payload: courseAccess,
+      })
+    }
+  }, [enrolledCoursesData, dispatch])
 
   // Transform API data to match frontend expectations
   const apiCourses = coursesData?.data?.courses ?? []
@@ -166,144 +206,151 @@ function CoursesPage() {
   )
 
   return (
-    <CourseMarketplaceProvider>
-      <div className="container py-8">
-        {/* Header */}
-        <div className="flex flex-col gap-4 mb-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h1 className="text-3xl font-bold">Khóa học</h1>
-              <p className="text-muted-foreground">
-                Khám phá {allCourses.length} khóa học chất lượng cao
-                {isLoading && ' (Đang tải...)'}
-                {error && ' (Lỗi kết nối API)'}
-              </p>
-            </div>
-
-            {/* View Mode Toggle */}
-            <div className="flex items-center gap-2">
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
-              >
-                <Grid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
+    <div className="container py-8">
+      {/* Header */}
+      <div className="flex flex-col gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Khóa học</h1>
+            <p className="text-muted-foreground">
+              Khám phá {allCourses.length} khóa học chất lượng cao
+              {isLoading && ' (Đang tải...)'}
+              {error && ' (Lỗi kết nối API)'}
+            </p>
           </div>
 
-          {/* Search and Filters */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Tìm kiếm khóa học..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-2">
             <Button
-              variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
+              variant={viewMode === 'grid' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('grid')}
             >
-              <Filter className="h-4 w-4 mr-2" />
-              Bộ lọc
+              <Grid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+            >
+              <List className="h-4 w-4" />
             </Button>
           </div>
-
-          {/* Filters Panel */}
-          {showFilters && (
-            <div className="border rounded-lg p-4">
-              <CourseFilters
-                filters={{
-                  search: '',
-                  category: '',
-                  level: '',
-                  minPrice: 0,
-                  maxPrice: 10000000,
-                  minRating: 0,
-                  duration: '',
-                  status: '',
-                  instructor: '',
-                  isFree: false,
-                  hasVideos: false,
-                  hasCertificate: false,
-                  sortBy: 'newest',
-                  sortOrder: 'desc',
-                  language: '',
-                  accessType: '',
-                  isPopular: false,
-                  isFeatured: false,
-                  hasSubtitles: false,
-                  instructorVerified: false,
-                  completionRate: 0,
-                  currency: 'VND',
-                }}
-                onFiltersChange={() => {}}
-                onReset={() => {}}
-              />
-            </div>
-          )}
         </div>
 
-        {/* Course Grid */}
-        <div
-          className={`
+        {/* Search and Filters */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Tìm kiếm khóa học..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter className="h-4 w-4 mr-2" />
+            Bộ lọc
+          </Button>
+        </div>
+
+        {/* Filters Panel */}
+        {showFilters && (
+          <div className="border rounded-lg p-4">
+            <CourseFilters
+              filters={{
+                search: '',
+                category: '',
+                level: '',
+                minPrice: 0,
+                maxPrice: 10000000,
+                minRating: 0,
+                duration: '',
+                status: '',
+                instructor: '',
+                isFree: false,
+                hasVideos: false,
+                hasCertificate: false,
+                sortBy: 'newest',
+                sortOrder: 'desc',
+                language: '',
+                accessType: '',
+                isPopular: false,
+                isFeatured: false,
+                hasSubtitles: false,
+                instructorVerified: false,
+                completionRate: 0,
+                currency: 'VND',
+              }}
+              onFiltersChange={() => {}}
+              onReset={() => {}}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Course Grid */}
+      <div
+        className={`
         ${
           viewMode === 'grid'
             ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
             : 'flex flex-col gap-4'
         }
       `}
-        >
-          {filteredCourses.map((course) => (
-            <CourseCard
-              key={course.id}
-              course={course}
-              variant={viewMode === 'list' ? 'compact' : 'default'}
-              showInstructor={true}
-              showProgress={false}
-              showAccessStatus={true}
-              showPricing={true}
-              onPreview={(course) => console.log('Preview:', course.title)}
-              onPurchase={(course) => console.log('Purchase:', course.title)}
-              onAddToWishlist={(course) =>
-                console.log('Add to wishlist:', course.title)
-              }
-              isInWishlist={false}
-            />
-          ))}
-        </div>
-
-        {/* Empty State */}
-        {filteredCourses.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-muted-foreground mb-4">
-              Không tìm thấy khóa học nào phù hợp với tìm kiếm của bạn
-            </div>
-            <Button variant="outline" onClick={() => setSearchQuery('')}>
-              Xóa bộ lọc
-            </Button>
-          </div>
-        )}
-
-        {/* Load More */}
-        {filteredCourses.length > 0 && (
-          <div className="text-center mt-12">
-            <Button variant="outline" size="lg">
-              Xem thêm khóa học
-            </Button>
-          </div>
-        )}
+      >
+        {filteredCourses.map((course) => (
+          <CourseCard
+            key={course.id}
+            course={course}
+            variant={viewMode === 'list' ? 'compact' : 'default'}
+            showInstructor={true}
+            showProgress={false}
+            showAccessStatus={true}
+            showPricing={true}
+            onPreview={(course) => console.log('Preview:', course.title)}
+            onPurchase={(course) => console.log('Purchase:', course.title)}
+            onAddToWishlist={(course) =>
+              console.log('Add to wishlist:', course.title)
+            }
+            isInWishlist={false}
+          />
+        ))}
       </div>
+
+      {/* Empty State */}
+      {filteredCourses.length === 0 && (
+        <div className="text-center py-12">
+          <div className="text-muted-foreground mb-4">
+            Không tìm thấy khóa học nào phù hợp với tìm kiếm của bạn
+          </div>
+          <Button variant="outline" onClick={() => setSearchQuery('')}>
+            Xóa bộ lọc
+          </Button>
+        </div>
+      )}
+
+      {/* Load More */}
+      {filteredCourses.length > 0 && (
+        <div className="text-center mt-12">
+          <Button variant="outline" size="lg">
+            Xem thêm khóa học
+          </Button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Main component with provider wrapper
+function CoursesPage() {
+  return (
+    <CourseMarketplaceProvider>
+      <CoursesPageContent />
     </CourseMarketplaceProvider>
   )
 }
