@@ -59,6 +59,7 @@ export default [
       '@typescript-eslint/no-non-null-assertion': 'warn',
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-unnecessary-condition': 'off',
     },
     settings: {
       'import-x/resolver': {

@@ -8,10 +8,15 @@ import {
   ChevronRight,
   Clock,
   Download,
+  Edit3,
+  Filter,
   Menu,
   MessageSquare,
+  MoreHorizontal,
   Play,
+  Search,
   Star,
+  Trash2,
   Users,
   X,
 } from 'lucide-react'
@@ -30,6 +35,35 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Sheet,
   SheetContent,
@@ -91,6 +125,14 @@ function LearningEnvironment() {
   const navigate = useNavigate()
   const [showSidebar, setShowSidebar] = useState(true)
   const [newNote, setNewNote] = useState('')
+  const [editingNote, setEditingNote] = useState<{
+    id: string
+    content: string
+  } | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterType, setFilterType] = useState<'all' | 'recent' | 'bookmarked'>(
+    'all',
+  )
 
   // Check course access
   const { data: accessData } = useCourseAccess(courseId)
@@ -103,7 +145,15 @@ function LearningEnvironment() {
   const progressTracking = useProgressTracking(courseId, lectureId)
 
   // Notes management
-  const { notes, addNote, isCreating } = useStudentNotes(courseId, lectureId)
+  const {
+    notes,
+    addNote,
+    updateNote,
+    deleteNote,
+    isCreating,
+    isUpdating,
+    isDeleting,
+  } = useStudentNotes(courseId, lectureId)
 
   // Fetch course data with lectures
   const {
@@ -190,6 +240,52 @@ function LearningEnvironment() {
       addNote(newNote, progressTracking.watchTime)
       setNewNote('')
     }
+  }
+
+  const handleEditNote = (noteId: string, content: string) => {
+    setEditingNote({ id: noteId, content })
+  }
+
+  const handleSaveEdit = () => {
+    if (editingNote && editingNote.content.trim()) {
+      updateNote(editingNote.id, editingNote.content)
+      setEditingNote(null)
+    }
+  }
+
+  const handleCancelEdit = () => {
+    setEditingNote(null)
+  }
+
+  const handleDeleteNote = (noteId: string) => {
+    deleteNote(noteId)
+  }
+
+  // Filter and search notes
+  const filteredNotes = notes.filter((note) => {
+    const matchesSearch = note.content
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase())
+    const matchesFilter = (() => {
+      switch (filterType) {
+        case 'recent':
+          const oneWeekAgo = new Date()
+          oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+          return new Date(note.created_at) >= oneWeekAgo
+        case 'bookmarked':
+          // For future implementation when we add bookmark feature
+          return true
+        default:
+          return true
+      }
+    })()
+    return matchesSearch && matchesFilter
+  })
+
+  // Jump to video timestamp
+  const handleJumpToTimestamp = (timestamp: number) => {
+    // This would integrate with the video player to seek to the specific time
+    console.log('Jump to timestamp:', timestamp)
   }
 
   const formatTime = (seconds: number) => {
@@ -502,61 +598,344 @@ function LearningEnvironment() {
                   </Card>
                 </TabsContent>
 
-                <TabsContent value="notes" className="space-y-4">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Ghi chú của bạn</CardTitle>
+                <TabsContent value="notes" className="space-y-6">
+                  {/* Notes Header with Search and Filter */}
+                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-bold tracking-tight">
+                        Academic Notes
+                      </h2>
+                      <p className="text-muted-foreground">
+                        Build your knowledge base with organized, timestamped
+                        notes
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                        <Input
+                          placeholder="Search notes..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="pl-10 w-64"
+                        />
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="icon">
+                            <Filter className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => setFilterType('all')}
+                          >
+                            All Notes
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => setFilterType('recent')}
+                          >
+                            Recent (7 days)
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => setFilterType('bookmarked')}
+                          >
+                            Bookmarked
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+
+                  {/* New Note Creation */}
+                  <Card className="border-dashed">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 bg-primary rounded-full animate-pulse" />
+                        <CardTitle className="text-lg">
+                          Create New Note
+                        </CardTitle>
+                        <Badge variant="secondary" className="ml-auto">
+                          {formatTime(progressTracking.watchTime)}
+                        </Badge>
+                      </div>
                       <CardDescription>
-                        Tạo ghi chú cho thời điểm hiện tại:{' '}
-                        {formatTime(progressTracking.watchTime)}
+                        Capture your thoughts and insights at the current video
+                        timestamp
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Textarea
-                            placeholder="Viết ghi chú của bạn..."
-                            value={newNote}
-                            onChange={(e) => setNewNote(e.target.value)}
-                          />
+                        <Textarea
+                          placeholder="Write your academic note here... Consider including key concepts, questions, or insights."
+                          value={newNote}
+                          onChange={(e) => setNewNote(e.target.value)}
+                          className="min-h-[100px] resize-none"
+                        />
+                        <div className="flex justify-between items-center">
+                          <p className="text-sm text-muted-foreground">
+                            {newNote.length} characters
+                          </p>
                           <Button
                             onClick={handleAddNote}
                             disabled={!newNote.trim() || isCreating}
+                            className="bg-primary hover:bg-primary/90"
                           >
-                            {isCreating ? 'Đang lưu...' : 'Thêm ghi chú'}
+                            {isCreating ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                                Creating...
+                              </>
+                            ) : (
+                              'Add Note'
+                            )}
                           </Button>
-                        </div>
-
-                        <div className="space-y-3">
-                          {notes.map((note) => (
-                            <div
-                              key={note.id}
-                              className="p-3 border rounded-lg"
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <Badge variant="outline">
-                                  {note.video_timestamp
-                                    ? formatTime(note.video_timestamp)
-                                    : 'N/A'}
-                                </Badge>
-                                <span className="text-xs text-muted-foreground">
-                                  {new Date(note.created_at).toLocaleDateString(
-                                    'vi-VN',
-                                  )}
-                                </span>
-                              </div>
-                              <p className="text-sm">{note.content}</p>
-                            </div>
-                          ))}
-                          {notes.length === 0 && (
-                            <p className="text-muted-foreground text-center py-4">
-                              Chưa có ghi chú nào
-                            </p>
-                          )}
                         </div>
                       </div>
                     </CardContent>
                   </Card>
+
+                  {/* Notes List */}
+                  <div className="space-y-4">
+                    {filteredNotes.length > 0 && (
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold">
+                          Your Notes ({filteredNotes.length})
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {filterType === 'all'
+                            ? 'All notes'
+                            : filterType === 'recent'
+                              ? 'Recent notes'
+                              : 'Bookmarked notes'}
+                        </p>
+                      </div>
+                    )}
+
+                    {filteredNotes.map((note) => (
+                      <Card
+                        key={note.id}
+                        className="academic-note-card hover:shadow-md transition-shadow"
+                      >
+                        <CardContent className="p-6">
+                          <div className="space-y-4">
+                            {/* Note Header */}
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-center gap-3">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleJumpToTimestamp(
+                                      note.video_timestamp || 0,
+                                    )
+                                  }
+                                  className="font-mono text-xs"
+                                >
+                                  <Play className="h-3 w-3 mr-1" />
+                                  {note.video_timestamp
+                                    ? formatTime(note.video_timestamp)
+                                    : '00:00'}
+                                </Button>
+                                <Badge variant="secondary" className="text-xs">
+                                  {new Date(note.created_at).toLocaleDateString(
+                                    'en-US',
+                                    {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      year: 'numeric',
+                                    },
+                                  )}
+                                </Badge>
+                                {note.updated_at !== note.created_at && (
+                                  <Badge variant="outline" className="text-xs">
+                                    Edited
+                                  </Badge>
+                                )}
+                              </div>
+
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleEditNote(note.id, note.content)
+                                    }
+                                  >
+                                    <Edit3 className="h-4 w-4 mr-2" />
+                                    Edit Note
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <DropdownMenuItem
+                                        onSelect={(e) => e.preventDefault()}
+                                        className="text-destructive focus:text-destructive"
+                                      >
+                                        <Trash2 className="h-4 w-4 mr-2" />
+                                        Delete Note
+                                      </DropdownMenuItem>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>
+                                          Delete Note
+                                        </AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          Are you sure you want to delete this
+                                          note? This action cannot be undone.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>
+                                          Cancel
+                                        </AlertDialogCancel>
+                                        <AlertDialogAction
+                                          onClick={() =>
+                                            handleDeleteNote(note.id)
+                                          }
+                                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                          disabled={isDeleting}
+                                        >
+                                          {isDeleting
+                                            ? 'Deleting...'
+                                            : 'Delete'}
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+
+                            {/* Note Content */}
+                            <div className="prose prose-sm max-w-none">
+                              <p className="text-foreground leading-relaxed whitespace-pre-wrap">
+                                {note.content}
+                              </p>
+                            </div>
+
+                            {/* Note Footer */}
+                            <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t">
+                              <span>
+                                Created:{' '}
+                                {new Date(note.created_at).toLocaleString(
+                                  'en-US',
+                                  {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  },
+                                )}
+                              </span>
+                              {note.updated_at !== note.created_at && (
+                                <span>
+                                  Modified:{' '}
+                                  {new Date(note.updated_at).toLocaleString(
+                                    'en-US',
+                                    {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit',
+                                    },
+                                  )}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+
+                    {filteredNotes.length === 0 && (
+                      <Card className="border-dashed">
+                        <CardContent className="flex flex-col items-center justify-center py-12">
+                          <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
+                          <h3 className="text-lg font-semibold mb-2">
+                            {searchQuery ? 'No notes found' : 'No notes yet'}
+                          </h3>
+                          <p className="text-muted-foreground text-center max-w-md">
+                            {searchQuery
+                              ? `No notes match your search "${searchQuery}". Try adjusting your search terms.`
+                              : 'Start taking notes to build your academic knowledge base. Click "Add Note" above to create your first note.'}
+                          </p>
+                          {searchQuery && (
+                            <Button
+                              variant="outline"
+                              onClick={() => setSearchQuery('')}
+                              className="mt-4"
+                            >
+                              Clear Search
+                            </Button>
+                          )}
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+
+                  {/* Edit Note Dialog */}
+                  <Dialog
+                    open={!!editingNote}
+                    onOpenChange={() => setEditingNote(null)}
+                  >
+                    <DialogContent className="sm:max-w-[600px]">
+                      <DialogHeader>
+                        <DialogTitle>Edit Note</DialogTitle>
+                        <DialogDescription>
+                          Make changes to your note. Click save when you're
+                          done.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="note-content">Note Content</Label>
+                          <Textarea
+                            id="note-content"
+                            value={editingNote?.content || ''}
+                            onChange={(e) =>
+                              setEditingNote(
+                                editingNote
+                                  ? { ...editingNote, content: e.target.value }
+                                  : null,
+                              )
+                            }
+                            className="min-h-[150px] resize-none"
+                            placeholder="Edit your note content..."
+                          />
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {editingNote?.content.length || 0} characters
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <DialogClose asChild>
+                          <Button variant="outline" onClick={handleCancelEdit}>
+                            Cancel
+                          </Button>
+                        </DialogClose>
+                        <Button
+                          onClick={handleSaveEdit}
+                          disabled={!editingNote?.content.trim() || isUpdating}
+                          className="bg-primary hover:bg-primary/90"
+                        >
+                          {isUpdating ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                              Saving...
+                            </>
+                          ) : (
+                            'Save Changes'
+                          )}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </TabsContent>
 
                 <TabsContent value="discussions" className="space-y-4">

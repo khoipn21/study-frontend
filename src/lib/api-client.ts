@@ -125,16 +125,6 @@ type ChatMessage = {
   created_at: string
 }
 
-type StudentNote = {
-  id: string
-  user_id: string
-  course_id: string
-  lecture_id: string
-  content: string
-  video_timestamp?: number
-  created_at: string
-  updated_at: string
-}
 
 type AnalyticsData = {
   total_courses: number
@@ -737,26 +727,67 @@ export const api = {
       video_timestamp?: number
     },
   ) =>
-    request<StudentNote>('/notes', {
+    request<{ data: any; success: boolean }>(`/notes/courses/${payload.course_id}/lectures/${payload.lecture_id}`, {
       method: 'POST',
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        title: `Note at ${payload.video_timestamp ? Math.floor(payload.video_timestamp / 60) + ':' + String(Math.floor(payload.video_timestamp % 60)).padStart(2, '0') : '00:00'}`,
+        content: payload.content,
+        video_timestamp: payload.video_timestamp,
+      }),
       token,
-    }),
+    }).then(response => ({
+      id: response.data.id,
+      user_id: '',
+      course_id: payload.course_id,
+      lecture_id: payload.lecture_id,
+      content: response.data.content,
+      video_timestamp: response.data.timestamp_seconds,
+      created_at: response.data.created_at,
+      updated_at: response.data.updated_at,
+    })),
 
   getLectureNotes: (token: string, courseId: string, lectureId: string) =>
-    request<{ notes: Array<StudentNote> }>(
+    request<{ data: Array<any>; count: number; success: boolean }>(
       `/notes/courses/${courseId}/lectures/${lectureId}`,
       {
         token,
       },
-    ),
+    ).then(response => {
+      console.log('API Response:', response)
+      const result = {
+        notes: response.data.map((note: any) => ({
+          id: note.id,
+          user_id: note.user_id || '',
+          course_id: courseId,
+          lecture_id: lectureId,
+          content: note.content,
+          video_timestamp: note.timestamp_seconds,
+          created_at: note.created_at,
+          updated_at: note.updated_at,
+        }))
+      }
+      console.log('Transformed result:', result)
+      return result
+    }),
 
   updateNote: (token: string, noteId: string, content: string) =>
-    request<StudentNote>(`/notes/${noteId}`, {
+    request<{ data: any; success: boolean }>(`/notes/${noteId}`, {
       method: 'PUT',
-      body: JSON.stringify({ content }),
+      body: JSON.stringify({
+        title: `Updated Note`,
+        content
+      }),
       token,
-    }),
+    }).then(response => ({
+      id: response.data.id,
+      user_id: '',
+      course_id: '',
+      lecture_id: '',
+      content: response.data.content,
+      video_timestamp: response.data.timestamp_seconds,
+      created_at: response.data.created_at,
+      updated_at: response.data.updated_at,
+    })),
 
   deleteNote: (token: string, noteId: string) =>
     request<{ success: boolean }>(`/notes/${noteId}`, {

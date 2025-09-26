@@ -191,6 +191,8 @@ export function useStudentNotes(courseId: string, lectureId: string) {
   })
 
   const notes = notesData?.notes || []
+  console.log('Notes data:', notesData)
+  console.log('Final notes:', notes)
 
   const addNote = useCallback(
     (content: string, videoTimestamp?: number) => {

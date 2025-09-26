@@ -372,6 +372,51 @@ code {
   .course-level-expert {
     @apply bg-progress-expert/10 text-progress-expert border-progress-expert/20;
   }
+
+  /* Academic Notes Specific Styles */
+  .academic-note-card {
+    @apply bg-card border border-border/60 shadow-sm rounded-lg transition-all duration-300 hover:border-primary/30;
+  }
+
+  .academic-note-card:hover {
+    @apply shadow-lg border-primary/40 bg-card/95;
+  }
+
+  .note-timestamp-btn {
+    @apply font-mono text-xs bg-primary/5 border-primary/20 text-primary hover:bg-primary/10 hover:border-primary/30;
+  }
+
+  .note-content {
+    @apply text-sm leading-relaxed text-foreground/90 font-normal whitespace-pre-wrap;
+  }
+
+  .note-meta {
+    @apply text-xs text-muted-foreground border-border/50;
+  }
+
+  .academic-prose {
+    @apply prose prose-sm prose-zinc dark:prose-invert max-w-none;
+  }
+
+  .academic-prose p {
+    @apply leading-7 text-foreground/90;
+  }
+
+  .academic-prose strong {
+    @apply text-foreground font-semibold;
+  }
+
+  .academic-note-empty {
+    @apply bg-muted/30 border-dashed border-muted-foreground/30;
+  }
+
+  .note-search-input {
+    @apply bg-background/50 border-border/60 focus:border-primary/50 focus:bg-background;
+  }
+
+  .note-filter-dropdown {
+    @apply bg-popover border-border/60 shadow-lg;
+  }
 }
 
 @layer base {
