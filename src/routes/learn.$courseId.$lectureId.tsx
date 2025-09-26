@@ -118,6 +118,7 @@ interface Course {
   thumbnail_url?: string
   duration_minutes?: number
   tags?: Array<string>
+  learning_outcomes?: Array<string>
 }
 
 function LearningEnvironment() {
@@ -302,7 +303,7 @@ function LearningEnvironment() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Đang tải khóa học...</p>
+          <p className="text-muted-foreground">Loading course...</p>
         </div>
       </div>
     )
@@ -313,22 +314,22 @@ function LearningEnvironment() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2 text-destructive">
-            Lỗi tải khóa học
+            Course loading error
           </h2>
           <p className="text-muted-foreground mb-4">
             {courseError instanceof Error
               ? courseError.message
-              : 'Không thể tải thông tin khóa học'}
+              : 'Unable to load course information'}
           </p>
           <Button
             variant="outline"
             onClick={() => window.location.reload()}
             className="mr-2"
           >
-            Thử lại
+            Try again
           </Button>
           <Button variant="ghost" onClick={() => window.history.back()}>
-            Quay lại
+            Go back
           </Button>
         </div>
       </div>
@@ -339,13 +340,11 @@ function LearningEnvironment() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">
-            Không tìm thấy bài giảng
-          </h2>
+          <h2 className="text-xl font-semibold mb-2">Lecture not found</h2>
           <p className="text-muted-foreground mb-4">
             {!course
-              ? 'Khóa học không tồn tại.'
-              : 'Bài giảng bạn đang tìm kiếm không tồn tại.'}
+              ? 'The course does not exist.'
+              : 'The lecture you are looking for does not exist.'}
           </p>
           <Button
             variant="outline"
@@ -353,7 +352,7 @@ function LearningEnvironment() {
               void navigate({ to: '/courses' })
             }}
           >
-            Về trang khóa học
+            Back to courses
           </Button>
         </div>
       </div>
@@ -372,7 +371,7 @@ function LearningEnvironment() {
               onClick={() => window.history.back()}
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
-              Quay lại
+              Back
             </Button>
             <Separator orientation="vertical" className="h-6" />
             <h1 className="font-semibold truncate max-w-[300px]">
@@ -383,7 +382,7 @@ function LearningEnvironment() {
           <div className="flex items-center space-x-2">
             <div className="hidden md:flex items-center space-x-2 text-sm text-muted-foreground">
               <span>
-                {completedLectures}/{totalLectures} bài
+                {completedLectures}/{totalLectures} lectures
               </span>
               <Progress value={courseProgress} className="w-24" />
               <span>{Math.round(courseProgress)}%</span>
@@ -427,7 +426,7 @@ function LearningEnvironment() {
                   <Badge
                     variant={currentLecture.is_free ? 'secondary' : 'default'}
                   >
-                    {currentLecture.is_free ? 'Miễn phí' : 'Trả phí'}
+                    {currentLecture.is_free ? 'Free' : 'Premium'}
                   </Badge>
                 </div>
                 <p className="text-muted-foreground mb-4">
@@ -437,15 +436,15 @@ function LearningEnvironment() {
                 <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                   <div className="flex items-center">
                     <Clock className="h-4 w-4 mr-1" />
-                    {currentLecture.duration_minutes} phút
+                    {currentLecture.duration_minutes} minutes
                   </div>
                   <div className="flex items-center">
                     <Users className="h-4 w-4 mr-1" />
-                    {course.enrollment_count.toLocaleString()} học viên
+                    {course.enrollment_count.toLocaleString()} students
                   </div>
                   <div className="flex items-center">
                     <Star className="h-4 w-4 mr-1 fill-current text-yellow-400" />
-                    {course.rating} ({course.rating_count} đánh giá)
+                    {course.rating} ({course.rating_count} ratings)
                   </div>
                 </div>
               </div>
@@ -464,11 +463,11 @@ function LearningEnvironment() {
                   }}
                 >
                   <ChevronLeft className="h-4 w-4 mr-2" />
-                  Bài trước
+                  Previous
                 </Button>
 
                 <span className="text-sm text-muted-foreground">
-                  Bài {currentLectureIndex + 1} / {totalLectures}
+                  Lecture {currentLectureIndex + 1} / {totalLectures}
                 </span>
 
                 <Button
@@ -481,7 +480,7 @@ function LearningEnvironment() {
                     }
                   }}
                 >
-                  Bài tiếp theo
+                  Next Lecture
                   <ChevronRight className="h-4 w-4 ml-2" />
                 </Button>
               </div>
@@ -489,51 +488,57 @@ function LearningEnvironment() {
               {/* Tabs Content */}
               <Tabs defaultValue="overview" className="w-full">
                 <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="overview">Tổng quan</TabsTrigger>
-                  <TabsTrigger value="resources">Tài liệu</TabsTrigger>
-                  <TabsTrigger value="notes">Ghi chú</TabsTrigger>
-                  <TabsTrigger value="discussions">Thảo luận</TabsTrigger>
+                  <TabsTrigger value="overview">Overview</TabsTrigger>
+                  <TabsTrigger value="resources">Resources</TabsTrigger>
+                  <TabsTrigger value="notes">Notes</TabsTrigger>
+                  <TabsTrigger value="discussions">Discussions</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="overview" className="space-y-4">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Về bài giảng này</CardTitle>
+                      <CardTitle>About this lecture</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <p className="text-muted-foreground mb-4">
                         {currentLecture.description}
                       </p>
-                      <div className="space-y-2">
-                        <h4 className="font-medium">Nội dung sẽ được học:</h4>
-                        <ul className="space-y-1 text-sm text-muted-foreground">
-                          <li>• Khái niệm cơ bản về React</li>
-                          <li>• Cách thiết lập môi trường phát triển</li>
-                          <li>• Tạo component đầu tiên</li>
-                          <li>• Hiểu về JSX và cách sử dụng</li>
-                        </ul>
-                      </div>
+                      {course.learning_outcomes &&
+                        course.learning_outcomes.length > 0 && (
+                          <div className="space-y-2">
+                            <h4 className="font-medium">
+                              Nội dung sẽ được học:
+                            </h4>
+                            <ul className="space-y-1 text-sm text-muted-foreground">
+                              {course.learning_outcomes
+                                .slice(0, 4)
+                                .map((outcome, index) => (
+                                  <li key={index}>• {outcome}</li>
+                                ))}
+                            </ul>
+                          </div>
+                        )}
                     </CardContent>
                   </Card>
 
                   <Card>
                     <CardHeader>
-                      <CardTitle>Giảng viên</CardTitle>
+                      <CardTitle>Instructor</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-center space-x-4">
                         <Avatar className="h-12 w-12">
                           <AvatarImage src={course.instructor_avatar} />
                           <AvatarFallback>
-                            {course.instructor_name.charAt(0)}
+                            {(course.instructor_name || 'I').charAt(0)}
                           </AvatarFallback>
                         </Avatar>
                         <div>
                           <h4 className="font-medium">
-                            {course.instructor_name}
+                            {course.instructor_name || 'Course Instructor'}
                           </h4>
                           <p className="text-sm text-muted-foreground">
-                            Senior Frontend Developer
+                            Expert Instructor
                           </p>
                         </div>
                       </div>
@@ -544,9 +549,9 @@ function LearningEnvironment() {
                 <TabsContent value="resources" className="space-y-4">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Tài liệu bài giảng</CardTitle>
+                      <CardTitle>Lecture resources</CardTitle>
                       <CardDescription>
-                        Tải xuống các tài liệu hỗ trợ cho bài giảng này
+                        Download supporting materials for this lecture
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -584,14 +589,14 @@ function LearningEnvironment() {
                               </div>
                               <Button size="sm" variant="outline">
                                 <Download className="h-4 w-4 mr-2" />
-                                Tải xuống
+                                Download
                               </Button>
                             </div>
                           ))}
                         </div>
                       ) : (
                         <p className="text-muted-foreground text-center py-4">
-                          Không có tài liệu cho bài giảng này
+                          No resources available for this lecture
                         </p>
                       )}
                     </CardContent>
@@ -941,16 +946,16 @@ function LearningEnvironment() {
                 <TabsContent value="discussions" className="space-y-4">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Thảo luận</CardTitle>
+                      <CardTitle>Discussions</CardTitle>
                       <CardDescription>
-                        Trao đổi với giảng viên và học viên khác
+                        Interact with instructors and other students
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="text-center py-8">
                         <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                         <p className="text-muted-foreground">
-                          Tính năng thảo luận sẽ sớm được cập nhật
+                          Discussion feature will be updated soon
                         </p>
                       </div>
                     </CardContent>
@@ -967,7 +972,7 @@ function LearningEnvironment() {
         >
           <div className="p-4 border-b">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="font-semibold">Nội dung khóa học</h3>
+              <h3 className="font-semibold">Course content</h3>
               <Button
                 variant="ghost"
                 size="sm"
@@ -977,7 +982,7 @@ function LearningEnvironment() {
               </Button>
             </div>
             <div className="text-sm text-muted-foreground">
-              {completedLectures}/{totalLectures} bài hoàn thành
+              {completedLectures}/{totalLectures} lectures completed
             </div>
             <Progress value={courseProgress} className="mt-2" />
           </div>
@@ -1012,11 +1017,11 @@ function LearningEnvironment() {
                       </h4>
                       <div className="flex items-center space-x-2 mt-1">
                         <span className="text-xs text-muted-foreground">
-                          {lecture.duration_minutes} phút
+                          {lecture.duration_minutes} minutes
                         </span>
                         {lecture.is_free && (
                           <Badge variant="secondary" className="text-xs">
-                            Miễn phí
+                            Free
                           </Badge>
                         )}
                       </div>
@@ -1032,9 +1037,9 @@ function LearningEnvironment() {
         <Sheet open={showSidebar} onOpenChange={setShowSidebar}>
           <SheetContent side="right" className="w-80 p-0">
             <SheetHeader className="p-4 border-b">
-              <SheetTitle>Nội dung khóa học</SheetTitle>
+              <SheetTitle>Course content</SheetTitle>
               <SheetDescription>
-                {completedLectures}/{totalLectures} bài hoàn thành
+                {completedLectures}/{totalLectures} lectures completed
               </SheetDescription>
               <Progress value={courseProgress} className="mt-2" />
             </SheetHeader>
@@ -1069,11 +1074,11 @@ function LearningEnvironment() {
                         </h4>
                         <div className="flex items-center space-x-2 mt-1">
                           <span className="text-xs text-muted-foreground">
-                            {lecture.duration_minutes} phút
+                            {lecture.duration_minutes} minutes
                           </span>
                           {lecture.is_free && (
                             <Badge variant="secondary" className="text-xs">
-                              Miễn phí
+                              Free
                             </Badge>
                           )}
                         </div>

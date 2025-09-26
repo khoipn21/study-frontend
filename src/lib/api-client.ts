@@ -125,7 +125,6 @@ type ChatMessage = {
   created_at: string
 }
 
-
 type AnalyticsData = {
   total_courses: number
   total_enrollments: number
@@ -133,6 +132,27 @@ type AnalyticsData = {
   completion_rate: number
   revenue: number
   growth_metrics: Record<string, number>
+}
+
+// Notes
+type NoteApi = {
+  id: string
+  user_id?: string
+  content: string
+  timestamp_seconds?: number
+  created_at: string
+  updated_at: string
+}
+
+type NotesListResponse = {
+  data: Array<NoteApi>
+  count: number
+  success: boolean
+}
+
+type NoteItemResponse = {
+  data: NoteApi
+  success: boolean
 }
 
 export class ApiError extends Error {
@@ -727,15 +747,18 @@ export const api = {
       video_timestamp?: number
     },
   ) =>
-    request<{ data: any; success: boolean }>(`/notes/courses/${payload.course_id}/lectures/${payload.lecture_id}`, {
-      method: 'POST',
-      body: JSON.stringify({
-        title: `Note at ${payload.video_timestamp ? Math.floor(payload.video_timestamp / 60) + ':' + String(Math.floor(payload.video_timestamp % 60)).padStart(2, '0') : '00:00'}`,
-        content: payload.content,
-        video_timestamp: payload.video_timestamp,
-      }),
-      token,
-    }).then(response => ({
+    request<NoteItemResponse>(
+      `/notes/courses/${payload.course_id}/lectures/${payload.lecture_id}`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          title: `Note at ${payload.video_timestamp ? Math.floor(payload.video_timestamp / 60) + ':' + String(Math.floor(payload.video_timestamp % 60)).padStart(2, '0') : '00:00'}`,
+          content: payload.content,
+          video_timestamp: payload.video_timestamp,
+        }),
+        token,
+      },
+    ).then((response) => ({
       id: response.data.id,
       user_id: '',
       course_id: payload.course_id,
@@ -747,15 +770,15 @@ export const api = {
     })),
 
   getLectureNotes: (token: string, courseId: string, lectureId: string) =>
-    request<{ data: Array<any>; count: number; success: boolean }>(
+    request<NotesListResponse>(
       `/notes/courses/${courseId}/lectures/${lectureId}`,
       {
         token,
       },
-    ).then(response => {
+    ).then((response) => {
       console.log('API Response:', response)
       const result = {
-        notes: response.data.map((note: any) => ({
+        notes: response.data.map((note) => ({
           id: note.id,
           user_id: note.user_id || '',
           course_id: courseId,
@@ -764,21 +787,21 @@ export const api = {
           video_timestamp: note.timestamp_seconds,
           created_at: note.created_at,
           updated_at: note.updated_at,
-        }))
+        })),
       }
       console.log('Transformed result:', result)
       return result
     }),
 
   updateNote: (token: string, noteId: string, content: string) =>
-    request<{ data: any; success: boolean }>(`/notes/${noteId}`, {
+    request<NoteItemResponse>(`/notes/${noteId}`, {
       method: 'PUT',
       body: JSON.stringify({
         title: `Updated Note`,
-        content
+        content,
       }),
       token,
-    }).then(response => ({
+    }).then((response) => ({
       id: response.data.id,
       user_id: '',
       course_id: '',

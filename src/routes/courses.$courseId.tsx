@@ -259,10 +259,12 @@ function CourseDetailPage() {
                         <span>{formatDuration(totalDuration)}</span>
                       </div>
                     )}
-                    <div className="flex items-center gap-1">
-                      <Globe className="h-4 w-4" />
-                      <span>English</span>
-                    </div>
+                    {course.language && (
+                      <div className="flex items-center gap-1">
+                        <Globe className="h-4 w-4" />
+                        <span>{course.language}</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Progress for enrolled students */}
@@ -304,46 +306,38 @@ function CourseDetailPage() {
 
               <TabsContent value="overview" className="space-y-6">
                 {/* What you'll learn */}
-                <div className="academic-card p-6">
-                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <Target className="h-5 w-5 text-primary" />
-                    What you'll learn
-                  </h3>
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    {[
-                      'Master the fundamentals and advanced concepts',
-                      'Build real-world projects from scratch',
-                      'Learn industry best practices and standards',
-                      'Get hands-on experience with modern tools',
-                      'Understand key principles and methodologies',
-                      'Prepare for certification or career advancement',
-                    ].map((item, index) => (
-                      <div key={index} className="flex items-start gap-3">
-                        <CheckCircle className="h-4 w-4 text-success mt-0.5 flex-shrink-0" />
-                        <span className="text-sm">{item}</span>
+                {course.learning_outcomes &&
+                  course.learning_outcomes.length > 0 && (
+                    <div className="academic-card p-6">
+                      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <Target className="h-5 w-5 text-primary" />
+                        What you'll learn
+                      </h3>
+                      <div className="grid sm:grid-cols-2 gap-3">
+                        {course.learning_outcomes.map((item, index) => (
+                          <div key={index} className="flex items-start gap-3">
+                            <CheckCircle className="h-4 w-4 text-success mt-0.5 flex-shrink-0" />
+                            <span className="text-sm">{item}</span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
+                  )}
 
                 {/* Course Requirements */}
-                <div className="academic-card p-6">
-                  <h3 className="text-lg font-semibold mb-4">Requirements</h3>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li className="flex items-start gap-2">
-                      <span className="w-1 h-1 bg-muted-foreground rounded-full mt-2 flex-shrink-0" />
-                      Basic computer literacy and internet access
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="w-1 h-1 bg-muted-foreground rounded-full mt-2 flex-shrink-0" />
-                      No prior experience required - we'll teach you everything
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="w-1 h-1 bg-muted-foreground rounded-full mt-2 flex-shrink-0" />
-                      Dedication to learn and practice regularly
-                    </li>
-                  </ul>
-                </div>
+                {course.requirements && course.requirements.length > 0 && (
+                  <div className="academic-card p-6">
+                    <h3 className="text-lg font-semibold mb-4">Requirements</h3>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      {course.requirements.map((requirement, index) => (
+                        <li key={index} className="flex items-start gap-2">
+                          <span className="w-1 h-1 bg-muted-foreground rounded-full mt-2 flex-shrink-0" />
+                          {requirement}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 {/* Course Description */}
                 <div className="academic-card p-6">
@@ -351,26 +345,9 @@ function CourseDetailPage() {
                     About this course
                   </h3>
                   <div className="prose prose-sm max-w-none">
-                    <p className="text-muted-foreground leading-relaxed">
+                    <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
                       {showFullDescription ? (
-                        <>
-                          {course.description}
-                          <br />
-                          <br />
-                          This comprehensive course is designed to take you from
-                          beginner to advanced level through structured learning
-                          modules, hands-on projects, and real-world
-                          applications. You'll gain practical skills that are
-                          immediately applicable in your career or personal
-                          projects.
-                          <br />
-                          <br />
-                          Throughout the course, you'll have access to
-                          downloadable resources, exercise files, and lifetime
-                          access to all course materials. Our community of
-                          learners and instructors are here to support your
-                          learning journey every step of the way.
-                        </>
+                        course.description
                       ) : (
                         <>
                           {course.description?.slice(0, 300)}
@@ -501,12 +478,39 @@ function CourseDetailPage() {
                   <h3 className="text-lg font-semibold mb-4">
                     Student Reviews
                   </h3>
-                  <div className="text-center py-8">
-                    <MessageSquare className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-muted-foreground">
-                      Reviews will appear here once students start rating this
-                      course.
-                    </p>
+                  <div className="space-y-4">
+                    {course.rating && course.rating > 0 ? (
+                      <>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center">
+                              <Star className="h-5 w-5 fill-current text-yellow-400" />
+                              <span className="text-2xl font-bold ml-2">
+                                {course.rating.toFixed(1)}
+                              </span>
+                            </div>
+                            <span className="text-muted-foreground">
+                              ({course.rating_count} reviews)
+                            </span>
+                          </div>
+                        </div>
+                        <div className="text-center py-8">
+                          <MessageSquare className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
+                          <p className="text-muted-foreground">
+                            Individual reviews will be shown here in a future
+                            update.
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-8">
+                        <MessageSquare className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
+                        <p className="text-muted-foreground">
+                          Reviews will appear here once students start rating
+                          this course.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </TabsContent>
@@ -617,14 +621,24 @@ function CourseDetailPage() {
                         <Download className="h-4 w-4 text-muted-foreground" />
                         <span>Downloadable resources</span>
                       </li>
-                      <li className="flex items-center gap-2">
-                        <Award className="h-4 w-4 text-muted-foreground" />
-                        <span>Certificate of completion</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span>Lifetime access</span>
-                      </li>
+                      {course.certificate_available && (
+                        <li className="flex items-center gap-2">
+                          <Award className="h-4 w-4 text-muted-foreground" />
+                          <span>Certificate of completion</span>
+                        </li>
+                      )}
+                      {course.lifetime_access && (
+                        <li className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                          <span>Lifetime access</span>
+                        </li>
+                      )}
+                      {course.mobile_access && (
+                        <li className="flex items-center gap-2">
+                          <Globe className="h-4 w-4 text-muted-foreground" />
+                          <span>Mobile access</span>
+                        </li>
+                      )}
                     </ul>
                   </div>
                 </div>
