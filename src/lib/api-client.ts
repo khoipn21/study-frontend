@@ -817,6 +817,26 @@ export const api = {
       method: 'DELETE',
       token,
     }),
+
+  // Resource access (authenticated downloads and previews)
+  getResourceDownloadUrl: async (token: string, resourceId: string) => {
+    const response = await requestGateway<{
+      download_url: string
+      expires_at: string
+      resource_id: string
+    }>(`/lecture-resources/${resourceId}/download-url`, { token })
+    return response.data!
+  },
+
+  getResourcePreviewUrl: async (token: string, resourceId: string) => {
+    const response = await requestGateway<{
+      preview_url: string
+      expires_at: string
+      resource_id: string
+      resource_type: string
+    }>(`/lecture-resources/${resourceId}/preview-url`, { token })
+    return response.data!
+  },
 }
 
 // Enhanced API client with automatic token injection and better error handling

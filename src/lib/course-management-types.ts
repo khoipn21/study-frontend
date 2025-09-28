@@ -51,7 +51,7 @@ export interface CourseCreationData {
   // Step 4: Lectures
   lectures: Array<LectureCreationData>
 
-  // Step 5: Resources
+  // Step 5: Resources (Global/Course-level resources)
   resources: Array<CourseResource>
 
   // Step 6: Videos
@@ -71,6 +71,7 @@ export interface LectureCreationData {
   quiz_data?: QuizData
   reading_content?: string
   assignment_data?: AssignmentData
+  resources?: Array<CourseResource>
 }
 
 export interface QuizData {

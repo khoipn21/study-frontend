@@ -139,7 +139,7 @@ export function ChatMessage({
             isAssistant && 'bg-card border',
           )}
         >
-          <div className="prose prose-sm max-w-none">
+          <div className="max-w-none">
             {formatContent(contentWithoutCodeBlocks).map((element, index) => {
               if (
                 typeof element === 'string' &&

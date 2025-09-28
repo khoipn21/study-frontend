@@ -646,7 +646,7 @@ export function CourseDetailPage({
                 {/* Course Description */}
                 <section>
                   <h3 className="text-xl font-semibold mb-4">Mô tả khóa học</h3>
-                  <div className="prose max-w-none">
+                  <div className="max-w-none">
                     <p className="text-muted-foreground leading-relaxed">
                       {course.description}
                     </p>

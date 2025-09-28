@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
+import { useMutation } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import {
   DndContext,
   KeyboardSensor,
@@ -18,14 +20,21 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import {
   Clock,
+  Download,
   Edit,
   Eye,
+  File,
   FileText,
   GripVertical,
   HelpCircle,
+  Image,
+  Paperclip,
   Play,
   Plus,
   Trash2,
+  Upload,
+  Video,
+  X,
 } from 'lucide-react'
 
 // UI Components
@@ -63,11 +72,65 @@ import {
   FormItem,
   FormLabel,
 } from '@/components/ui/form'
+import { api } from '@/lib/api-client'
+import { useAuth } from '@/lib/auth-context'
 import type {
   CourseCreationData,
+  CourseResource,
+  FileUploadProgress,
   LectureCreationData,
 } from '@/lib/course-management-types'
 import type { DragEndEvent } from '@dnd-kit/core'
+
+// Resource Management Constants
+const ALLOWED_FILE_TYPES = {
+  documents: ['.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx'],
+  images: ['.jpg', '.jpeg', '.png', '.gif', '.svg'],
+  audio: ['.mp3', '.wav', '.ogg'],
+  archives: ['.zip', '.rar', '.7z'],
+  text: ['.txt', '.md', '.csv'],
+}
+
+const ALL_ALLOWED_TYPES = Object.values(ALLOWED_FILE_TYPES).flat()
+const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
+
+function getFileIcon(fileName: string) {
+  const extension = fileName.toLowerCase().split('.').pop()
+
+  if (
+    extension !== null &&
+    extension !== undefined &&
+    extension !== '' &&
+    ALLOWED_FILE_TYPES.documents.some((ext) => ext.includes(extension))
+  ) {
+    return <FileText className="w-4 h-4" />
+  }
+  if (
+    extension !== null &&
+    extension !== undefined &&
+    extension !== '' &&
+    ALLOWED_FILE_TYPES.images.some((ext) => ext.includes(extension))
+  ) {
+    return <Image className="w-4 h-4" />
+  }
+  if (
+    extension !== null &&
+    extension !== undefined &&
+    extension !== '' &&
+    ALLOWED_FILE_TYPES.audio.some((ext) => ext.includes(extension))
+  ) {
+    return <Video className="w-4 h-4" />
+  }
+  return <File className="w-4 h-4" />
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
 
 // Types
 
@@ -83,6 +146,7 @@ interface SortableLectureCardProps {
   index: number
   onEdit: () => void
   onDelete: () => void
+  onManageResources: () => void
 }
 
 function SortableLectureCard({
@@ -90,6 +154,7 @@ function SortableLectureCard({
   index,
   onEdit,
   onDelete,
+  onManageResources,
 }: SortableLectureCardProps) {
   const {
     attributes,
@@ -179,6 +244,12 @@ function SortableLectureCard({
                   <span>{lecture.duration_minutes} min</span>
                 </div>
               )}
+              {lecture.resources && lecture.resources.length > 0 && (
+                <div className="flex items-center gap-1">
+                  <Paperclip className="w-3 h-3" />
+                  <span>{lecture.resources.length} resources</span>
+                </div>
+              )}
               {lecture.description !== '' && (
                 <span className="truncate max-w-xs">{lecture.description}</span>
               )}
@@ -186,6 +257,9 @@ function SortableLectureCard({
           </div>
 
           <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={onManageResources}>
+              <Paperclip className="w-4 h-4" />
+            </Button>
             <Button variant="ghost" size="sm" onClick={onEdit}>
               <Edit className="w-4 h-4" />
             </Button>
@@ -219,6 +293,7 @@ function LectureDialog({
     type: lecture?.type ?? 'video',
     duration_minutes: lecture?.duration_minutes ?? 0,
     is_free: lecture?.is_free ?? false,
+    resources: lecture?.resources ?? [],
   })
 
   const watchedType = lectureForm.type
@@ -232,6 +307,7 @@ function LectureDialog({
         type: lecture.type ?? 'video',
         duration_minutes: lecture.duration_minutes ?? 0,
         is_free: lecture.is_free ?? false,
+        resources: lecture.resources ?? [],
       })
     }
   }, [lecture])
@@ -250,6 +326,7 @@ function LectureDialog({
       type: 'video',
       duration_minutes: 0,
       is_free: false,
+      resources: [],
     })
   }
 
@@ -373,6 +450,329 @@ function LectureDialog({
   )
 }
 
+// Resource Management Dialog Component
+interface ResourceManagementDialogProps {
+  lecture: LectureCreationData | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onUpdateLecture: (lecture: LectureCreationData) => void
+}
+
+function ResourceManagementDialog({
+  lecture,
+  open,
+  onOpenChange,
+  onUpdateLecture,
+}: ResourceManagementDialogProps) {
+  const { token } = useAuth()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploads, setUploads] = useState<Map<string, FileUploadProgress>>(
+    new Map(),
+  )
+  const [isDragOver, setIsDragOver] = useState(false)
+
+  const resources = lecture?.resources ?? []
+
+  // File Upload Mutation - must be called before any early returns
+  const uploadMutation = useMutation({
+    mutationFn: async (file: File) => {
+      if (!token) throw new Error('Authentication required')
+
+      // Validate file
+      if (file.size === 0) {
+        throw new Error('File is empty. Please select a valid file.')
+      }
+
+      if (file.size > MAX_FILE_SIZE) {
+        throw new Error(
+          `File is too large. Maximum size is ${formatFileSize(MAX_FILE_SIZE)}`,
+        )
+      }
+
+      const extension = `.${file.name.split('.').pop()?.toLowerCase()}`
+      if (!ALL_ALLOWED_TYPES.includes(extension)) {
+        throw new Error(`File type ${extension} is not supported`)
+      }
+
+      const uploadFormData = new FormData()
+      uploadFormData.append('file', file)
+      uploadFormData.append('type', 'course_resource')
+      uploadFormData.append('is_public', 'false')
+
+      return api.uploadFile(token, uploadFormData)
+    },
+    onSuccess: (response, file) => {
+      const newResource: CourseResource = {
+        id: response.id,
+        filename: response.filename,
+        original_name: file.name,
+        file_type: file.type,
+        file_size: file.size,
+        download_url: response.url,
+        is_public: false,
+        uploaded_at: new Date().toISOString(),
+      }
+
+      if (!lecture) return
+
+      const updatedLecture = {
+        ...lecture,
+        resources: [...resources, newResource],
+      }
+
+      onUpdateLecture(updatedLecture)
+
+      // Remove from uploads
+      setUploads((prev) => {
+        const newMap = new Map(prev)
+        const uploadId = Array.from(newMap.entries()).find(
+          ([_, upload]) => upload.filename === file.name,
+        )?.[0]
+        if (uploadId) newMap.delete(uploadId)
+        return newMap
+      })
+
+      toast.success(`${file.name} uploaded successfully`)
+    },
+    onError: (error: Error, file) => {
+      toast.error(`Failed to upload ${file.name}: ${error.message}`)
+
+      // Update upload status
+      setUploads((prev) => {
+        const newMap = new Map(prev)
+        const uploadId = Array.from(newMap.entries()).find(
+          ([_, upload]) => upload.filename === file.name,
+        )?.[0]
+        if (uploadId) {
+          const existingUpload = newMap.get(uploadId)
+          if (existingUpload) {
+            newMap.set(uploadId, {
+              ...existingUpload,
+              status: 'error',
+              error: error.message,
+            })
+          }
+        }
+        return newMap
+      })
+    },
+  })
+
+  const handleFilesSelected = async (files: FileList) => {
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]
+
+      // Add to uploads
+      const uploadId = `${Date.now()}-${i}`
+      setUploads(
+        (prev) =>
+          new Map(
+            prev.set(uploadId, {
+              fileId: uploadId,
+              filename: file.name,
+              progress: 0,
+              status: 'uploading',
+            }),
+          ),
+      )
+
+      try {
+        await uploadMutation.mutateAsync(file)
+      } catch (error) {
+        // Error handled by mutation
+      }
+    }
+  }
+
+  const deleteResource = (resourceId: string) => {
+    if (!lecture) return
+
+    const updatedLecture = {
+      ...lecture,
+      resources: resources.filter((r) => r.id !== resourceId),
+    }
+    onUpdateLecture(updatedLecture)
+    toast.success('Resource removed from lecture')
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(false)
+
+    const files = e.dataTransfer.files
+    if (files.length > 0) {
+      handleFilesSelected(files)
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(false)
+  }
+
+  if (!lecture) {
+    return null
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Manage Resources - {lecture.title}</DialogTitle>
+          <DialogDescription>
+            Upload and manage resources specific to this lecture
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {/* Upload Zone */}
+          <Card
+            className={`border-2 border-dashed transition-colors cursor-pointer ${
+              isDragOver
+                ? 'border-primary bg-primary/5'
+                : 'border-muted-foreground/25'
+            }`}
+            onClick={() => fileInputRef.current?.click()}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+          >
+            <CardContent className="p-6">
+              <div className="text-center space-y-3">
+                <Upload
+                  className={`mx-auto h-8 w-8 ${
+                    isDragOver ? 'text-primary' : 'text-muted-foreground'
+                  }`}
+                />
+                <div>
+                  <h4 className="font-medium">Upload Resources</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Drag and drop files here or click to browse
+                  </p>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  PDF, DOC, PPT, images, audio files (max{' '}
+                  {formatFileSize(MAX_FILE_SIZE)})
+                </p>
+              </div>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept={ALL_ALLOWED_TYPES.join(',')}
+                onChange={(e) => {
+                  if (e.target.files && e.target.files.length > 0) {
+                    handleFilesSelected(e.target.files)
+                  }
+                }}
+                className="hidden"
+              />
+            </CardContent>
+          </Card>
+
+          {/* Upload Progress */}
+          {uploads.size > 0 && (
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm">Uploading...</h4>
+              {Array.from(uploads.values()).map((upload) => (
+                <div
+                  key={upload.fileId}
+                  className="flex items-center gap-2 p-2 border rounded"
+                >
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{upload.filename}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {upload.status === 'uploading'
+                        ? `${upload.progress}%`
+                        : upload.status}
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setUploads((prev) => {
+                        const newMap = new Map(prev)
+                        newMap.delete(upload.fileId)
+                        return newMap
+                      })
+                    }}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Resources List */}
+          {resources.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm">
+                Current Resources ({resources.length})
+              </h4>
+              {resources.map((resource) => (
+                <div
+                  key={resource.id}
+                  className="flex items-center gap-3 p-3 border rounded"
+                >
+                  <div className="p-2 rounded bg-muted">
+                    {getFileIcon(resource.filename)}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <h5 className="font-medium text-sm truncate">
+                      {resource.original_name}
+                    </h5>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span>{formatFileSize(resource.file_size)}</span>
+                      <span className="capitalize">{resource.file_type}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="sm" asChild>
+                      <a href={resource.download_url} download>
+                        <Download className="w-4 h-4" />
+                      </a>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deleteResource(resource.id)}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {resources.length === 0 && uploads.size === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              <FileText className="mx-auto h-8 w-8 mb-2" />
+              <p className="text-sm">No resources uploaded yet</p>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Done
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 export function LectureManagementStep({
   onUpdate,
   errors,
@@ -385,6 +785,9 @@ export function LectureManagementStep({
   const [editingLecture, setEditingLecture] = useState<
     LectureCreationData | undefined
   >()
+  const [isResourceDialogOpen, setIsResourceDialogOpen] = useState(false)
+  const [managingResourcesLecture, setManagingResourcesLecture] =
+    useState<LectureCreationData | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -454,6 +857,24 @@ export function LectureManagementStep({
   const closeDialog = () => {
     setEditingLecture(undefined)
     setIsDialogOpen(false)
+  }
+
+  const openResourceDialog = (lecture: LectureCreationData) => {
+    setManagingResourcesLecture(lecture)
+    setIsResourceDialogOpen(true)
+  }
+
+  const closeResourceDialog = () => {
+    setManagingResourcesLecture(null)
+    setIsResourceDialogOpen(false)
+  }
+
+  const updateLectureWithResources = (updatedLecture: LectureCreationData) => {
+    const newLectures = lectures.map((lecture) =>
+      lecture.id === updatedLecture.id ? updatedLecture : lecture,
+    )
+    setValue('lectures', newLectures)
+    onUpdate({ lectures: newLectures })
   }
 
   const getTotalDuration = () => {
@@ -566,6 +987,7 @@ export function LectureManagementStep({
                       lecture.id !== '' &&
                       deleteLecture(lecture.id)
                     }
+                    onManageResources={() => openResourceDialog(lecture)}
                   />
                 ))}
               </div>
@@ -650,6 +1072,14 @@ export function LectureManagementStep({
         open={isDialogOpen}
         onOpenChange={closeDialog}
         onSave={editingLecture ? updateLecture : addLecture}
+      />
+
+      {/* Resource Management Dialog */}
+      <ResourceManagementDialog
+        lecture={managingResourcesLecture}
+        open={isResourceDialogOpen}
+        onOpenChange={closeResourceDialog}
+        onUpdateLecture={updateLectureWithResources}
       />
     </div>
   )

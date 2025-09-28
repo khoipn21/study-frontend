@@ -104,7 +104,7 @@ export function PaymentErrorPage({
   className,
 }: PaymentErrorPageProps) {
   const navigate = useNavigate()
-  const search = useSearch({ strict: false })
+  const search = useSearch({ strict: false }) as any
 
   const [retryCount, setRetryCount] = useState(0)
   const [showDetails, setShowDetails] = useState(false)

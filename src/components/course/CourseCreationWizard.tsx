@@ -14,7 +14,6 @@ import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { VideoUploadStep } from './wizard-steps/VideoUploadStep'
-import { ResourceManagementStep } from './wizard-steps/ResourceManagementStep'
 import { LectureManagementStep } from './wizard-steps/LectureManagementStep'
 import { CourseSettingsStep } from './wizard-steps/CourseSettingsStep'
 import { CourseDetailsStep } from './wizard-steps/CourseDetailsStep'
@@ -200,19 +199,11 @@ export function CourseCreationWizard({
     },
     {
       id: 'lectures',
-      title: 'Add Lectures',
-      description: 'Create and organize course content',
+      title: 'Add Lectures & Resources',
+      description: 'Create course content and attach resources',
       component: LectureManagementStep,
       isComplete: false,
       isActive: currentStep === 3,
-    },
-    {
-      id: 'resources',
-      title: 'Add Resources',
-      description: 'Upload supplementary materials',
-      component: ResourceManagementStep,
-      isComplete: false,
-      isActive: currentStep === 4,
     },
     {
       id: 'videos',
@@ -220,7 +211,7 @@ export function CourseCreationWizard({
       description: 'Upload and assign course videos',
       component: VideoUploadStep,
       isComplete: false,
-      isActive: currentStep === 5,
+      isActive: currentStep === 4,
     },
   ]
 

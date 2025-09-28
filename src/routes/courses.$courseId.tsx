@@ -344,7 +344,7 @@ function CourseDetailPage() {
                   <h3 className="text-lg font-semibold mb-4">
                     About this course
                   </h3>
-                  <div className="prose prose-sm max-w-none">
+                  <div className="max-w-none">
                     <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
                       {showFullDescription ? (
                         course.description

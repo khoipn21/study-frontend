@@ -9,7 +9,12 @@ import {
   Clock,
   Download,
   Edit3,
+  Eye,
+  File,
+  FileText,
   Filter,
+  Image,
+  Loader2,
   Menu,
   MessageSquare,
   MoreHorizontal,
@@ -18,6 +23,7 @@ import {
   Star,
   Trash2,
   Users,
+  Video,
   X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -80,10 +86,193 @@ import {
   useStudentNotes,
   useVideoStream,
 } from '@/lib/learning-hooks'
+import { useResourceService } from '@/lib/resource-service'
+import { ResourcePreviewModal } from '@/components/ResourcePreviewModal'
+import type { ResourceData } from '@/lib/resource-service'
 
 export const Route = createFileRoute('/learn/$courseId/$lectureId')({
   component: LearningEnvironment,
 })
+
+// Utility functions for file handling
+function getFileIcon(
+  filename: string,
+  fileType: string,
+  resourceType?: string,
+) {
+  const extension = filename.toLowerCase().split('.').pop()
+  const mimeType = fileType.toLowerCase()
+
+  // Use resource_type first if available (from API)
+  if (resourceType) {
+    switch (resourceType.toLowerCase()) {
+      case 'image': {
+        return <Image className="h-4 w-4 text-blue-500" />
+      }
+      case 'video': {
+        return <Video className="h-4 w-4 text-red-500" />
+      }
+      case 'pdf': {
+        return <FileText className="h-4 w-4 text-red-600" />
+      }
+      case 'document': {
+        return <FileText className="h-4 w-4 text-blue-600" />
+      }
+      case 'spreadsheet': {
+        return <FileText className="h-4 w-4 text-green-600" />
+      }
+      case 'presentation': {
+        return <FileText className="h-4 w-4 text-orange-600" />
+      }
+      case 'audio': {
+        return <Play className="h-4 w-4 text-purple-500" />
+      }
+      case 'archive': {
+        return <Download className="h-4 w-4 text-gray-500" />
+      }
+    }
+  }
+
+  // Fallback to MIME type detection
+  if (mimeType.startsWith('image/')) {
+    return <Image className="h-4 w-4 text-blue-500" />
+  }
+  if (mimeType.startsWith('video/')) {
+    return <Video className="h-4 w-4 text-red-500" />
+  }
+  if (mimeType === 'application/pdf') {
+    return <FileText className="h-4 w-4 text-red-600" />
+  }
+  if (mimeType.includes('document') || mimeType.includes('word')) {
+    return <FileText className="h-4 w-4 text-blue-600" />
+  }
+  if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) {
+    return <FileText className="h-4 w-4 text-green-600" />
+  }
+  if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) {
+    return <FileText className="h-4 w-4 text-orange-600" />
+  }
+
+  // Fallback to extension
+  switch (extension) {
+    case 'pdf': {
+      return <FileText className="h-4 w-4 text-red-600" />
+    }
+    case 'doc':
+    case 'docx': {
+      return <FileText className="h-4 w-4 text-blue-600" />
+    }
+    case 'xls':
+    case 'xlsx': {
+      return <FileText className="h-4 w-4 text-green-600" />
+    }
+    case 'ppt':
+    case 'pptx': {
+      return <FileText className="h-4 w-4 text-orange-600" />
+    }
+    case 'jpg':
+    case 'jpeg':
+    case 'png':
+    case 'gif':
+    case 'svg':
+    case 'webp': {
+      return <Image className="h-4 w-4 text-blue-500" />
+    }
+    case 'mp4':
+    case 'avi':
+    case 'mov':
+    case 'wmv':
+    case 'flv':
+    case 'webm': {
+      return <Video className="h-4 w-4 text-red-500" />
+    }
+    case 'mp3':
+    case 'wav':
+    case 'ogg':
+    case 'flac': {
+      return <Play className="h-4 w-4 text-purple-500" />
+    }
+    case 'zip':
+    case 'rar':
+    case '7z':
+    case 'tar':
+    case 'gz': {
+      return <Download className="h-4 w-4 text-gray-500" />
+    }
+    case 'txt':
+    case 'md':
+    case 'csv': {
+      return <FileText className="h-4 w-4 text-gray-600" />
+    }
+    default: {
+      return <File className="h-4 w-4 text-gray-500" />
+    }
+  }
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+function getFileTypeDisplay(fileType: string, resourceType?: string): string {
+  // Use resource_type first if available
+  if (resourceType) {
+    switch (resourceType.toLowerCase()) {
+      case 'image':
+        return 'Image'
+      case 'video':
+        return 'Video'
+      case 'pdf':
+        return 'PDF Document'
+      case 'document':
+        return 'Document'
+      case 'spreadsheet':
+        return 'Spreadsheet'
+      case 'presentation':
+        return 'Presentation'
+      case 'audio':
+        return 'Audio'
+      case 'archive':
+        return 'Archive'
+      default:
+        return resourceType.charAt(0).toUpperCase() + resourceType.slice(1)
+    }
+  }
+  const mimeToDisplay: Record<string, string> = {
+    'application/pdf': 'PDF Document',
+    'application/msword': 'Word Document',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+      'Word Document',
+    'application/vnd.ms-excel': 'Excel Spreadsheet',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+      'Excel Spreadsheet',
+    'application/vnd.ms-powerpoint': 'PowerPoint Presentation',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation':
+      'PowerPoint Presentation',
+    'text/plain': 'Text File',
+    'text/csv': 'CSV File',
+    'application/zip': 'ZIP Archive',
+    'application/x-rar-compressed': 'RAR Archive',
+    'image/jpeg': 'JPEG Image',
+    'image/png': 'PNG Image',
+    'image/gif': 'GIF Image',
+    'image/svg+xml': 'SVG Image',
+    'video/mp4': 'MP4 Video',
+    'video/webm': 'WebM Video',
+    'audio/mp3': 'MP3 Audio',
+    'audio/wav': 'WAV Audio',
+  }
+
+  return (
+    mimeToDisplay[fileType] ||
+    fileType.split('/').pop()?.toUpperCase() ||
+    'File'
+  )
+}
 
 interface Lecture {
   id: string
@@ -95,9 +284,14 @@ interface Lecture {
   is_free: boolean
   resources?: Array<{
     id: string
-    title: string
-    type: 'pdf' | 'video' | 'text' | 'link'
-    url: string
+    filename: string
+    original_name: string
+    file_type: string
+    file_size: number
+    download_url: string
+    is_public: boolean
+    resource_type: string
+    uploaded_at: string
   }>
 }
 
@@ -135,6 +329,14 @@ function LearningEnvironment() {
     'all',
   )
 
+  // Resource preview state
+  const [previewResource, setPreviewResource] = useState<ResourceData | null>(
+    null,
+  )
+  const [downloadingResources, setDownloadingResources] = useState<Set<string>>(
+    new Set(),
+  )
+
   // Check course access
   const { data: accessData } = useCourseAccess(courseId)
   const hasAccess = accessData?.data?.has_access ?? false
@@ -155,6 +357,9 @@ function LearningEnvironment() {
     isUpdating,
     isDeleting,
   } = useStudentNotes(courseId, lectureId)
+
+  // Resource service
+  const resourceService = useResourceService()
 
   // Fetch course data with lectures
   const {
@@ -181,7 +386,7 @@ function LearningEnvironment() {
           .map((lecture) => ({
             ...lecture,
             order_number: lecture.order_number || 0,
-            resources: [], // Resources will be loaded separately if needed
+            resources: lecture.resources || [], // Include resources from API
             duration_minutes: lecture.duration_minutes || 0,
           }))
 
@@ -269,10 +474,11 @@ function LearningEnvironment() {
       .includes(searchQuery.toLowerCase())
     const matchesFilter = (() => {
       switch (filterType) {
-        case 'recent':
+        case 'recent': {
           const oneWeekAgo = new Date()
           oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
           return new Date(note.created_at) >= oneWeekAgo
+        }
         case 'bookmarked':
           // For future implementation when we add bookmark feature
           return true
@@ -287,6 +493,41 @@ function LearningEnvironment() {
   const handleJumpToTimestamp = (timestamp: number) => {
     // This would integrate with the video player to seek to the specific time
     console.log('Jump to timestamp:', timestamp)
+  }
+
+  // Handle resource download
+  const handleResourceDownload = async (resourceId: string) => {
+    try {
+      const resource = currentLecture?.resources?.find(
+        (r) => r.id === resourceId,
+      )
+      if (!resource) return
+
+      // Add to downloading set
+      setDownloadingResources((prev) => new Set(prev).add(resourceId))
+
+      // Use resource service for authenticated download
+      await resourceService.downloadResource(resource as ResourceData)
+    } catch (error) {
+      console.error('Download failed:', error)
+      alert(
+        error instanceof Error
+          ? error.message
+          : 'Failed to download resource. Please try again.',
+      )
+    } finally {
+      // Remove from downloading set
+      setDownloadingResources((prev) => {
+        const next = new Set(prev)
+        next.delete(resourceId)
+        return next
+      })
+    }
+  }
+
+  // Handle resource preview
+  const handleResourcePreview = (resource: any) => {
+    setPreviewResource(resource as ResourceData)
   }
 
   const formatTime = (seconds: number) => {
@@ -549,9 +790,22 @@ function LearningEnvironment() {
                 <TabsContent value="resources" className="space-y-4">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Lecture resources</CardTitle>
+                      <CardTitle className="flex items-center gap-2">
+                        <BookOpen className="h-5 w-5" />
+                        Lecture Resources
+                        {currentLecture.resources &&
+                          currentLecture.resources.length > 0 && (
+                            <span className="ml-auto text-sm font-normal text-muted-foreground">
+                              {currentLecture.resources.length}{' '}
+                              {currentLecture.resources.length === 1
+                                ? 'file'
+                                : 'files'}
+                            </span>
+                          )}
+                      </CardTitle>
                       <CardDescription>
-                        Download supporting materials for this lecture
+                        Download supporting materials and additional resources
+                        for this lecture
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -561,46 +815,291 @@ function LearningEnvironment() {
                           {currentLecture.resources.map((resource) => (
                             <div
                               key={resource.id}
-                              className="flex items-center justify-between p-3 border rounded-lg"
+                              className="group border rounded-lg hover:bg-muted/30 transition-colors"
                             >
-                              <div className="flex items-center space-x-3">
-                                <div className="w-8 h-8 bg-primary/10 rounded flex items-center justify-center">
-                                  {resource.type === 'pdf' && (
-                                    <BookOpen className="h-4 w-4 text-primary" />
-                                  )}
-                                  {resource.type === 'video' && (
-                                    <Play className="h-4 w-4 text-primary" />
-                                  )}
-                                  {resource.type === 'link' && (
-                                    <Download className="h-4 w-4 text-primary" />
-                                  )}
-                                  {resource.type === 'text' && (
-                                    <MessageSquare className="h-4 w-4 text-primary" />
-                                  )}
+                              {/* Desktop Layout */}
+                              <div className="hidden sm:flex items-center justify-between p-4">
+                                <div className="flex items-center space-x-4 flex-1 min-w-0">
+                                  <div className="flex-shrink-0 w-10 h-10 bg-background border border-border rounded-lg flex items-center justify-center">
+                                    {getFileIcon(
+                                      resource.filename,
+                                      resource.file_type,
+                                      resource.resource_type,
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <p
+                                        className="font-medium text-sm truncate"
+                                        title={resource.original_name}
+                                      >
+                                        {resource.original_name}
+                                      </p>
+                                      {!resource.is_public && (
+                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                                          Premium
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                      <span className="flex items-center gap-1">
+                                        <File className="h-3 w-3" />
+                                        {getFileTypeDisplay(
+                                          resource.file_type,
+                                          resource.resource_type,
+                                        )}
+                                      </span>
+                                      <span className="flex items-center gap-1">
+                                        <Download className="h-3 w-3" />
+                                        {formatFileSize(resource.file_size)}
+                                      </span>
+                                      <span className="flex items-center gap-1">
+                                        <Clock className="h-3 w-3" />
+                                        {new Date(
+                                          resource.uploaded_at,
+                                        ).toLocaleDateString('en-US', {
+                                          year: 'numeric',
+                                          month: 'short',
+                                          day: 'numeric',
+                                        })}
+                                      </span>
+                                    </div>
+                                  </div>
                                 </div>
-                                <div>
-                                  <p className="font-medium">
-                                    {resource.title}
-                                  </p>
-                                  <p className="text-sm text-muted-foreground capitalize">
-                                    {resource.type}
-                                  </p>
+                                <div className="flex items-center gap-2 ml-4">
+                                  {resourceService.canPreview(
+                                    resource as ResourceData,
+                                  ) && (
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="gap-2"
+                                      onClick={() =>
+                                        handleResourcePreview(resource)
+                                      }
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                      Preview
+                                    </Button>
+                                  )}
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="gap-2"
+                                    onClick={() =>
+                                      handleResourceDownload(resource.id)
+                                    }
+                                    disabled={downloadingResources.has(
+                                      resource.id,
+                                    )}
+                                  >
+                                    {downloadingResources.has(resource.id) ? (
+                                      <>
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        Downloading...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Download className="h-4 w-4" />
+                                        Download
+                                      </>
+                                    )}
+                                  </Button>
                                 </div>
                               </div>
-                              <Button size="sm" variant="outline">
-                                <Download className="h-4 w-4 mr-2" />
-                                Download
-                              </Button>
+
+                              {/* Mobile Layout */}
+                              <div className="sm:hidden p-4">
+                                <div className="flex items-start space-x-3 mb-3">
+                                  <div className="flex-shrink-0 w-10 h-10 bg-background border border-border rounded-lg flex items-center justify-center">
+                                    {getFileIcon(
+                                      resource.filename,
+                                      resource.file_type,
+                                      resource.resource_type,
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-start justify-between gap-2 mb-2">
+                                      <p
+                                        className="font-medium text-sm leading-tight"
+                                        title={resource.original_name}
+                                      >
+                                        {resource.original_name}
+                                      </p>
+                                      {!resource.is_public && (
+                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 flex-shrink-0">
+                                          Premium
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="grid grid-cols-1 gap-1 text-xs text-muted-foreground mb-3">
+                                      <span className="flex items-center gap-1">
+                                        <File className="h-3 w-3" />
+                                        {getFileTypeDisplay(
+                                          resource.file_type,
+                                          resource.resource_type,
+                                        )}
+                                      </span>
+                                      <span className="flex items-center gap-1">
+                                        <Download className="h-3 w-3" />
+                                        {formatFileSize(resource.file_size)}
+                                      </span>
+                                      <span className="flex items-center gap-1">
+                                        <Clock className="h-3 w-3" />
+                                        {new Date(
+                                          resource.uploaded_at,
+                                        ).toLocaleDateString('en-US', {
+                                          year: 'numeric',
+                                          month: 'short',
+                                          day: 'numeric',
+                                        })}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex gap-2">
+                                  {resourceService.canPreview(
+                                    resource as ResourceData,
+                                  ) && (
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="flex-1 gap-2"
+                                      onClick={() =>
+                                        handleResourcePreview(resource)
+                                      }
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                      Preview
+                                    </Button>
+                                  )}
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="flex-1 gap-2"
+                                    onClick={() =>
+                                      handleResourceDownload(resource.id)
+                                    }
+                                    disabled={downloadingResources.has(
+                                      resource.id,
+                                    )}
+                                  >
+                                    {downloadingResources.has(resource.id) ? (
+                                      <>
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        Downloading...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Download className="h-4 w-4" />
+                                        Download
+                                      </>
+                                    )}
+                                  </Button>
+                                </div>
+                              </div>
                             </div>
                           ))}
+
+                          {/* Resources Summary */}
+                          <div className="mt-6 p-4 bg-muted/20 rounded-lg border-dashed border">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm">
+                              <span className="text-muted-foreground">
+                                Total resources:{' '}
+                                {currentLecture.resources.length}
+                              </span>
+                              <span className="text-muted-foreground">
+                                Total size:{' '}
+                                {formatFileSize(
+                                  currentLecture.resources.reduce(
+                                    (total, resource) =>
+                                      total + resource.file_size,
+                                    0,
+                                  ),
+                                )}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       ) : (
-                        <p className="text-muted-foreground text-center py-4">
-                          No resources available for this lecture
-                        </p>
+                        <div className="text-center py-12">
+                          <div className="mx-auto w-16 h-16 bg-muted/20 rounded-full flex items-center justify-center mb-4">
+                            <BookOpen className="h-8 w-8 text-muted-foreground" />
+                          </div>
+                          <h3 className="text-lg font-semibold mb-2">
+                            No resources available
+                          </h3>
+                          <p className="text-muted-foreground text-sm max-w-sm mx-auto">
+                            This lecture doesn&apos;t have any additional
+                            resources at the moment. Check back later or contact
+                            the instructor for more materials.
+                          </p>
+                        </div>
                       )}
                     </CardContent>
                   </Card>
+
+                  {/* Resource Usage Tips */}
+                  {currentLecture.resources &&
+                    currentLecture.resources.length > 0 && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-base">
+                            Tips for using resources
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="flex items-start gap-3 text-sm">
+                            <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+                              <span className="text-blue-600 dark:text-blue-400 text-xs font-semibold">
+                                1
+                              </span>
+                            </div>
+                            <div>
+                              <p className="font-medium">
+                                Download for offline access
+                              </p>
+                              <p className="text-muted-foreground">
+                                Save resources to your device to access them
+                                anytime, even without internet.
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-3 text-sm">
+                            <div className="w-5 h-5 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+                              <span className="text-green-600 dark:text-green-400 text-xs font-semibold">
+                                2
+                              </span>
+                            </div>
+                            <div>
+                              <p className="font-medium">
+                                Review alongside the video
+                              </p>
+                              <p className="text-muted-foreground">
+                                Use these materials as reference while watching
+                                the lecture for better understanding.
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-3 text-sm">
+                            <div className="w-5 h-5 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+                              <span className="text-purple-600 dark:text-purple-400 text-xs font-semibold">
+                                3
+                              </span>
+                            </div>
+                            <div>
+                              <p className="font-medium">
+                                Take notes and annotate
+                              </p>
+                              <p className="text-muted-foreground">
+                                Add your own notes to downloaded resources to
+                                create personalized study materials.
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
                 </TabsContent>
 
                 <TabsContent value="notes" className="space-y-6">
@@ -818,7 +1317,7 @@ function LearningEnvironment() {
                             </div>
 
                             {/* Note Content */}
-                            <div className="prose prose-sm max-w-none">
+                            <div className="max-w-none">
                               <p className="text-foreground leading-relaxed whitespace-pre-wrap">
                                 {note.content}
                               </p>
@@ -893,7 +1392,7 @@ function LearningEnvironment() {
                       <DialogHeader>
                         <DialogTitle>Edit Note</DialogTitle>
                         <DialogDescription>
-                          Make changes to your note. Click save when you're
+                          Make changes to your note. Click save when you&apos;re
                           done.
                         </DialogDescription>
                       </DialogHeader>
@@ -919,11 +1418,11 @@ function LearningEnvironment() {
                         </div>
                       </div>
                       <DialogFooter>
-                        <DialogClose asChild>
+                        {/* <DialogClose asChild>
                           <Button variant="outline" onClick={handleCancelEdit}>
                             Cancel
                           </Button>
-                        </DialogClose>
+                        </DialogClose> */}
                         <Button
                           onClick={handleSaveEdit}
                           disabled={!editingNote?.content.trim() || isUpdating}
@@ -1090,6 +1589,14 @@ function LearningEnvironment() {
             </ScrollArea>
           </SheetContent>
         </Sheet>
+
+        {/* Resource Preview Modal */}
+        <ResourcePreviewModal
+          resource={previewResource}
+          isOpen={!!previewResource}
+          onClose={() => setPreviewResource(null)}
+          onDownload={(resource) => handleResourceDownload(resource.id)}
+        />
       </div>
     </div>
   )

@@ -133,6 +133,24 @@ function RouteComponent() {
             : 0,
         is_free: lecture.isFree,
         video_id: lecture.videoUrl,
+        resources:
+          lecture.resources?.map((resource) => ({
+            id: resource.id,
+            filename: resource.title, // Map title to filename for compatibility
+            original_name: resource.title,
+            file_type:
+              resource.type === 'pdf'
+                ? 'application/pdf'
+                : resource.type === 'zip'
+                  ? 'application/zip'
+                  : resource.type === 'code'
+                    ? 'text/plain'
+                    : 'text/html',
+            file_size: resource.size || 0,
+            download_url: resource.url,
+            is_public: false,
+            uploaded_at: new Date().toISOString(), // Default value since we don't have this data
+          })) || [],
       })) || [],
     resources: [],
     videos: [],

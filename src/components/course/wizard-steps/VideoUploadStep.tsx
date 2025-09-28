@@ -270,11 +270,10 @@ function VideoAssignmentSection({
   onAssign,
 }: VideoAssignmentSectionProps) {
   const videoLectures = lectures.filter((lecture) => lecture.type === 'video')
-  const unassignedVideos = videos.filter(
-    (video) => !lectures.some((lecture) => lecture.video_id === video.id),
-  )
+  // Show all videos, not just unassigned ones
+  const allVideos = videos
 
-  if (unassignedVideos.length === 0 && videoLectures.length === 0) {
+  if (allVideos.length === 0 && videoLectures.length === 0) {
     return null
   }
 
@@ -287,81 +286,103 @@ function VideoAssignmentSection({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {unassignedVideos.length === 0 ? (
+        {allVideos.length === 0 ? (
           <div className="text-center py-8">
-            <CheckCircle className="mx-auto h-12 w-12 text-green-500 mb-4" />
-            <h3 className="font-medium mb-2">All videos assigned!</h3>
+            <Play className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="font-medium mb-2">No videos uploaded</h3>
             <p className="text-sm text-muted-foreground">
-              All your videos have been successfully assigned to lectures.
+              Upload videos first to assign them to lectures.
             </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {unassignedVideos.map((video) => (
-              <div
-                key={video.id}
-                className="flex items-center gap-4 p-4 border rounded-lg"
-              >
-                <div className="w-32 h-20 bg-muted rounded overflow-hidden">
-                  {video.thumbnail_url ? (
-                    <img
-                      src={video.thumbnail_url}
-                      alt={video.filename}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Play className="w-8 h-8 text-muted-foreground" />
-                    </div>
-                  )}
-                </div>
+            {allVideos.map((video) => {
+              const assignedLecture = lectures.find(
+                (lecture) => lecture.video_id === video.id,
+              )
+              return (
+                <div
+                  key={video.id}
+                  className="flex items-center gap-4 p-4 border rounded-lg"
+                >
+                  <div className="w-32 h-20 bg-muted rounded overflow-hidden">
+                    {video.thumbnail_url ? (
+                      <img
+                        src={video.thumbnail_url}
+                        alt={video.filename}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Play className="w-8 h-8 text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
 
-                <div className="flex-1">
-                  <h4 className="font-medium">{video.filename}</h4>
-                  <div className="text-sm text-muted-foreground">
-                    Duration: {formatDuration(video.duration_seconds)} • Size:{' '}
-                    {formatFileSize(video.file_size)}
+                  <div className="flex-1">
+                    <h4 className="font-medium">{video.filename}</h4>
+                    <div className="text-sm text-muted-foreground">
+                      Duration: {formatDuration(video.duration_seconds)} • Size:{' '}
+                      {formatFileSize(video.file_size)}
+                      {assignedLecture && (
+                        <div className="mt-1 flex items-center gap-1">
+                          <CheckCircle className="w-3 h-3 text-green-500" />
+                          <span className="text-green-600">
+                            Assigned to: {assignedLecture.title}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                    <Select
+                      value={assignedLecture?.id ?? 'unassigned'}
+                      onValueChange={(lectureId) => {
+                        onAssign(
+                          video.id,
+                          lectureId === 'unassigned' ? '' : lectureId,
+                        )
+                      }}
+                    >
+                      <SelectTrigger className="w-48">
+                        <SelectValue placeholder="Select lecture" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="unassigned">
+                          <span className="text-muted-foreground">
+                            Unassigned
+                          </span>
+                        </SelectItem>
+                        {videoLectures.map((lecture) => {
+                          const lectureId =
+                            lecture.id ?? `lecture-${Date.now()}`
+                          return (
+                            <SelectItem key={lectureId} value={lectureId}>
+                              {lecture.title}
+                              {lecture.video_id &&
+                                lecture.video_id !== video.id && (
+                                  <span className="text-muted-foreground ml-2">
+                                    (assigned)
+                                  </span>
+                                )}
+                            </SelectItem>
+                          )
+                        })}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
+              )
+            })}
 
-                <div className="flex items-center gap-2">
-                  <ArrowRight className="w-4 h-4 text-muted-foreground" />
-                  <Select
-                    onValueChange={(lectureId) => onAssign(video.id, lectureId)}
-                  >
-                    <SelectTrigger className="w-48">
-                      <SelectValue placeholder="Select lecture" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {videoLectures
-                        .filter(
-                          (lecture) =>
-                            lecture.video_id === undefined ||
-                            lecture.video_id === null ||
-                            lecture.video_id === '',
-                        )
-                        .map((lecture) => (
-                          <SelectItem key={lecture.id} value={lecture.id ?? ''}>
-                            {lecture.title}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            ))}
-
-            {videoLectures.filter(
-              (lecture) =>
-                lecture.video_id === undefined ||
-                lecture.video_id === null ||
-                lecture.video_id === '',
-            ).length === 0 && (
+            {videoLectures.length === 0 && (
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  All video lectures already have videos assigned. Create more
-                  video lectures in the previous step to assign these videos.
+                  No video lectures found. Create video lectures in the lecture
+                  management step to assign videos.
                 </AlertDescription>
               </Alert>
             )}
@@ -676,7 +697,28 @@ export function VideoUploadStep({ onUpdate, errors }: VideoUploadStepProps) {
   }
 
   const assignVideoToLecture = (videoId: string, lectureId: string) => {
-    const updatedLectures = lectures.map((lecture) =>
+    if (!lectureId) {
+      // Unassign video - remove video_id from any lecture that has this video
+      const updatedLectures = lectures.map((lecture) =>
+        lecture.video_id === videoId
+          ? { ...lecture, video_id: undefined }
+          : lecture,
+      )
+      setValue('lectures', updatedLectures)
+      onUpdate({ lectures: updatedLectures })
+      toast.success('Video unassigned')
+      return
+    }
+
+    // First, unassign video from any other lecture
+    const clearedLectures = lectures.map((lecture) =>
+      lecture.video_id === videoId
+        ? { ...lecture, video_id: undefined }
+        : lecture,
+    )
+
+    // Then assign to the selected lecture
+    const updatedLectures = clearedLectures.map((lecture) =>
       lecture.id === lectureId ? { ...lecture, video_id: videoId } : lecture,
     )
 

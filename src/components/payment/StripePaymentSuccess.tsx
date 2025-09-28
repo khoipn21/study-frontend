@@ -46,7 +46,7 @@ export function PaymentSuccessPage({
 }: PaymentSuccessPageProps) {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const search = useSearch({ strict: false })
+  const search = useSearch({ strict: false }) as any
 
   const [state, setState] = useState<PaymentSuccessState>({
     isLoading: true,

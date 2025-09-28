@@ -2,6 +2,10 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+/* React PDF styles */
+@import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
+@import 'react-pdf/dist/esm/Page/TextLayer.css';
+
 @custom-variant dark (&:is(.dark *));
 @custom-variant academic (&:is(.academic *));
 @custom-variant corporate (&:is(.corporate *));
@@ -267,7 +271,7 @@ code {
     @apply font-academic font-semibold;
   }
 
-  .academic .prose :is(h1, h2, h3, h4, h5, h6) {
+  .academic .academic-prose :is(h1, h2, h3, h4, h5, h6) {
     @apply font-academic font-semibold;
   }
 
@@ -395,7 +399,7 @@ code {
   }
 
   .academic-prose {
-    @apply prose prose-sm prose-zinc dark:prose-invert max-w-none;
+    @apply max-w-none;
   }
 
   .academic-prose p {

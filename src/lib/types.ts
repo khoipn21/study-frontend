@@ -138,6 +138,17 @@ export type Lecture = {
   video_id?: string
   status?: string
   is_free?: boolean
+  resources?: Array<{
+    id: string
+    filename: string
+    original_name: string
+    file_type: string
+    file_size: number
+    download_url: string
+    is_public: boolean
+    resource_type: string
+    uploaded_at: string
+  }>
   created_at?: string
   updated_at?: string
 }
