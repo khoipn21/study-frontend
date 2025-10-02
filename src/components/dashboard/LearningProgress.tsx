@@ -7,9 +7,11 @@ import {
   TrendingUp,
   User,
 } from 'lucide-react'
+
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
+
 import type { LearningProgress as LearningProgressType } from '@/lib/dashboard'
 
 interface LearningProgressProps {

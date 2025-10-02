@@ -1,4 +1,3 @@
-import React, { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Archive,
@@ -13,29 +12,12 @@ import {
   Trash2,
   Users,
 } from 'lucide-react'
+import React, { useEffect, useRef, useState } from 'react'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Separator } from '@/components/ui/separator'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -45,8 +27,28 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Separator } from '@/components/ui/separator'
+import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/lib/auth-context'
 import { instructorDashboardService } from '@/lib/instructor-dashboard'
+
 import type {
   InstructorMessage,
   MessageThread,
@@ -433,6 +435,12 @@ function ConversationView({
   onUpdateThread,
 }: ConversationViewProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const { user } = useAuth()
+
+  // Get current user's display name for comparison
+  const getCurrentUserDisplayName = () => {
+    return user?.username || user?.email || 'Instructor'
+  }
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -527,7 +535,7 @@ function ConversationView({
                 <MessageBubble
                   key={message.id}
                   message={message}
-                  isOwn={message.senderName === 'Dr. Sarah Wilson'} // Note: This should be dynamic
+                  isOwn={message.senderName === getCurrentUserDisplayName()}
                 />
               ))}
             </div>

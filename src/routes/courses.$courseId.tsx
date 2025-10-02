@@ -1,6 +1,5 @@
-import { useMemo, useState } from 'react'
-import { Link, createFileRoute } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Link, createFileRoute } from '@tanstack/react-router'
 import {
   ArrowLeft,
   Award,
@@ -18,17 +17,23 @@ import {
   Lock,
   MessageSquare,
   Play,
+  PlusCircle,
   Share2,
   Star,
   Target,
   Users,
 } from 'lucide-react'
-import { api } from '@/lib/api-client'
-import { useAuth } from '@/lib/auth-context'
+import { useMemo, useState } from 'react'
+
+import { CreateTopicDialog } from '@/components/forum/create-topic-dialog'
+import { TopicList } from '@/components/forum/TopicList'
+import { PaymentModal } from '@/components/payment/PaymentModal'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { PaymentModal } from '@/components/payment/PaymentModal'
+import { useCreateTopic, useTopics } from '@/hooks/use-forum'
+import { api } from '@/lib/api-client'
+import { useAuth } from '@/lib/auth-context'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/courses/$courseId')({
@@ -41,6 +46,8 @@ function CourseDetailPage() {
   const qc = useQueryClient()
   const [showFullDescription, setShowFullDescription] = useState(false)
   const [selectedTab, setSelectedTab] = useState('overview')
+  const [createTopicOpen, setCreateTopicOpen] = useState(false)
+  const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null)
 
   const {
     data: course,
@@ -78,6 +85,31 @@ function CourseDetailPage() {
   const isUserEnrolled = useMemo(() => {
     return !!enrollmentData
   }, [enrollmentData])
+
+  // Forum topics for this course
+  const { data: forumTopicsData, isLoading: isLoadingTopics } = useTopics({
+    courseId,
+  })
+
+  const createTopicMutation = useCreateTopic()
+
+  const forumTopics = forumTopicsData?.topics || []
+
+  const handleCreateTopic = async (data: any) => {
+    try {
+      if (!token) {
+        throw new Error('You must be logged in to create topics')
+      }
+      await createTopicMutation.mutateAsync({
+        data: { ...data, courseId },
+        authToken: token,
+      })
+      alert('Topic created and sent for approval!')
+      setCreateTopicOpen(false)
+    } catch (error) {
+      throw new Error('Failed to create topic. Please try again.')
+    }
+  }
 
   // For free courses only - paid courses must go through payment flow
   const enrollFree = async () => {
@@ -297,9 +329,13 @@ function CourseDetailPage() {
 
             {/* Course Content Tabs */}
             <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="curriculum">Curriculum</TabsTrigger>
+                <TabsTrigger value="discussions">
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Discussions
+                </TabsTrigger>
                 <TabsTrigger value="instructor">Instructor</TabsTrigger>
                 <TabsTrigger value="reviews">Reviews</TabsTrigger>
               </TabsList>
@@ -444,6 +480,52 @@ function CourseDetailPage() {
                       ))
                     )}
                   </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="discussions" className="space-y-6">
+                <div className="academic-card p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h3 className="text-lg font-semibold">
+                        Course Discussions
+                      </h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Ask questions and discuss course content with other
+                        students
+                      </p>
+                    </div>
+                    {isUserEnrolled && (
+                      <Button onClick={() => setCreateTopicOpen(true)}>
+                        <PlusCircle className="h-4 w-4 mr-2" />
+                        New Discussion
+                      </Button>
+                    )}
+                  </div>
+
+                  {!isUserEnrolled ? (
+                    <div className="text-center py-12">
+                      <Lock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-lg font-semibold mb-2">
+                        Enroll to join discussions
+                      </p>
+                      <p className="text-muted-foreground">
+                        Purchase or enroll in this course to participate in
+                        discussions
+                      </p>
+                    </div>
+                  ) : (
+                    <TopicList
+                      topics={forumTopics}
+                      isLoading={isLoadingTopics}
+                      onTopicSelect={setSelectedTopicId}
+                      selectedTopicId={selectedTopicId || undefined}
+                      emptyMessage="No discussions yet. Be the first to start a discussion!"
+                      showSearch={true}
+                      showFilters={true}
+                      showViewToggle={false}
+                    />
+                  )}
                 </div>
               </TabsContent>
 
@@ -684,6 +766,14 @@ function CourseDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Create Topic Dialog */}
+      <CreateTopicDialog
+        open={createTopicOpen}
+        onOpenChange={setCreateTopicOpen}
+        onSubmit={handleCreateTopic}
+        courseId={courseId}
+      />
     </div>
   )
 }

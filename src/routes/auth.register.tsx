@@ -1,6 +1,5 @@
-import { Link, createFileRoute, useRouter } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import { useState } from 'react'
+import { Link, createFileRoute, useRouter } from '@tanstack/react-router'
 import {
   AlertCircle,
   BookOpen,
@@ -16,8 +15,9 @@ import {
   Shield,
   User,
 } from 'lucide-react'
-import { api } from '@/lib/api-client'
-import { useAuth } from '@/lib/auth-context'
+import { useState } from 'react'
+
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -26,12 +26,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Separator } from '@/components/ui/separator'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Progress } from '@/components/ui/progress'
+import { Separator } from '@/components/ui/separator'
+import { api } from '@/lib/api-client'
+import { useAuth } from '@/lib/auth-context'
+
 import type { Role } from '@/lib/types'
 
 // Helper function to determine redirect URL based on user role

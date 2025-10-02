@@ -1,8 +1,9 @@
-import React from 'react'
 import { BarChart3, BookOpen, Loader2, Upload } from 'lucide-react'
+import React from 'react'
+
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Progress } from '@/components/ui/progress'
+import { Skeleton } from '@/components/ui/skeleton'
 
 // Generic loading spinner
 export function LoadingSpinner({

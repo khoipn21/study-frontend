@@ -11,7 +11,9 @@ import {
   ThumbsUp,
   User,
 } from 'lucide-react'
+
 import { cn, formatDistanceToNow } from '@/lib/utils'
+
 import type { ForumPost } from '@/lib/forum'
 
 interface ForumPostCardProps {

@@ -1,4 +1,3 @@
-import React, { useEffect, useRef, useState } from 'react'
 import {
   BookOpen,
   Bot,
@@ -8,11 +7,15 @@ import {
   Send,
   Sparkles,
 } from 'lucide-react'
+import React, { useEffect, useRef, useState } from 'react'
+
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { aiChatService } from '@/lib/ai-chat'
 import { cn } from '@/lib/utils'
+
 import { ChatMessage } from './ChatMessage'
+
 import type {
   ChatContext,
   ChatMessage as ChatMessageType,

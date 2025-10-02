@@ -1,12 +1,14 @@
-import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
+import { createFileRoute } from '@tanstack/react-router'
 import { AlertCircle } from 'lucide-react'
+
 import { CourseCreationWizard } from '@/components/course/CourseCreationWizard'
-import { instructorDashboardService } from '@/lib/instructor-dashboard'
-import { useAuth } from '@/lib/auth-context'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Button } from '@/components/ui/button'
+import { useAuth } from '@/lib/auth-context'
+import { instructorDashboardService } from '@/lib/instructor-dashboard'
+
 import type { CourseCreationData } from '@/lib/course-management-types'
 
 export const Route = createFileRoute(

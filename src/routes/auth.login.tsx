@@ -1,6 +1,5 @@
-import { Link, createFileRoute, useRouter } from '@tanstack/react-router'
-import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
+import { Link, createFileRoute, useRouter } from '@tanstack/react-router'
 import {
   AlertCircle,
   Chrome,
@@ -11,6 +10,9 @@ import {
   Lock,
   Mail,
 } from 'lucide-react'
+import React, { useState } from 'react'
+
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -19,13 +21,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Checkbox } from '@/components/ui/checkbox'
 import { api } from '@/lib/api-client'
 import { useAuth } from '@/lib/auth-context'
+
 import type { Role } from '@/lib/types'
 
 // Helper function to determine redirect URL based on user role
@@ -52,6 +54,12 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState('')
+  const [isHydrated, setIsHydrated] = useState(false)
+
+  // Prevent hydration mismatch by waiting for client-side hydration
+  React.useEffect(() => {
+    setIsHydrated(true)
+  }, [])
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: { email: string; password: string }) => {
@@ -110,6 +118,24 @@ function LoginPage() {
   const handleSocialLogin = (provider: string) => {
     // Implementation for OAuth login
     window.location.href = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/api/v1/auth/${provider}`
+  }
+
+  // Show loading placeholder during hydration
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4">
+        <div className="w-full max-w-md">
+          <div className="border-0 shadow-2xl shadow-primary/5 bg-background rounded-lg p-8">
+            <div className="text-center space-y-2 pb-6">
+              <div className="mx-auto mb-4 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                <Mail className="h-6 w-6 text-primary" />
+              </div>
+              <h1 className="text-3xl font-bold text-foreground">Đăng nhập</h1>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

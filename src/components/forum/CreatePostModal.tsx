@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from 'react'
 import { AlertCircle, Loader2, Plus, X } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -9,10 +11,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -20,7 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
 import { forumService } from '@/lib/forum'
+
 import type { CreatePostData, ForumCategory } from '@/lib/forum'
 
 interface CreatePostModalProps {

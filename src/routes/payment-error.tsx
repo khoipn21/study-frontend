@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+
 import { PaymentErrorPage } from '@/components/payment/StripePaymentError'
 
 export const Route = createFileRoute('/payment-error' as any)({

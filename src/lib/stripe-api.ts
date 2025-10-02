@@ -1,5 +1,6 @@
-import { config } from './config'
 import { ApiError } from './api-client'
+import { config } from './config'
+
 import type {
   CourseEnrollment,
   CreatePaymentIntentRequest,

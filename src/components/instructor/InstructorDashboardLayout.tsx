@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Link } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
+import { Link, useRouter } from '@tanstack/react-router'
 import {
   BarChart3,
   Bell,
@@ -13,18 +13,37 @@ import {
   MessageSquare,
   Search,
   Settings,
+  Shield,
   TrendingUp,
   User,
   Users,
   Video,
   X,
 } from 'lucide-react'
-import { useQuery } from '@tanstack/react-query'
-import {
-  InstructorRealTimeProvider,
-  useRealTimeNotifications,
-} from '@/lib/instructor-realtime-context'
+import React, { useState } from 'react'
 
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Separator } from '@/components/ui/separator'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
 import {
   Sidebar,
   SidebarContent,
@@ -44,30 +63,13 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Separator } from '@/components/ui/separator'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet'
+import { useAuth } from '@/lib/auth-context'
 import { instructorDashboardService } from '@/lib/instructor-dashboard'
+import {
+  InstructorRealTimeProvider,
+  useRealTimeNotifications,
+} from '@/lib/instructor-realtime-context'
 
 // Navigation items for the instructor dashboard
 const navigationItems = [
@@ -158,6 +160,11 @@ const navigationItems = [
 
 const toolsItems = [
   {
+    title: 'Forum Approval',
+    url: '/dashboard/instructor/forum',
+    icon: Shield,
+  },
+  {
     title: 'Reports',
     url: '/dashboard/instructor/reports',
     icon: FileText,
@@ -181,6 +188,8 @@ const toolsItems = [
 
 function InstructorSidebar() {
   const { setOpenMobile, setOpen } = useSidebar()
+  const { user, logout } = useAuth()
+  const router = useRouter()
 
   // Fetch notifications for unread count
   const { data: notificationsData } = useQuery({
@@ -190,6 +199,22 @@ function InstructorSidebar() {
   })
 
   const unreadNotifications = notificationsData?.unreadCount ?? 0
+
+  // Generate user initials from real user data
+  const getUserInitials = (user: any) => {
+    if (user?.username) {
+      return user.username.charAt(0).toUpperCase()
+    }
+    if (user?.email) {
+      const parts = user.email.split('@')
+      return parts[0].charAt(0).toUpperCase()
+    }
+    return 'IN'
+  }
+
+  const getUserDisplayName = (user: any) => {
+    return user?.username || user?.email || 'Instructor'
+  }
 
   return (
     <Sidebar collapsible="offcanvas" className="border-r">
@@ -331,17 +356,19 @@ function InstructorSidebar() {
                 >
                   <Avatar className="h-8 w-8 rounded-lg">
                     <AvatarImage
-                      src="/placeholder-avatar.jpg"
-                      alt="Instructor"
+                      src={user?.avatar_url || '/placeholder-avatar.jpg'}
+                      alt={getUserDisplayName(user)}
                     />
-                    <AvatarFallback className="rounded-lg">IN</AvatarFallback>
+                    <AvatarFallback className="rounded-lg">
+                      {getUserInitials(user)}
+                    </AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">
-                      Dr. Sarah Wilson
+                      {getUserDisplayName(user)}
                     </span>
                     <span className="truncate text-xs text-muted-foreground">
-                      sarah@example.com
+                      {user?.email || 'Instructor'}
                     </span>
                   </div>
                   <ChevronDown className="ml-auto size-4" />
@@ -357,17 +384,19 @@ function InstructorSidebar() {
                   <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                     <Avatar className="h-8 w-8 rounded-lg">
                       <AvatarImage
-                        src="/placeholder-avatar.jpg"
-                        alt="Instructor"
+                        src={user?.avatar_url || '/placeholder-avatar.jpg'}
+                        alt={getUserDisplayName(user)}
                       />
-                      <AvatarFallback className="rounded-lg">IN</AvatarFallback>
+                      <AvatarFallback className="rounded-lg">
+                        {getUserInitials(user)}
+                      </AvatarFallback>
                     </Avatar>
                     <div className="grid flex-1 text-left text-sm leading-tight">
                       <span className="truncate font-semibold">
-                        Dr. Sarah Wilson
+                        {getUserDisplayName(user)}
                       </span>
                       <span className="truncate text-xs text-muted-foreground">
-                        sarah@example.com
+                        {user?.email || 'Instructor'}
                       </span>
                     </div>
                   </div>
@@ -386,7 +415,13 @@ function InstructorSidebar() {
                   Help
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-red-600">
+                <DropdownMenuItem
+                  className="text-red-600"
+                  onClick={() => {
+                    logout()
+                    void router.navigate({ to: '/auth/login' })
+                  }}
+                >
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign out
                 </DropdownMenuItem>
@@ -411,6 +446,24 @@ function InstructorDashboardHeader({
   children,
 }: InstructorDashboardHeaderProps) {
   const [searchQuery, setSearchQuery] = useState('')
+  const { user, logout } = useAuth()
+  const router = useRouter()
+
+  // Helper functions for user display
+  const getUserInitials = (user: any) => {
+    if (user?.username) {
+      return user.username.charAt(0).toUpperCase()
+    }
+    if (user?.email) {
+      const parts = user.email.split('@')
+      return parts[0].charAt(0).toUpperCase()
+    }
+    return 'IN'
+  }
+
+  const getUserDisplayName = (user: any) => {
+    return user?.username || user?.email || 'Instructor'
+  }
 
   // Use real-time notifications if available, otherwise fallback to API
   const realTimeNotifications = useRealTimeNotifications()
@@ -522,13 +575,16 @@ function InstructorDashboardHeader({
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="icon">
               <Avatar className="h-8 w-8">
-                <AvatarImage src="/placeholder-avatar.jpg" alt="Instructor" />
-                <AvatarFallback>IN</AvatarFallback>
+                <AvatarImage
+                  src={user?.avatar_url || '/placeholder-avatar.jpg'}
+                  alt={getUserDisplayName(user)}
+                />
+                <AvatarFallback>{getUserInitials(user)}</AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Dr. Sarah Wilson</DropdownMenuLabel>
+            <DropdownMenuLabel>{getUserDisplayName(user)}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
               <User className="mr-2 h-4 w-4" />
@@ -539,7 +595,13 @@ function InstructorDashboardHeader({
               Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600">
+            <DropdownMenuItem
+              className="text-red-600"
+              onClick={() => {
+                logout()
+                void router.navigate({ to: '/auth/login' })
+              }}
+            >
               <LogOut className="mr-2 h-4 w-4" />
               Sign out
             </DropdownMenuItem>

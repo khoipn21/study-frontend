@@ -1,7 +1,8 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { Download, Plus, Upload } from 'lucide-react'
-import InstructorDashboardLayout from '@/components/instructor/InstructorDashboardLayout'
+
 import CoursesDataTable from '@/components/instructor/CoursesDataTable'
+import InstructorDashboardLayout from '@/components/instructor/InstructorDashboardLayout'
 import { Button } from '@/components/ui/button'
 import { requireInstructorRole } from '@/lib/auth-guards'
 

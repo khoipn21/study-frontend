@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from 'react'
 import { Link, useRouter } from '@tanstack/react-router'
 import {
   Bell,
@@ -14,10 +13,9 @@ import {
   User,
   X,
 } from 'lucide-react'
-import { useAuth } from '@/lib/auth-context'
-import { ThemeToggle } from '@/components/ui/theme-toggle'
+import React, { useEffect, useState } from 'react'
+
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +24,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { useAuth } from '@/lib/auth-context'
 
 export default function Header() {
   const { user, logout } = useAuth()

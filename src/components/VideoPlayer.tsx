@@ -1,4 +1,3 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
 import Hls from 'hls.js'
 import {
   Activity,
@@ -12,16 +11,19 @@ import {
   Volume2,
   VolumeX,
 } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+
 import { Button } from '@/components/ui/button'
-import { Slider } from '@/components/ui/slider'
-import { cn } from '@/lib/utils'
-import { useVideoNetworkMonitoring } from '@/hooks/useVideoNetworkMonitoring'
 import {
   ConnectionStatus,
   NetworkStatusIndicator,
 } from '@/components/ui/network-status-indicator'
 import { QualityBadge, QualitySelector } from '@/components/ui/quality-selector'
+import { Slider } from '@/components/ui/slider'
+import { useVideoNetworkMonitoring } from '@/hooks/useVideoNetworkMonitoring'
+import { cn } from '@/lib/utils'
 import { videoService } from '@/lib/video-service'
+
 import type {
   NetworkCondition,
   NetworkMonitoringConfig,

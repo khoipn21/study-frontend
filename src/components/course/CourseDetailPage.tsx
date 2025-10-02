@@ -1,4 +1,3 @@
-import { useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   Award,
@@ -30,23 +29,26 @@ import {
   Users,
   Video,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useRef, useState } from 'react'
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { api } from '@/lib/api-client'
+import { useCourseAccess } from '@/lib/course-marketplace-context'
 import {
   formatCoursePrice,
   formatPriceWithDiscount,
   formatVietnameseDuration,
 } from '@/lib/currency'
+import { cn } from '@/lib/utils'
 import {
   formatVietnameseCount,
   formatVietnameseDate,
   vietnameseTranslations,
 } from '@/lib/vietnamese-locale'
-import { useCourseAccess } from '@/lib/course-marketplace-context'
-import { cn } from '@/lib/utils'
+
 import type { Course } from '@/lib/types'
 
 interface CourseDetailPageProps {

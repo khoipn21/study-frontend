@@ -1,4 +1,3 @@
-import React, { useEffect, useRef, useState } from 'react'
 import {
   animate,
   motion,
@@ -6,6 +5,7 @@ import {
   useMotionValueEvent,
   useTransform,
 } from 'motion/react'
+import React, { useEffect, useRef, useState } from 'react'
 
 const MAX_OVERFLOW = 50
 

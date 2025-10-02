@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import { gsap } from 'gsap'
+import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 
 export interface TargetCursorProps {
   targetSelector?: string

@@ -6,7 +6,6 @@
  * streaming performance.
  */
 
-import React from 'react'
 import {
   Activity,
   AlertCircle,
@@ -17,7 +16,8 @@ import {
   Wifi,
   WifiOff,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import React from 'react'
+
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -26,6 +26,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
+
 import type {
   ConnectionType,
   NetworkCondition,

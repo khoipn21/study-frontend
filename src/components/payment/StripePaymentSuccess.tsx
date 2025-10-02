@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import {
   AlertCircle,
@@ -12,7 +11,9 @@ import {
   Play,
   Star,
 } from 'lucide-react'
-import { useAuth } from '@/lib/auth-context'
+import React, { useEffect, useState } from 'react'
+
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -21,9 +22,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { useAuth } from '@/lib/auth-context'
 import { cn } from '@/lib/utils'
+
 import type { PaymentSuccessResponse } from '@/lib/stripe-types'
 
 interface PaymentSuccessState {

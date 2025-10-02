@@ -1,6 +1,7 @@
 import { BookOpen, CheckCircle, CreditCard } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+
 import { PaymentModal } from '@/components/payment/PaymentModal'
+import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth-context'
 
 interface EnrollmentButtonProps {

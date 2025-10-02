@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 
 export interface BentoCardProps {
   color?: string

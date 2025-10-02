@@ -310,6 +310,47 @@ export class InstructorDashboardService {
     return (response as { data: Array<StudentEngagement> }).data
   }
 
+  async getStudentAnalytics(
+    params?: {
+      startDate?: string
+      endDate?: string
+      courseId?: string
+      granularity?: 'day' | 'week' | 'month'
+    },
+    token?: string,
+  ): Promise<
+    Array<{
+      date: string
+      newStudents: number
+      activeStudents: number
+      completions: number
+    }>
+  > {
+    const searchParams = new URLSearchParams()
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) {
+          searchParams.append(key, value.toString())
+        }
+      })
+    }
+
+    const response = await apiClient.get(
+      `/instructor/analytics/students?${searchParams}`,
+      { token },
+    )
+    return (
+      response as {
+        data: Array<{
+          date: string
+          newStudents: number
+          activeStudents: number
+          completions: number
+        }>
+      }
+    ).data
+  }
+
   // Course Management
   async getCourses(
     params?: {

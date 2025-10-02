@@ -1,11 +1,11 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
 import {
   ArrowUp,
   Award,
   BookOpen,
   Calendar,
   CheckCircle,
+  Clock,
   Code,
   Eye,
   HelpCircle,
@@ -22,8 +22,12 @@ import {
   TrendingUp,
   Users,
 } from 'lucide-react'
+import { useState } from 'react'
+
+import { CreateTopicDialog } from '@/components/forum/create-topic-dialog'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import {
   Card,
   CardContent,
@@ -31,8 +35,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -40,6 +43,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { useCreateTopic, useTopics } from '@/hooks/use-forum'
+import { useAuth } from '@/lib/auth-context'
 
 export const Route = createFileRoute('/forum/')({
   component: ForumPage,
@@ -56,47 +61,39 @@ interface ForumCategory {
   color: string
 }
 
-interface ForumTopic {
-  id: string
-  title: string
-  content: string
-  categoryId: string
-  categoryName: string
-  author: {
-    id: string
-    name: string
-    avatar?: string
-    role: 'student' | 'instructor' | 'admin'
-  }
-  createdAt: string
-  updatedAt: string
-  viewsCount: number
-  repliesCount: number
-  isPinned: boolean
-  isLocked: boolean
-  isSolved: boolean
-  tags: Array<string>
-  lastReply?: {
-    author: string
-    timestamp: string
-  }
-}
-
 function ForumPage() {
+  const { token } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [sortBy, setSortBy] = useState('latest')
+  const [createTopicOpen, setCreateTopicOpen] = useState(false)
 
-  // Mock data - replace with actual API calls
+  // Fetch topics from API
+  const {
+    data: topicsData,
+    isLoading,
+    error,
+  } = useTopics({
+    category: selectedCategory === 'all' ? undefined : selectedCategory,
+  })
+
+  const createTopicMutation = useCreateTopic()
+
+  const topics = topicsData?.topics || []
+
+  // Fetch categories from API - for now using fallback data based on topics
+  // TODO: Replace with actual API call when categories endpoint is available
   const categories: Array<ForumCategory> = [
     {
       id: 'programming',
       name: 'Lập trình',
       description: 'Thảo luận về các ngôn ngữ lập trình và công nghệ',
       icon: Code,
-      topicsCount: 1234,
-      postsCount: 5678,
-      lastActivity: '2 phút trước',
+      topicsCount: topics.filter((t) => t.category === 'programming').length,
+      postsCount: topics
+        .filter((t) => t.category === 'programming')
+        .reduce((sum, t) => sum + (t.postCount || 0), 0),
+      lastActivity: 'Gần đây',
       color: 'bg-blue-500/10 text-blue-600 border-blue-200',
     },
     {
@@ -104,9 +101,11 @@ function ForumPage() {
       name: 'Thảo luận chung',
       description: 'Chia sẻ kinh nghiệm học tập và giao lưu',
       icon: MessageSquare,
-      topicsCount: 856,
-      postsCount: 3421,
-      lastActivity: '5 phút trước',
+      topicsCount: topics.filter((t) => t.category === 'general').length,
+      postsCount: topics
+        .filter((t) => t.category === 'general')
+        .reduce((sum, t) => sum + (t.postCount || 0), 0),
+      lastActivity: 'Gần đây',
       color: 'bg-green-500/10 text-green-600 border-green-200',
     },
     {
@@ -114,9 +113,11 @@ function ForumPage() {
       name: 'Hỗ trợ kỹ thuật',
       description: 'Giải đáp thắc mắc về platform và khóa học',
       icon: HelpCircle,
-      topicsCount: 432,
-      postsCount: 1876,
-      lastActivity: '10 phút trước',
+      topicsCount: topics.filter((t) => t.category === 'help').length,
+      postsCount: topics
+        .filter((t) => t.category === 'help')
+        .reduce((sum, t) => sum + (t.postCount || 0), 0),
+      lastActivity: 'Gần đây',
       color: 'bg-orange-500/10 text-orange-600 border-orange-200',
     },
     {
@@ -124,9 +125,11 @@ function ForumPage() {
       name: 'Mẹo học tập',
       description: 'Chia sẻ phương pháp và kinh nghiệm học hiệu quả',
       icon: Lightbulb,
-      topicsCount: 234,
-      postsCount: 987,
-      lastActivity: '15 phút trước',
+      topicsCount: topics.filter((t) => t.category === 'tips').length,
+      postsCount: topics
+        .filter((t) => t.category === 'tips')
+        .reduce((sum, t) => sum + (t.postCount || 0), 0),
+      lastActivity: 'Gần đây',
       color: 'bg-yellow-500/10 text-yellow-600 border-yellow-200',
     },
     {
@@ -134,100 +137,33 @@ function ForumPage() {
       name: 'Showcase dự án',
       description: 'Khoe dự án và nhận feedback từ cộng đồng',
       icon: Award,
-      topicsCount: 345,
-      postsCount: 1543,
-      lastActivity: '30 phút trước',
+      topicsCount: topics.filter((t) => t.category === 'showcase').length,
+      postsCount: topics
+        .filter((t) => t.category === 'showcase')
+        .reduce((sum, t) => sum + (t.postCount || 0), 0),
+      lastActivity: 'Gần đây',
       color: 'bg-purple-500/10 text-purple-600 border-purple-200',
-    },
-  ]
-
-  const topics: Array<ForumTopic> = [
-    {
-      id: '1',
-      title: 'Làm thế nào để học React hiệu quả cho người mới bắt đầu?',
-      content:
-        'Mình mới bắt đầu học React và cảm thấy khá khó khăn. Có ai có kinh nghiệm chia sẻ không?',
-      categoryId: 'programming',
-      categoryName: 'Lập trình',
-      author: {
-        id: '1',
-        name: 'Nguyễn Văn A',
-        avatar: '/api/placeholder/32/32',
-        role: 'student',
-      },
-      createdAt: '2024-01-20T10:30:00Z',
-      updatedAt: '2024-01-20T14:15:00Z',
-      viewsCount: 256,
-      repliesCount: 18,
-      isPinned: true,
-      isLocked: false,
-      isSolved: false,
-      tags: ['react', 'javascript', 'beginner'],
-      lastReply: {
-        author: 'Trần Thị B',
-        timestamp: '2 giờ trước',
-      },
-    },
-    {
-      id: '2',
-      title: 'Chia sẻ dự án Todo App với React và TypeScript',
-      content:
-        'Vừa hoàn thành dự án Todo App sử dụng React và TypeScript. Mọi người góp ý nhé!',
-      categoryId: 'showcase',
-      categoryName: 'Showcase dự án',
-      author: {
-        id: '2',
-        name: 'Lê Văn C',
-        role: 'student',
-      },
-      createdAt: '2024-01-20T09:00:00Z',
-      updatedAt: '2024-01-20T13:45:00Z',
-      viewsCount: 142,
-      repliesCount: 7,
-      isPinned: false,
-      isLocked: false,
-      isSolved: true,
-      tags: ['react', 'typescript', 'project'],
-      lastReply: {
-        author: 'Phạm Thị D',
-        timestamp: '3 giờ trước',
-      },
-    },
-    {
-      id: '3',
-      title: 'Video bài giảng không phát được trên Chrome',
-      content:
-        'Mình đang gặp vấn đề không thể phát video trên trình duyệt Chrome. Firefox thì bình thường.',
-      categoryId: 'help',
-      categoryName: 'Hỗ trợ kỹ thuật',
-      author: {
-        id: '3',
-        name: 'Hoàng Văn E',
-        role: 'student',
-      },
-      createdAt: '2024-01-20T08:15:00Z',
-      updatedAt: '2024-01-20T12:30:00Z',
-      viewsCount: 89,
-      repliesCount: 12,
-      isPinned: false,
-      isLocked: false,
-      isSolved: true,
-      tags: ['technical', 'video', 'chrome'],
-      lastReply: {
-        author: 'Support Team',
-        timestamp: '4 giờ trước',
-      },
     },
   ]
 
   const filteredTopics = topics.filter((topic) => {
     const matchesSearch =
       topic.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      topic.content.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory =
-      selectedCategory === 'all' || topic.categoryId === selectedCategory
-    return matchesSearch && matchesCategory
+      topic.content?.toLowerCase().includes(searchQuery.toLowerCase())
+    return matchesSearch
   })
+
+  const handleCreateTopic = async (data: any) => {
+    try {
+      if (!token) {
+        throw new Error('Bạn cần đăng nhập để tạo chủ đề mới')
+      }
+      await createTopicMutation.mutateAsync({ data, authToken: token })
+      alert('Chủ đề đã được tạo và gửi để duyệt!')
+    } catch (error) {
+      throw new Error('Không thể tạo chủ đề. Vui lòng thử lại.')
+    }
+  }
 
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -267,7 +203,10 @@ function ForumPage() {
                 {topics.length.toLocaleString()} thành viên
               </p>
             </div>
-            <Button className="whitespace-nowrap">
+            <Button
+              className="whitespace-nowrap"
+              onClick={() => setCreateTopicOpen(true)}
+            >
               <PlusCircle className="h-4 w-4 mr-2" />
               Tạo chủ đề mới
             </Button>
@@ -323,7 +262,10 @@ function ForumPage() {
                 <CardContent className="p-4 text-center">
                   <MessageSquare className="h-8 w-8 text-primary mx-auto mb-2" />
                   <div className="text-2xl font-bold text-foreground">
-                    {topics.reduce((sum, topic) => sum + topic.repliesCount, 0)}
+                    {topics.reduce(
+                      (sum, topic) => sum + (topic.postCount || 0),
+                      0,
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground">Bài viết</p>
                 </CardContent>
@@ -331,24 +273,46 @@ function ForumPage() {
               <Card>
                 <CardContent className="p-4 text-center">
                   <Users className="h-8 w-8 text-blue-500 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-foreground">2.1K</div>
-                  <p className="text-xs text-muted-foreground">Thành viên</p>
+                  <div className="text-2xl font-bold text-foreground">
+                    {topics.reduce((sum) => sum + 1, 0)}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Người dùng</p>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-4 text-center">
                   <TrendingUp className="h-8 w-8 text-green-500 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-foreground">156</div>
+                  <div className="text-2xl font-bold text-foreground">
+                    {
+                      topics.filter((t) => {
+                        const createdDate = new Date(t.createdAt)
+                        const today = new Date()
+                        return (
+                          createdDate.toDateString() === today.toDateString()
+                        )
+                      }).length
+                    }
+                  </div>
                   <p className="text-xs text-muted-foreground">
-                    Hoạt động hôm nay
+                    Chủ đề hôm nay
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-4 text-center">
                   <CheckCircle className="h-8 w-8 text-yellow-500 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-foreground">89%</div>
-                  <p className="text-xs text-muted-foreground">Giải quyết</p>
+                  <div className="text-2xl font-bold text-foreground">
+                    {topics.length > 0
+                      ? Math.round(
+                          (topics.filter((t) => t.status === 'approved')
+                            .length /
+                            topics.length) *
+                            100,
+                        )
+                      : 0}
+                    %
+                  </div>
+                  <p className="text-xs text-muted-foreground">Đã duyệt</p>
                 </CardContent>
               </Card>
             </div>
@@ -368,124 +332,135 @@ function ForumPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {filteredTopics.map((topic) => (
-                    <div
-                      key={topic.id}
-                      className="flex items-start gap-4 p-4 rounded-lg border border-border/50 hover:border-primary/20 hover:bg-muted/30 transition-colors cursor-pointer"
-                    >
-                      {/* Topic Status Icons */}
-                      <div className="flex flex-col gap-1 mt-1">
-                        {topic.isPinned && (
-                          <Pin className="h-4 w-4 text-primary" />
-                        )}
-                        {topic.isLocked && (
-                          <Lock className="h-4 w-4 text-muted-foreground" />
-                        )}
-                        {topic.isSolved && (
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                        )}
-                      </div>
-
-                      {/* Author Avatar */}
-                      <Avatar className="h-10 w-10 border-2 border-border/50">
-                        <AvatarImage src={topic.author.avatar} />
-                        <AvatarFallback className="text-xs">
-                          {topic.author.name.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-
-                      {/* Topic Content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-foreground hover:text-primary transition-colors line-clamp-2">
-                              <Link
-                                to="/forum/topics/$topicId"
-                                params={{ topicId: topic.id }}
-                                className="hover:underline"
-                              >
-                                {topic.title}
-                              </Link>
-                            </h3>
-                            <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                              <span className="flex items-center gap-1">
-                                {topic.author.name}
-                                {getRoleIcon(topic.author.role)}
-                              </span>
-                              <span>•</span>
-                              <Badge
-                                variant="outline"
-                                className={`text-xs ${categories.find((c) => c.id === topic.categoryId)?.color}`}
-                              >
-                                {topic.categoryName}
-                              </Badge>
-                              <span>•</span>
-                              <span className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3" />
-                                {formatTimeAgo(topic.createdAt)}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Tags */}
-                        {topic.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mb-3">
-                            {topic.tags.map((tag) => (
-                              <Badge
-                                key={tag}
-                                variant="secondary"
-                                className="text-xs"
-                              >
-                                <Tag className="h-2 w-2 mr-1" />
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Topic Stats */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <Eye className="h-3 w-3" />
-                              {topic.viewsCount.toLocaleString()} lượt xem
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <MessageCircle className="h-3 w-3" />
-                              {topic.repliesCount} trả lời
-                            </span>
-                          </div>
-
-                          {topic.lastReply && (
-                            <div className="text-xs text-muted-foreground">
-                              <span className="hidden sm:inline">
-                                Trả lời cuối:{' '}
-                              </span>
-                              <span className="font-medium">
-                                {topic.lastReply.author}
-                              </span>
-                              <span className="hidden sm:inline">
-                                {' '}
-                                • {topic.lastReply.timestamp}
-                              </span>
-                            </div>
+                  {isLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                      <p className="text-muted-foreground mt-2">Đang tải...</p>
+                    </div>
+                  ) : error ? (
+                    <div className="text-center py-8">
+                      <p className="text-red-600">
+                        Có lỗi xảy ra khi tải dữ liệu
+                      </p>
+                    </div>
+                  ) : (
+                    filteredTopics.map((topic) => (
+                      <div
+                        key={topic.id}
+                        className="flex items-start gap-4 p-4 rounded-lg border border-border/50 hover:border-primary/20 hover:bg-muted/30 transition-colors cursor-pointer"
+                      >
+                        {/* Topic Status Icons */}
+                        <div className="flex flex-col gap-1 mt-1">
+                          {topic.isPinned && (
+                            <Pin className="h-4 w-4 text-primary" />
+                          )}
+                          {topic.isLocked && (
+                            <Lock className="h-4 w-4 text-muted-foreground" />
+                          )}
+                          {topic.status === 'pending' && (
+                            <Clock className="h-4 w-4 text-yellow-500" />
                           )}
                         </div>
+
+                        {/* Author Avatar */}
+                        <Avatar className="h-10 w-10 border-2 border-border/50">
+                          <AvatarImage src={topic.author?.avatar} />
+                          <AvatarFallback className="text-xs">
+                            {topic.author?.name?.charAt(0) || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+
+                        {/* Topic Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-foreground hover:text-primary transition-colors line-clamp-2">
+                                <Link
+                                  to="/forum/topics/$topicId"
+                                  params={{ topicId: topic.id }}
+                                  className="hover:underline"
+                                >
+                                  {topic.title}
+                                </Link>
+                              </h3>
+                              <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  {topic.author?.name || 'Unknown'}
+                                  {getRoleIcon(topic.author?.role || 'student')}
+                                </span>
+                                <span>•</span>
+                                <Badge variant="outline" className="text-xs">
+                                  {topic.category}
+                                </Badge>
+                                <span>•</span>
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" />
+                                  {formatTimeAgo(topic.createdAt)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Tags */}
+                          {topic.tags && topic.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mb-3">
+                              {topic.tags.map((tag) => (
+                                <Badge
+                                  key={tag}
+                                  variant="secondary"
+                                  className="text-xs"
+                                >
+                                  <Tag className="h-2 w-2 mr-1" />
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Topic Stats */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <Eye className="h-3 w-3" />
+                                {(topic.viewCount || 0).toLocaleString()} lượt
+                                xem
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <MessageCircle className="h-3 w-3" />
+                                {topic.postCount || 0} trả lời
+                              </span>
+                            </div>
+
+                            {topic.lastReply && (
+                              <div className="text-xs text-muted-foreground">
+                                <span className="hidden sm:inline">
+                                  Trả lời cuối:{' '}
+                                </span>
+                                <span className="font-medium">
+                                  {topic.lastReply.authorName}
+                                </span>
+                                <span className="hidden sm:inline">
+                                  {' '}
+                                  • {topic.lastReply.timestamp}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Quick Action */}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <ArrowUp className="h-4 w-4 rotate-45" />
+                        </Button>
                       </div>
+                    ))
+                  )}
 
-                      {/* Quick Action */}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <ArrowUp className="h-4 w-4 rotate-45" />
-                      </Button>
-                    </div>
-                  ))}
-
-                  {filteredTopics.length === 0 && (
+                  {!isLoading && !error && filteredTopics.length === 0 && (
                     <div className="text-center py-12">
                       <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                       <h3 className="font-semibold text-foreground mb-2">
@@ -494,7 +469,7 @@ function ForumPage() {
                       <p className="text-muted-foreground mb-4">
                         Thử thay đổi từ khóa tìm kiếm hoặc tạo chủ đề mới
                       </p>
-                      <Button>
+                      <Button onClick={() => setCreateTopicOpen(true)}>
                         <PlusCircle className="h-4 w-4 mr-2" />
                         Tạo chủ đề đầu tiên
                       </Button>
@@ -546,54 +521,77 @@ function ForumPage() {
               </CardContent>
             </Card>
 
-            {/* Online Users */}
+            {/* Recent Authors */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Users className="h-5 w-5 text-primary" />
-                  Đang hoạt động
+                  Thành viên tích cực
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {[
-                    { name: 'Nguyễn Văn A', role: 'student', status: 'online' },
-                    {
-                      name: 'Trần Thị B',
-                      role: 'instructor',
-                      status: 'online',
-                    },
-                    { name: 'Lê Văn C', role: 'student', status: 'online' },
-                  ].map((user, index) => (
-                    <div key={index} className="flex items-center gap-3">
-                      <div className="relative">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback className="text-xs">
-                            {user.name.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground">
-                          {user.name}
-                        </p>
-                        <div className="flex items-center gap-1">
-                          {getRoleIcon(user.role)}
-                          <span className="text-xs text-muted-foreground capitalize">
-                            {user.role === 'student'
-                              ? 'Học viên'
-                              : 'Giảng viên'}
-                          </span>
+                  {Array.from(
+                    new Set(
+                      topics
+                        .slice(0, 10)
+                        .map(
+                          (t) =>
+                            t.author?.name || (t as any).created_by?.username,
+                        ),
+                    ),
+                  )
+                    .filter(Boolean)
+                    .slice(0, 5)
+                    .map((authorName, index) => {
+                      const authorTopics = topics.filter(
+                        (t) =>
+                          t.author?.name === authorName ||
+                          (t as any).created_by?.username === authorName,
+                      )
+                      const authorRole =
+                        authorTopics[0]?.author?.role ||
+                        (authorTopics[0] as any).created_by?.role ||
+                        'student'
+
+                      return (
+                        <div key={index} className="flex items-center gap-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback className="text-xs">
+                              {authorName?.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground">
+                              {authorName}
+                            </p>
+                            <div className="flex items-center gap-1">
+                              {getRoleIcon(authorRole)}
+                              <span className="text-xs text-muted-foreground">
+                                {authorTopics.length} chủ đề
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  ))}
+                      )
+                    })}
                 </div>
                 <div className="mt-4 pt-3 border-t border-border/50 text-center">
                   <p className="text-xs text-muted-foreground">
-                    <span className="font-medium text-green-600">42</span> thành
-                    viên đang online
+                    <span className="font-medium">
+                      {
+                        Array.from(
+                          new Set(
+                            topics.map(
+                              (t) =>
+                                t.author?.name ||
+                                (t as any).created_by?.username,
+                            ),
+                          ),
+                        ).length
+                      }
+                    </span>{' '}
+                    thành viên đã tham gia
                   </p>
                 </div>
               </CardContent>
@@ -631,6 +629,13 @@ function ForumPage() {
           </div>
         </div>
       </div>
+
+      {/* Create Topic Dialog */}
+      <CreateTopicDialog
+        open={createTopicOpen}
+        onOpenChange={setCreateTopicOpen}
+        onSubmit={handleCreateTopic}
+      />
     </div>
   )
 }

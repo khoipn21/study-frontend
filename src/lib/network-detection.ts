@@ -7,11 +7,13 @@
  */
 
 import Hls from 'hls.js'
+
 import {
   calculateQualityScore,
   getNetworkCondition,
   recommendQualityFromScore,
 } from '@/types/video-network'
+
 import type {
   ConnectionType,
   HLSNetworkMetrics,

@@ -1,5 +1,4 @@
-import { useRef, useState } from 'react'
-import { useFormContext } from 'react-hook-form'
+import { useMutation } from '@tanstack/react-query'
 import {
   AlertCircle,
   ArrowRight,
@@ -8,10 +7,13 @@ import {
   Upload,
   X,
 } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { useFormContext } from 'react-hook-form'
 
 // UI Components
-import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
+
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -28,11 +30,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 
 // Hooks
 import { api } from '@/lib/api-client'
 import { useAuth } from '@/lib/auth-context'
+
 import type {
   CourseCreationData,
   LectureCreationData,

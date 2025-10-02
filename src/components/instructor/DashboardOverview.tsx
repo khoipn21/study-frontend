@@ -1,5 +1,20 @@
-import React from 'react'
 import { useQuery } from '@tanstack/react-query'
+import {
+  AlertCircle,
+  ArrowDownRight,
+  ArrowUpRight,
+  Award,
+  BookOpen,
+  Clock,
+  DollarSign,
+  MessageSquare,
+  PlayCircle,
+  Shield,
+  Star,
+  TrendingUp,
+  Users,
+} from 'lucide-react'
+import React from 'react'
 import {
   Bar,
   BarChart,
@@ -15,21 +30,9 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import {
-  AlertCircle,
-  ArrowDownRight,
-  ArrowUpRight,
-  Award,
-  BookOpen,
-  Clock,
-  DollarSign,
-  MessageSquare,
-  PlayCircle,
-  Star,
-  TrendingUp,
-  Users,
-} from 'lucide-react'
 
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -37,10 +40,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { instructorDashboardService } from '@/lib/instructor-dashboard'
+import { usePendingTopics } from '@/hooks/use-forum'
 import { useAuthenticatedApi } from '@/lib/auth-context'
+import { instructorDashboardService } from '@/lib/instructor-dashboard'
+
 import type {
   RevenueMetrics,
   StudentEngagement,
@@ -354,6 +357,99 @@ function RecentActivity({ activities }: RecentActivityProps) {
             </div>
           ))}
         </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+interface ForumApprovalProps {
+  onViewAll: () => void
+}
+
+function ForumApproval({ onViewAll }: ForumApprovalProps) {
+  const { token } = useAuthenticatedApi()
+  const {
+    data: pendingTopicsData,
+    isLoading,
+    error,
+  } = usePendingTopics(token ?? undefined)
+
+  const pendingTopics = pendingTopicsData?.topics || []
+  const pendingCount = pendingTopics.length
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Shield className="h-5 w-5 text-primary" />
+            Forum Approval
+          </div>
+          {pendingCount > 0 && (
+            <Badge variant="destructive">{pendingCount}</Badge>
+          )}
+        </CardTitle>
+        <CardDescription>
+          Review and approve pending forum topics
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-4">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+          </div>
+        ) : error ? (
+          <div className="text-center py-4">
+            <p className="text-sm text-red-600">
+              Failed to load pending topics
+            </p>
+          </div>
+        ) : pendingCount === 0 ? (
+          <div className="text-center py-4">
+            <Shield className="h-8 w-8 text-green-500 mx-auto mb-2" />
+            <p className="text-sm font-medium">All caught up!</p>
+            <p className="text-xs text-muted-foreground">
+              No pending topics to review
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="text-sm font-medium">
+              {pendingCount} topic{pendingCount > 1 ? 's' : ''} pending approval
+            </div>
+            <div className="space-y-2">
+              {pendingTopics.slice(0, 3).map((topic) => (
+                <div
+                  key={topic.id}
+                  className="flex items-center justify-between p-2 rounded-lg bg-muted/30"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {topic.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      by{' '}
+                      {(topic as any).created_by?.username ||
+                        topic.author?.name ||
+                        'Unknown'}
+                    </p>
+                  </div>
+                  <Badge variant="secondary" className="text-xs">
+                    {topic.category || 'General'}
+                  </Badge>
+                </div>
+              ))}
+              {pendingCount > 3 && (
+                <p className="text-xs text-muted-foreground text-center">
+                  +{pendingCount - 3} more topics
+                </p>
+              )}
+            </div>
+            <Button onClick={onViewAll} className="w-full" variant="default">
+              Review All Topics
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
@@ -779,20 +875,27 @@ export default function DashboardOverview() {
         <RecentActivity activities={recentActivities} />
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <QuickActions
-          onCreateCourse={() =>
-            (window.location.href = '/dashboard/instructor/courses/new')
-          }
-          onUploadVideo={() =>
-            (window.location.href = '/dashboard/instructor/upload')
-          }
-          onViewAnalytics={() =>
-            (window.location.href = '/dashboard/instructor/analytics')
-          }
-          onCheckMessages={() =>
-            (window.location.href = '/dashboard/instructor/messages')
+      {/* Quick Actions and Forum Approval */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <div className="lg:col-span-4">
+          <QuickActions
+            onCreateCourse={() =>
+              (window.location.href = '/dashboard/instructor/courses/new')
+            }
+            onUploadVideo={() =>
+              (window.location.href = '/dashboard/instructor/upload')
+            }
+            onViewAnalytics={() =>
+              (window.location.href = '/dashboard/instructor/analytics')
+            }
+            onCheckMessages={() =>
+              (window.location.href = '/dashboard/instructor/messages')
+            }
+          />
+        </div>
+        <ForumApproval
+          onViewAll={() =>
+            (window.location.href = '/dashboard/instructor/forum')
           }
         />
       </div>

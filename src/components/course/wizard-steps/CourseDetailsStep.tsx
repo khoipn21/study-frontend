@@ -1,9 +1,23 @@
+import { Check, Plus, X } from 'lucide-react'
 import { useState } from 'react'
 import { Controller, useFormContext } from 'react-hook-form'
-import { Check, Plus, X } from 'lucide-react'
 
 // UI Components
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import {
+  FormControl,
+  FormDescription,
+  FormItem,
+  FormLabel,
+} from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -12,20 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import {
-  FormControl,
-  FormDescription,
-  FormItem,
-  FormLabel,
-} from '@/components/ui/form'
+
 import type { CourseCreationData } from '@/lib/course-management-types'
 
 // Types

@@ -1,6 +1,5 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   BookOpen,
   CheckCircle,
@@ -26,21 +25,9 @@ import {
   Video,
   X,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Textarea } from '@/components/ui/textarea'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { useState } from 'react'
+
+import { ResourcePreviewModal } from '@/components/ResourcePreviewModal'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,9 +39,18 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -70,6 +66,9 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Progress } from '@/components/ui/progress'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Separator } from '@/components/ui/separator'
 import {
   Sheet,
   SheetContent,
@@ -78,8 +77,10 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
-import { api } from '@/lib/api-client'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Textarea } from '@/components/ui/textarea'
 import { VideoPlayer } from '@/components/VideoPlayer'
+import { api } from '@/lib/api-client'
 import {
   useCourseAccess,
   useProgressTracking,
@@ -87,7 +88,7 @@ import {
   useVideoStream,
 } from '@/lib/learning-hooks'
 import { useResourceService } from '@/lib/resource-service'
-import { ResourcePreviewModal } from '@/components/ResourcePreviewModal'
+
 import type { ResourceData } from '@/lib/resource-service'
 
 export const Route = createFileRoute('/learn/$courseId/$lectureId')({
@@ -457,10 +458,6 @@ function LearningEnvironment() {
       updateNote(editingNote.id, editingNote.content)
       setEditingNote(null)
     }
-  }
-
-  const handleCancelEdit = () => {
-    setEditingNote(null)
   }
 
   const handleDeleteNote = (noteId: string) => {

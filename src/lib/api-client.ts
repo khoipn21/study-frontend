@@ -1,4 +1,5 @@
 import { config } from './config'
+
 import type {
   AuthResponse,
   Course,
@@ -837,6 +838,14 @@ export const api = {
     }>(`/lecture-resources/${resourceId}/preview-url`, { token })
     return response.data!
   },
+
+  // Users for mentions
+  getUsers: (token?: string) =>
+    requestGateway<{
+      users: Array<{ id: string; username: string; role: string }>
+    }>('/users', {
+      token,
+    }).then((response) => response.data?.users || []),
 }
 
 // Enhanced API client with automatic token injection and better error handling

@@ -7,11 +7,12 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+
 import { useToast } from '@/hooks/use-toast'
-import { videoService } from '@/lib/video-service'
 import { NetworkPerformanceMonitor } from '@/lib/network-detection'
+import { videoService } from '@/lib/video-service'
 import { DEFAULT_NETWORK_CONFIG } from '@/types/video-network'
-import type Hls from 'hls.js'
+
 import type {
   HLSNetworkMetrics,
   NetworkCondition,
@@ -22,6 +23,7 @@ import type {
   VideoQualityInfo,
   VideoSession,
 } from '@/types/video-network'
+import type Hls from 'hls.js'
 
 export interface UseVideoNetworkMonitoringOptions {
   /** Video session data from backend */

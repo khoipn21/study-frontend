@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   AlertCircle,
@@ -12,6 +11,10 @@ import {
   Star,
   Unlock,
 } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -19,12 +22,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuthenticatedApi } from '@/lib/auth-context'
 import { stripeApiClient } from '@/lib/stripe-api'
+
 import { CoursePaymentButton } from './CoursePaymentButton'
+
 import type {
   CourseAccessGuardProps,
   CourseEnrollment,

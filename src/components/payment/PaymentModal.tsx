@@ -1,4 +1,3 @@
-import React, { useState } from 'react'
 import {
   AlertCircle,
   CheckCircle,
@@ -10,6 +9,9 @@ import {
   X,
   Zap,
 } from 'lucide-react'
+import React, { useState } from 'react'
+
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -19,13 +21,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { useAuth } from '@/lib/auth-context'
 import { lemonSqueezyService } from '@/lib/lemon-squeezy'
 import { cn } from '@/lib/utils'
+
 import type {
   CourseCheckoutData,
   SubscriptionCheckoutData,

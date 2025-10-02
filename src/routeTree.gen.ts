@@ -32,6 +32,7 @@ import { Route as ApiMcpTodosRouteImport } from './routes/api.mcp-todos'
 import { Route as ApiDemoTqTodosRouteImport } from './routes/api.demo-tq-todos'
 import { Route as ApiDemoNamesRouteImport } from './routes/api.demo-names'
 import { Route as DashboardInstructorIndexRouteImport } from './routes/dashboard.instructor.index'
+import { Route as DashboardAdminIndexRouteImport } from './routes/dashboard.admin.index'
 import { Route as LearnCourseIdLectureIdRouteImport } from './routes/learn.$courseId.$lectureId'
 import { Route as ForumTopicsTopicIdRouteImport } from './routes/forum.topics.$topicId'
 import { Route as ForumPostsPostIdRouteImport } from './routes/forum.posts.$postId'
@@ -39,6 +40,8 @@ import { Route as DemoStartServerFuncsRouteImport } from './routes/demo.start.se
 import { Route as DemoStartApiRequestRouteImport } from './routes/demo.start.api-request'
 import { Route as DemoFormSimpleRouteImport } from './routes/demo.form.simple'
 import { Route as DemoFormAddressRouteImport } from './routes/demo.form.address'
+import { Route as DashboardInstructorForumRouteImport } from './routes/dashboard.instructor.forum'
+import { Route as DashboardAdminForumRouteImport } from './routes/dashboard.admin.forum'
 import { Route as DashboardInstructorUploadIndexRouteImport } from './routes/dashboard.instructor.upload.index'
 import { Route as DashboardInstructorStudentsIndexRouteImport } from './routes/dashboard.instructor.students.index'
 import { Route as DashboardInstructorMessagesIndexRouteImport } from './routes/dashboard.instructor.messages.index'
@@ -165,6 +168,11 @@ const DashboardInstructorIndexRoute =
     path: '/dashboard/instructor/',
     getParentRoute: () => rootRouteImport,
   } as any)
+const DashboardAdminIndexRoute = DashboardAdminIndexRouteImport.update({
+  id: '/dashboard/admin/',
+  path: '/dashboard/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LearnCourseIdLectureIdRoute = LearnCourseIdLectureIdRouteImport.update({
   id: '/learn/$courseId/$lectureId',
   path: '/learn/$courseId/$lectureId',
@@ -198,6 +206,17 @@ const DemoFormSimpleRoute = DemoFormSimpleRouteImport.update({
 const DemoFormAddressRoute = DemoFormAddressRouteImport.update({
   id: '/demo/form/address',
   path: '/demo/form/address',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardInstructorForumRoute =
+  DashboardInstructorForumRouteImport.update({
+    id: '/dashboard/instructor/forum',
+    path: '/dashboard/instructor/forum',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DashboardAdminForumRoute = DashboardAdminForumRouteImport.update({
+  id: '/dashboard/admin/forum',
+  path: '/dashboard/admin/forum',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardInstructorUploadIndexRoute =
@@ -278,6 +297,8 @@ export interface FileRoutesByFullPath {
   '/courses': typeof CoursesIndexRoute
   '/files': typeof FilesIndexRoute
   '/forum': typeof ForumIndexRoute
+  '/dashboard/admin/forum': typeof DashboardAdminForumRoute
+  '/dashboard/instructor/forum': typeof DashboardInstructorForumRoute
   '/demo/form/address': typeof DemoFormAddressRoute
   '/demo/form/simple': typeof DemoFormSimpleRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
@@ -285,6 +306,7 @@ export interface FileRoutesByFullPath {
   '/forum/posts/$postId': typeof ForumPostsPostIdRoute
   '/forum/topics/$topicId': typeof ForumTopicsTopicIdRoute
   '/learn/$courseId/$lectureId': typeof LearnCourseIdLectureIdRoute
+  '/dashboard/admin': typeof DashboardAdminIndexRoute
   '/dashboard/instructor': typeof DashboardInstructorIndexRoute
   '/dashboard/instructor/courses/new': typeof DashboardInstructorCoursesNewRoute
   '/me/course/$courseId/progress': typeof MeCourseCourseIdProgressRoute
@@ -319,6 +341,8 @@ export interface FileRoutesByTo {
   '/courses': typeof CoursesIndexRoute
   '/files': typeof FilesIndexRoute
   '/forum': typeof ForumIndexRoute
+  '/dashboard/admin/forum': typeof DashboardAdminForumRoute
+  '/dashboard/instructor/forum': typeof DashboardInstructorForumRoute
   '/demo/form/address': typeof DemoFormAddressRoute
   '/demo/form/simple': typeof DemoFormSimpleRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
@@ -326,6 +350,7 @@ export interface FileRoutesByTo {
   '/forum/posts/$postId': typeof ForumPostsPostIdRoute
   '/forum/topics/$topicId': typeof ForumTopicsTopicIdRoute
   '/learn/$courseId/$lectureId': typeof LearnCourseIdLectureIdRoute
+  '/dashboard/admin': typeof DashboardAdminIndexRoute
   '/dashboard/instructor': typeof DashboardInstructorIndexRoute
   '/dashboard/instructor/courses/new': typeof DashboardInstructorCoursesNewRoute
   '/me/course/$courseId/progress': typeof MeCourseCourseIdProgressRoute
@@ -361,6 +386,8 @@ export interface FileRoutesById {
   '/courses/': typeof CoursesIndexRoute
   '/files/': typeof FilesIndexRoute
   '/forum/': typeof ForumIndexRoute
+  '/dashboard/admin/forum': typeof DashboardAdminForumRoute
+  '/dashboard/instructor/forum': typeof DashboardInstructorForumRoute
   '/demo/form/address': typeof DemoFormAddressRoute
   '/demo/form/simple': typeof DemoFormSimpleRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
@@ -368,6 +395,7 @@ export interface FileRoutesById {
   '/forum/posts/$postId': typeof ForumPostsPostIdRoute
   '/forum/topics/$topicId': typeof ForumTopicsTopicIdRoute
   '/learn/$courseId/$lectureId': typeof LearnCourseIdLectureIdRoute
+  '/dashboard/admin/': typeof DashboardAdminIndexRoute
   '/dashboard/instructor/': typeof DashboardInstructorIndexRoute
   '/dashboard/instructor/courses/new': typeof DashboardInstructorCoursesNewRoute
   '/me/course/$courseId/progress': typeof MeCourseCourseIdProgressRoute
@@ -404,6 +432,8 @@ export interface FileRouteTypes {
     | '/courses'
     | '/files'
     | '/forum'
+    | '/dashboard/admin/forum'
+    | '/dashboard/instructor/forum'
     | '/demo/form/address'
     | '/demo/form/simple'
     | '/demo/start/api-request'
@@ -411,6 +441,7 @@ export interface FileRouteTypes {
     | '/forum/posts/$postId'
     | '/forum/topics/$topicId'
     | '/learn/$courseId/$lectureId'
+    | '/dashboard/admin'
     | '/dashboard/instructor'
     | '/dashboard/instructor/courses/new'
     | '/me/course/$courseId/progress'
@@ -445,6 +476,8 @@ export interface FileRouteTypes {
     | '/courses'
     | '/files'
     | '/forum'
+    | '/dashboard/admin/forum'
+    | '/dashboard/instructor/forum'
     | '/demo/form/address'
     | '/demo/form/simple'
     | '/demo/start/api-request'
@@ -452,6 +485,7 @@ export interface FileRouteTypes {
     | '/forum/posts/$postId'
     | '/forum/topics/$topicId'
     | '/learn/$courseId/$lectureId'
+    | '/dashboard/admin'
     | '/dashboard/instructor'
     | '/dashboard/instructor/courses/new'
     | '/me/course/$courseId/progress'
@@ -486,6 +520,8 @@ export interface FileRouteTypes {
     | '/courses/'
     | '/files/'
     | '/forum/'
+    | '/dashboard/admin/forum'
+    | '/dashboard/instructor/forum'
     | '/demo/form/address'
     | '/demo/form/simple'
     | '/demo/start/api-request'
@@ -493,6 +529,7 @@ export interface FileRouteTypes {
     | '/forum/posts/$postId'
     | '/forum/topics/$topicId'
     | '/learn/$courseId/$lectureId'
+    | '/dashboard/admin/'
     | '/dashboard/instructor/'
     | '/dashboard/instructor/courses/new'
     | '/me/course/$courseId/progress'
@@ -528,6 +565,8 @@ export interface RootRouteChildren {
   CoursesIndexRoute: typeof CoursesIndexRoute
   FilesIndexRoute: typeof FilesIndexRoute
   ForumIndexRoute: typeof ForumIndexRoute
+  DashboardAdminForumRoute: typeof DashboardAdminForumRoute
+  DashboardInstructorForumRoute: typeof DashboardInstructorForumRoute
   DemoFormAddressRoute: typeof DemoFormAddressRoute
   DemoFormSimpleRoute: typeof DemoFormSimpleRoute
   DemoStartApiRequestRoute: typeof DemoStartApiRequestRoute
@@ -535,6 +574,7 @@ export interface RootRouteChildren {
   ForumPostsPostIdRoute: typeof ForumPostsPostIdRoute
   ForumTopicsTopicIdRoute: typeof ForumTopicsTopicIdRoute
   LearnCourseIdLectureIdRoute: typeof LearnCourseIdLectureIdRoute
+  DashboardAdminIndexRoute: typeof DashboardAdminIndexRoute
   DashboardInstructorIndexRoute: typeof DashboardInstructorIndexRoute
   DashboardInstructorCoursesNewRoute: typeof DashboardInstructorCoursesNewRoute
   MeCourseCourseIdProgressRoute: typeof MeCourseCourseIdProgressRoute
@@ -710,6 +750,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardInstructorIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/admin/': {
+      id: '/dashboard/admin/'
+      path: '/dashboard/admin'
+      fullPath: '/dashboard/admin'
+      preLoaderRoute: typeof DashboardAdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/learn/$courseId/$lectureId': {
       id: '/learn/$courseId/$lectureId'
       path: '/learn/$courseId/$lectureId'
@@ -757,6 +804,20 @@ declare module '@tanstack/react-router' {
       path: '/demo/form/address'
       fullPath: '/demo/form/address'
       preLoaderRoute: typeof DemoFormAddressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/instructor/forum': {
+      id: '/dashboard/instructor/forum'
+      path: '/dashboard/instructor/forum'
+      fullPath: '/dashboard/instructor/forum'
+      preLoaderRoute: typeof DashboardInstructorForumRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/admin/forum': {
+      id: '/dashboard/admin/forum'
+      path: '/dashboard/admin/forum'
+      fullPath: '/dashboard/admin/forum'
+      preLoaderRoute: typeof DashboardAdminForumRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/instructor/upload/': {
@@ -848,6 +909,8 @@ const rootRouteChildren: RootRouteChildren = {
   CoursesIndexRoute: CoursesIndexRoute,
   FilesIndexRoute: FilesIndexRoute,
   ForumIndexRoute: ForumIndexRoute,
+  DashboardAdminForumRoute: DashboardAdminForumRoute,
+  DashboardInstructorForumRoute: DashboardInstructorForumRoute,
   DemoFormAddressRoute: DemoFormAddressRoute,
   DemoFormSimpleRoute: DemoFormSimpleRoute,
   DemoStartApiRequestRoute: DemoStartApiRequestRoute,
@@ -855,6 +918,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForumPostsPostIdRoute: ForumPostsPostIdRoute,
   ForumTopicsTopicIdRoute: ForumTopicsTopicIdRoute,
   LearnCourseIdLectureIdRoute: LearnCourseIdLectureIdRoute,
+  DashboardAdminIndexRoute: DashboardAdminIndexRoute,
   DashboardInstructorIndexRoute: DashboardInstructorIndexRoute,
   DashboardInstructorCoursesNewRoute: DashboardInstructorCoursesNewRoute,
   MeCourseCourseIdProgressRoute: MeCourseCourseIdProgressRoute,

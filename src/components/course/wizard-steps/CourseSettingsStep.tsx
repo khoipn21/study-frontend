@@ -1,13 +1,9 @@
+import { Award, Shield, Users } from 'lucide-react'
 import { useState } from 'react'
 import { Controller, useFormContext } from 'react-hook-form'
-import { Award, Shield, Users } from 'lucide-react'
 
 // UI Components
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Checkbox } from '@/components/ui/checkbox'
+import { Badge } from '@/components/ui/badge'
 import {
   Card,
   CardContent,
@@ -15,14 +11,19 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
+import { DatePicker } from '@/components/ui/date-picker'
 import {
   FormControl,
   FormDescription,
   FormItem,
   FormLabel,
 } from '@/components/ui/form'
-import { DatePicker } from '@/components/ui/date-picker'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Switch } from '@/components/ui/switch'
+
 import type { CourseCreationData } from '@/lib/course-management-types'
 
 // Types

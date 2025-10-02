@@ -1,6 +1,5 @@
-import { Link, createFileRoute } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { Link, createFileRoute } from '@tanstack/react-router'
 import {
   Award,
   BookOpen,
@@ -14,6 +13,10 @@ import {
   Search,
   TrendingUp,
 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+
+import { CourseCard } from '@/components/CourseCard'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -22,9 +25,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
-import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { Progress } from '@/components/ui/progress'
 import {
   Select,
   SelectContent,
@@ -32,13 +34,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { CourseCard } from '@/components/CourseCard'
+import { api } from '@/lib/api-client'
+import { useAuth } from '@/lib/auth-context'
 import {
   CourseMarketplaceProvider,
   useCourseMarketplace,
 } from '@/lib/course-marketplace-context'
-import { useAuth } from '@/lib/auth-context'
-import { api } from '@/lib/api-client'
+
 import type { CourseAccess } from '@/lib/types'
 
 export const Route = createFileRoute('/me/enrollments')({

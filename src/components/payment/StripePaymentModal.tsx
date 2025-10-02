@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { Elements } from '@stripe/react-stripe-js'
 import {
   AlertCircle,
@@ -10,6 +9,10 @@ import {
   Star,
   X,
 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -17,14 +20,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { useAuth } from '@/lib/auth-context'
-import { stripeConfig, useStripe } from '@/lib/stripe-context'
 import { stripeApiClient } from '@/lib/stripe-api'
+import { stripeConfig, useStripe } from '@/lib/stripe-context'
 import { cn } from '@/lib/utils'
+
 import { PaymentForm } from './PaymentForm'
+
 import type {
   CreatePaymentIntentRequest,
   StripePaymentIntent,

@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
 import { loadStripe } from '@stripe/stripe-js'
+import React, { createContext, useContext, useEffect, useState } from 'react'
+
 import type { Stripe, StripeError } from '@stripe/stripe-js'
 
 // Stripe publishable key from environment/config

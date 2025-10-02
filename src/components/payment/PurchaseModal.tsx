@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import {
   BookOpen,
   Check,
@@ -13,6 +12,10 @@ import {
   Users,
   X,
 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -20,15 +23,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { useAuth } from '@/lib/auth-context'
 import {
   useCourseAccess,
   usePaymentFlow,
 } from '@/lib/course-marketplace-context'
 import { lemonSqueezyService } from '@/lib/lemon-squeezy'
-import { useAuth } from '@/lib/auth-context'
+
 import type { Course } from '@/lib/types'
 
 interface PurchaseModalProps {

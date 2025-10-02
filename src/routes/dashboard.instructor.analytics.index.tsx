@@ -1,11 +1,12 @@
 import { createFileRoute, useRouter, useSearch } from '@tanstack/react-router'
 import { Download, RefreshCw, Settings } from 'lucide-react'
 import { useEffect } from 'react'
-import InstructorDashboardLayout from '@/components/instructor/InstructorDashboardLayout'
+
 import AnalyticsDashboard from '@/components/instructor/AnalyticsDashboard'
+import InstructorDashboardLayout from '@/components/instructor/InstructorDashboardLayout'
 import { Button } from '@/components/ui/button'
-import { requireInstructorRole } from '@/lib/auth-guards'
 import { useAuth } from '@/lib/auth-context'
+import { requireInstructorRole } from '@/lib/auth-guards'
 
 type SearchParams = {
   token?: string

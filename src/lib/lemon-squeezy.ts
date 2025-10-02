@@ -9,6 +9,7 @@ import {
   listVariants,
   updateSubscription,
 } from '@lemonsqueezy/lemonsqueezy.js'
+
 import type {
   Checkout,
   Customer,

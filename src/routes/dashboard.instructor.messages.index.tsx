@@ -8,13 +8,14 @@ import {
   Settings,
   Users,
 } from 'lucide-react'
-import InstructorDashboardLayout from '@/components/instructor/InstructorDashboardLayout'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+
 import CommunicationCenter from '@/components/instructor/CommunicationCenter'
+import InstructorDashboardLayout from '@/components/instructor/InstructorDashboardLayout'
 import NotificationCenter from '@/components/instructor/NotificationCenter'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export const Route = createFileRoute('/dashboard/instructor/messages/')({
   component: RouteComponent,

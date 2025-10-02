@@ -1,5 +1,7 @@
 import { Building2, GraduationCap, Moon, Palette, Sun } from 'lucide-react'
+
 import { useTheme } from '@/lib/theme-context'
+
 import { Button } from './button'
 import {
   DropdownMenu,

@@ -1,20 +1,22 @@
+import { useMutation } from '@tanstack/react-query'
+import { Download, File, FileText, Image, Upload, Video, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
-import { Download, File, FileText, Image, Upload, Video, X } from 'lucide-react'
 
 // UI Components
-import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
+
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Progress } from '@/components/ui/progress'
+import { Switch } from '@/components/ui/switch'
 
 // Hooks
 import { api } from '@/lib/api-client'
 import { useAuth } from '@/lib/auth-context'
+
 import type {
   CourseCreationData,
   CourseResource,

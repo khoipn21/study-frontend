@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from 'react'
 import {
   AddressElement,
   PaymentElement,
@@ -14,15 +13,18 @@ import {
   Shield,
   User,
 } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Separator } from '@/components/ui/separator'
 import { useAuth } from '@/lib/auth-context'
-import { useStripeErrorHandler } from '@/lib/stripe-context'
 import { stripeApiClient } from '@/lib/stripe-api'
+import { useStripeErrorHandler } from '@/lib/stripe-context'
 import { cn } from '@/lib/utils'
+
 import type { PaymentFormProps, StripePaymentIntent } from '@/lib/stripe-types'
 
 interface PaymentFormState {

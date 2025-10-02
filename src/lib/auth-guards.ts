@@ -103,3 +103,46 @@ export function requireInstructorRole(location: { href: string }) {
     })
   }
 }
+
+export function requireAdminRole(location: { href: string }) {
+  const isAuthenticated = checkAuthentication()
+  if (!isAuthenticated) {
+    throw redirect({
+      to: '/auth/login',
+      search: {
+        redirect: location.href,
+      },
+    })
+  }
+
+  try {
+    const auth = localStorage.getItem('study.auth')
+    if (!auth) throw new Error('No auth data')
+
+    const parsed = JSON.parse(auth) as { token: string | null; user: any }
+    const user = parsed.user as { roles?: Array<string>; role?: string }
+    const hasValidToken = isTokenValid(parsed.token)
+
+    if (!hasValidToken) {
+      localStorage.removeItem('study.auth')
+      throw new Error('Invalid token')
+    }
+
+    // Check if user has admin role
+    const hasAdminRole =
+      user?.roles?.includes('admin') || user?.role === 'admin'
+
+    if (!hasAdminRole) {
+      throw redirect({
+        to: '/',
+      })
+    }
+  } catch (error) {
+    throw redirect({
+      to: '/auth/login',
+      search: {
+        redirect: location.href,
+      },
+    })
+  }
+}

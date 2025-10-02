@@ -7,6 +7,7 @@ export type User = {
   username: string
   email: string
   role: Role
+  avatar_url?: string
 }
 
 export type AuthResponse = {

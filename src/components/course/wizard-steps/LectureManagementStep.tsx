@@ -1,7 +1,3 @@
-import { useEffect, useRef, useState } from 'react'
-import { useFormContext } from 'react-hook-form'
-import { useMutation } from '@tanstack/react-query'
-import { toast } from 'sonner'
 import {
   DndContext,
   KeyboardSensor,
@@ -18,6 +14,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { useMutation } from '@tanstack/react-query'
 import {
   Clock,
   Download,
@@ -36,18 +33,13 @@ import {
   Video,
   X,
 } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { useFormContext } from 'react-hook-form'
+import { toast } from 'sonner'
 
 // UI Components
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Card,
   CardContent,
@@ -55,9 +47,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
 import {
   Dialog,
   DialogContent,
@@ -72,8 +61,20 @@ import {
   FormItem,
   FormLabel,
 } from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
 import { api } from '@/lib/api-client'
 import { useAuth } from '@/lib/auth-context'
+
 import type {
   CourseCreationData,
   CourseResource,

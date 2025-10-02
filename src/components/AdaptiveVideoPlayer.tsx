@@ -13,9 +13,12 @@
  */
 
 import { useEffect, useState } from 'react'
-import { videoService } from '@/lib/video-service'
+
 import { useToast } from '@/hooks/use-toast'
+import { videoService } from '@/lib/video-service'
+
 import { VideoPlayer } from './VideoPlayer'
+
 import type {
   NetworkCondition,
   NetworkMonitoringConfig,

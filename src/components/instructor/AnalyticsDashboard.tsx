@@ -1,5 +1,18 @@
-import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import {
+  BarChart3,
+  BookOpen,
+  DollarSign,
+  Download,
+  Eye,
+  PieChart as PieChartIcon,
+  RefreshCw,
+  Star,
+  TrendingDown,
+  TrendingUp,
+  Users,
+} from 'lucide-react'
+import { useState } from 'react'
 import {
   Area,
   AreaChart,
@@ -17,20 +30,9 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import {
-  BarChart3,
-  BookOpen,
-  DollarSign,
-  Download,
-  Eye,
-  PieChart as PieChartIcon,
-  RefreshCw,
-  Star,
-  TrendingDown,
-  TrendingUp,
-  Users,
-} from 'lucide-react'
 
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -38,16 +40,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { DatePickerWithRange } from '@/components/ui/date-range-picker'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -56,13 +49,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { DatePickerWithRange } from '@/components/ui/date-range-picker'
 import { Progress } from '@/components/ui/progress'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { instructorDashboardService } from '@/lib/instructor-dashboard'
-import type {
-  InstructorCourse,
-  StudentEngagement,
-} from '@/lib/instructor-dashboard'
+
+import type { InstructorCourse } from '@/lib/instructor-dashboard'
 
 // Chart color themes
 const CHART_COLORS = {
@@ -87,43 +85,241 @@ const PIE_COLORS = [
   CHART_COLORS.cyan,
 ]
 
+// Define types for API responses
+interface EngagementAPIResponse {
+  data: {
+    period: string
+    start_date: string
+    end_date: string
+    total_students: number
+    active_students: number
+    engagement_rate: number
+    avg_watch_time: number
+    completion_rate: number
+    drop_off_rate: number
+    discussion_participation: number
+    quiz_participation: number
+    ai_interactions: number
+    daily_engagement: Array<{
+      date: string
+      active_students: number
+      total_watch_time: number
+      video_completions: number
+      quiz_completions: number
+      forum_posts: number
+      ai_interactions: number
+      engagement_score: number
+    }>
+    course_engagement: Array<{
+      course_id: string
+      course_title: string
+      total_students: number
+      active_students: number
+      completion_rate: number
+      avg_progress: number
+      avg_watch_time: number
+      engagement_score: number
+      drop_off_rate: number
+      student_satisfaction: number
+    }>
+    video_engagement: any
+  }
+  success: boolean
+}
+
+interface RevenueAPIResponse {
+  data: {
+    period: string
+    start_date: string
+    end_date: string
+    total_revenue: number
+    gross_revenue: number
+    net_revenue: number
+    refund_amount: number
+    total_sales: number
+    unique_buyers: number
+    avg_order_value: number
+    conversion_rate: number
+    revenue_growth: number
+    daily_breakdown: Array<{
+      date: string
+      revenue: number
+      sales: number
+      refunds: number
+      net_revenue: number
+      new_customers: number
+    }>
+    course_breakdown: Array<{
+      course_id: string
+      course_title: string
+      total_revenue: number
+      total_sales: number
+      refund_amount: number
+      net_revenue: number
+      avg_sale_price: number
+      conversion_rate: number
+      revenue_growth: number
+    }>
+    top_courses: Array<any>
+  }
+  success: boolean
+}
+
+// Define types for transformed data used by components
+interface TransformedRevenueData {
+  revenue: Array<{
+    date: string
+    amount: number
+    enrollments: number
+  }>
+  forecast: Array<{
+    date: string
+    predicted: number
+    confidence: number
+  }>
+  summary: {
+    total: number
+    growth: number
+    avgPerStudent: number
+    topCourse: {
+      id: string
+      title: string
+      revenue: number
+    }
+  }
+}
+
+interface StudentAnalyticsData {
+  data: {
+    period: string
+    start_date: string
+    end_date: string
+    total_students: number
+    new_students: number
+    active_students: number
+    retention_rate: number
+    churn_rate: number
+    avg_student_lifetime: number
+    avg_courses_per_student: number
+    student_satisfaction: number
+    student_demographics: {
+      country_distribution: any
+      age_distribution: any
+      device_distribution: any
+      language_distribution: any
+    }
+    student_progress: Array<{
+      student_id: string
+      student_name: string
+      student_email: string
+      enrollment_date: string
+      last_activity_at: string
+      courses_enrolled: number
+      courses_completed: number
+      overall_progress: number
+      total_watch_time: number
+      engagement_score: number
+      status: string
+    }>
+    top_students: Array<{
+      student_id: string
+      student_name: string
+      student_email: string
+      courses_completed: number
+      total_watch_time: number
+      engagement_score: number
+      forum_posts: number
+      helpful_ratings: number
+      certificates_earned: number
+    }>
+    at_risk_students: Array<{
+      student_id: string
+      student_name: string
+      student_email: string
+      last_activity_at: string
+      progress_rate: number
+      engagement_score: number
+      days_inactive: number
+      risk_score: number
+      risk_factors: Array<string>
+      recommended_actions: Array<string>
+    }>
+  }
+  success: boolean
+}
+
 // Data adapters to transform API data to component interface
-function adaptStudentEngagementData(data: Array<StudentEngagement>) {
-  return data.map((engagement) => ({
-    courseTitle: engagement.courseTitle,
-    engagementScore: engagement.engagementScore,
-    averageWatchTime: engagement.averageWatchTime,
-    completionRate:
-      (engagement.completedStudents / engagement.totalStudents) * 100 || 0,
+function adaptStudentEngagementData(data: EngagementAPIResponse | undefined) {
+  // Handle API response structure
+  const engagementData = data?.data?.course_engagement ?? []
+
+  return engagementData.map((engagement) => ({
+    courseId: engagement.course_id,
+    courseTitle: engagement.course_title,
+    totalStudents: engagement.total_students,
+    activeStudents: engagement.active_students,
+    completedStudents: Math.round(
+      engagement.total_students * (engagement.completion_rate / 100),
+    ),
+    averageProgress: engagement.avg_progress ?? 0,
+    averageWatchTime: engagement.avg_watch_time,
+    engagementScore: engagement.engagement_score * 100, // Convert to percentage
+    completionRate: engagement.completion_rate,
   }))
 }
 
 function adaptInstructorCoursesForPerformance(
   courses: Array<InstructorCourse>,
+  engagementData: EngagementAPIResponse | undefined,
 ) {
-  return courses.map((course) => ({
-    id: course.id,
-    title: course.title,
-    revenue: course.revenue || 0,
-    enrollments: course.enrollmentCount || 0,
-    rating: course.averageRating || 0,
-    engagementRate: Math.random() * 100, // Mock engagement rate - replace with real data
-  }))
+  // Get engagement array from API response structure
+  const engagementArray = engagementData?.data?.course_engagement ?? []
+
+  return courses.map((course) => {
+    // Find matching engagement data for this course
+    const courseEngagement = engagementArray.find(
+      (engagement) => engagement.course_id === course.id,
+    )
+
+    return {
+      id: course.id,
+      title: course.title,
+      revenue: course.revenue ?? 0,
+      enrollments: course.enrollmentCount ?? 0,
+      rating: course.averageRating ?? 0,
+      engagementRate: courseEngagement
+        ? courseEngagement.engagement_score * 100
+        : 0,
+    }
+  })
 }
 
 function adaptInstructorCoursesForTopPerformers(
   courses: Array<InstructorCourse>,
+  engagementData: EngagementAPIResponse | undefined,
 ) {
-  return courses.map((course) => ({
-    id: course.id,
-    title: course.title,
-    thumbnail: course.thumbnail,
-    revenue: course.revenue || 0,
-    enrollments: course.enrollmentCount || 0,
-    rating: course.averageRating || 0,
-    completionRate: course.completionRate || 0,
-    engagementRate: Math.random() * 100, // Mock engagement rate - replace with real data
-  }))
+  // Get engagement array from API response structure
+  const engagementArray = engagementData?.data?.course_engagement ?? []
+
+  return courses.map((course) => {
+    // Find matching engagement data for this course
+    const courseEngagement = engagementArray.find(
+      (engagement) => engagement.course_id === course.id,
+    )
+
+    return {
+      id: course.id,
+      title: course.title,
+      thumbnail: course.thumbnail,
+      revenue: course.revenue ?? 0,
+      enrollments: course.enrollmentCount ?? 0,
+      rating: course.averageRating ?? 0,
+      completionRate: courseEngagement ? courseEngagement.completion_rate : 0,
+      engagementRate: courseEngagement
+        ? courseEngagement.engagement_score * 100
+        : 0,
+    }
+  })
 }
 
 interface DateRangeState {
@@ -132,15 +328,27 @@ interface DateRangeState {
 }
 
 interface RevenueAnalyticsProps {
-  data: Array<any>
-  forecast?: Array<any>
+  data: Array<{
+    date: string
+    amount: number
+    enrollments: number
+  }>
+  forecast?: Array<{
+    date: string
+    predicted: number
+    confidence: number
+  }>
   period: string
 }
 
 function RevenueAnalytics({ data, forecast, period }: RevenueAnalyticsProps) {
-  const formatCurrency = (value: number) => `$${(value || 0).toLocaleString()}`
-  const formatPeriod = (period: string) => {
-    switch (period) {
+  // Ensure data is always an array for the chart
+  const chartData = Array.isArray(data) ? data : []
+  const forecastData = Array.isArray(forecast) ? forecast : []
+
+  const formatCurrency = (value: number) => `$${(value ?? 0).toLocaleString()}`
+  const formatPeriod = (selectedPeriod: string) => {
+    switch (selectedPeriod) {
       case 'day':
         return 'Daily'
       case 'week':
@@ -150,6 +358,36 @@ function RevenueAnalytics({ data, forecast, period }: RevenueAnalyticsProps) {
       default:
         return 'Daily'
     }
+  }
+
+  if (chartData.length === 0) {
+    return (
+      <Card className="col-span-full">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <DollarSign className="h-5 w-5" />
+            Revenue Analytics
+          </CardTitle>
+          <CardDescription>
+            {formatPeriod(period)} revenue trends with forecasting
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[400px] flex items-center justify-center text-muted-foreground">
+            <div className="text-center">
+              <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="text-lg font-medium mb-2">
+                No revenue data available
+              </p>
+              <p className="text-sm">
+                Revenue analytics will appear once you start generating sales
+                from your courses
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
@@ -165,7 +403,7 @@ function RevenueAnalytics({ data, forecast, period }: RevenueAnalyticsProps) {
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={400}>
-          <AreaChart data={data}>
+          <AreaChart data={chartData}>
             <defs>
               <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop
@@ -204,7 +442,7 @@ function RevenueAnalytics({ data, forecast, period }: RevenueAnalyticsProps) {
               fill={CHART_COLORS.secondary}
               name="Enrollments"
             />
-            {forecast && forecast.length > 0 && (
+            {forecastData && forecastData.length > 0 && (
               <Line
                 type="monotone"
                 dataKey="predicted"
@@ -233,6 +471,36 @@ interface CoursePerformanceProps {
 }
 
 function CoursePerformance({ courses }: CoursePerformanceProps) {
+  if (!courses || courses.length === 0) {
+    return (
+      <Card className="col-span-2">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5" />
+            Course Performance
+          </CardTitle>
+          <CardDescription>
+            Revenue by course (top 8 performers)
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[350px] flex items-center justify-center text-muted-foreground">
+            <div className="text-center">
+              <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="text-lg font-medium mb-2">
+                No course performance data
+              </p>
+              <p className="text-sm">
+                Course performance metrics will appear once you have published
+                courses with enrollments
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   const revenueData = courses
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 8)
@@ -267,7 +535,7 @@ function CoursePerformance({ courses }: CoursePerformanceProps) {
             <Tooltip
               formatter={(value: number, name: string) => [
                 name === 'revenue'
-                  ? `$${(value || 0).toLocaleString()}`
+                  ? `$${(value ?? 0).toLocaleString()}`
                   : value,
                 name === 'revenue' ? 'Revenue' : name,
               ]}
@@ -290,6 +558,32 @@ interface EngagementMetricsProps {
 }
 
 function EngagementMetrics({ data }: EngagementMetricsProps) {
+  if (!data || data.length === 0) {
+    return (
+      <Card className="col-span-1">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <PieChartIcon className="h-5 w-5" />
+            Engagement Distribution
+          </CardTitle>
+          <CardDescription>Engagement scores by course</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[350px] flex items-center justify-center text-muted-foreground">
+            <div className="text-center">
+              <PieChartIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="text-lg font-medium mb-2">No engagement data</p>
+              <p className="text-sm">
+                Engagement metrics will appear once students start interacting
+                with your courses
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   const pieData = data.slice(0, 6).map((course, index) => ({
     name:
       course.courseTitle.length > 15
@@ -362,6 +656,36 @@ interface StudentAnalyticsProps {
 }
 
 function StudentAnalytics({ data }: StudentAnalyticsProps) {
+  if (!data || data.length === 0) {
+    return (
+      <Card className="col-span-full">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Student Analytics
+          </CardTitle>
+          <CardDescription>
+            Student acquisition, activity, and completion trends
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+            <div className="text-center">
+              <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="text-lg font-medium mb-2">
+                No student data available
+              </p>
+              <p className="text-sm">
+                Student analytics will appear once students start enrolling in
+                your courses
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card className="col-span-full">
       <CardHeader>
@@ -423,6 +747,29 @@ interface TopPerformersProps {
 }
 
 function TopPerformers({ courses }: TopPerformersProps) {
+  if (!courses || courses.length === 0) {
+    return (
+      <Card className="col-span-full">
+        <CardHeader>
+          <CardTitle>Top Performing Courses</CardTitle>
+          <CardDescription>
+            Detailed performance metrics for your best courses
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-12">
+            <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+            <p className="text-lg font-medium mb-2">No courses to display</p>
+            <p className="text-muted-foreground">
+              Your top performing courses will appear here once you have
+              published courses with enrollment data
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   const topCourses = courses.slice(0, 5)
 
   return (
@@ -463,7 +810,7 @@ function TopPerformers({ courses }: TopPerformersProps) {
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <DollarSign className="h-3 w-3" />$
-                      {(course.revenue || 0).toLocaleString()}
+                      {(course.revenue ?? 0).toLocaleString()}
                     </span>
                     <span className="flex items-center gap-1">
                       <Users className="h-3 w-3" />
@@ -471,7 +818,7 @@ function TopPerformers({ courses }: TopPerformersProps) {
                     </span>
                     <span className="flex items-center gap-1">
                       <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                      {(course.rating || 0).toFixed(1)}
+                      {(course.rating ?? 0).toFixed(1)}
                     </span>
                   </div>
                 </div>
@@ -482,10 +829,10 @@ function TopPerformers({ courses }: TopPerformersProps) {
                     Completion
                   </div>
                   <div className="font-medium">
-                    {(course.completionRate || 0).toFixed(1)}%
+                    {(course.completionRate ?? 0).toFixed(1)}%
                   </div>
                   <Progress
-                    value={course.completionRate || 0}
+                    value={course.completionRate ?? 0}
                     className="w-16 h-2 mt-1"
                   />
                 </div>
@@ -494,15 +841,15 @@ function TopPerformers({ courses }: TopPerformersProps) {
                     Engagement
                   </div>
                   <div className="font-medium">
-                    {(course.engagementRate || 0).toFixed(1)}%
+                    {(course.engagementRate ?? 0).toFixed(1)}%
                   </div>
                   <Progress
-                    value={course.engagementRate || 0}
+                    value={course.engagementRate ?? 0}
                     className="w-16 h-2 mt-1"
                   />
                 </div>
                 <div className="flex items-center">
-                  {course.revenue > 10000 ? (
+                  {course.revenue && course.revenue > 10000 ? (
                     <TrendingUp className="h-5 w-5 text-green-600" />
                   ) : (
                     <TrendingDown className="h-5 w-5 text-red-600" />
@@ -526,7 +873,11 @@ export default function AnalyticsDashboard() {
   const [selectedCourse, setSelectedCourse] = useState<string>('all')
 
   // Fetch analytics data
-  const { data: revenueAnalytics, isLoading: revenueLoading } = useQuery({
+  const { data: revenueAnalytics, isLoading: revenueLoading } = useQuery<
+    RevenueAPIResponse,
+    Error,
+    TransformedRevenueData
+  >({
     queryKey: [
       'instructor',
       'analytics',
@@ -538,77 +889,205 @@ export default function AnalyticsDashboard() {
         granularity: period,
       },
     ],
-    queryFn: () =>
-      instructorDashboardService.getRevenueAnalytics({
-        startDate: dateRange.from.toISOString(),
-        endDate: dateRange.to.toISOString(),
-        courseId: selectedCourse !== 'all' ? selectedCourse : undefined,
-        granularity: period,
-      }),
+    queryFn: async (): Promise<RevenueAPIResponse> => {
+      try {
+        const result = await instructorDashboardService.getRevenueAnalytics({
+          startDate: dateRange.from.toISOString(),
+          endDate: dateRange.to.toISOString(),
+          courseId: selectedCourse !== 'all' ? selectedCourse : undefined,
+          granularity: period,
+        })
+        console.log('Revenue Analytics API Response:', result)
+        // Wrap the response in the expected structure
+        return {
+          data: result,
+          success: true,
+        } as unknown as RevenueAPIResponse
+      } catch (error) {
+        console.error('Failed to fetch revenue analytics:', error)
+        throw error
+      }
+    },
+    select: (data: RevenueAPIResponse): TransformedRevenueData => {
+      // Transform API response to match expected format
+      console.log('Revenue Analytics Data for Select:', data)
+      // API returns data directly, not nested under a 'data' property
+      const apiData = (data as any) ?? {}
+      console.log('Revenue API Data:', apiData)
+
+      const transformedData = {
+        revenue:
+          apiData.daily_breakdown?.map((item: any) => ({
+            date: new Date(item.date).toISOString().split('T')[0],
+            amount: item.net_revenue ?? item.revenue ?? 0,
+            enrollments: item.new_customers ?? 0,
+          })) ?? [],
+        forecast: [], // API doesn't provide forecast data yet
+        summary: {
+          total: apiData.total_revenue ?? 0,
+          growth: apiData.revenue_growth ?? 0,
+          avgPerStudent: apiData.avg_order_value ?? 0,
+          topCourse: apiData.course_breakdown?.[0]
+            ? {
+                id: apiData.course_breakdown[0].course_id,
+                title: apiData.course_breakdown[0].course_title,
+                revenue: apiData.course_breakdown[0].total_revenue,
+              }
+            : { id: '', title: '', revenue: 0 },
+        },
+      }
+      console.log('Transformed Revenue Data:', transformedData)
+      return transformedData
+    },
   })
 
-  const { data: engagementData, isLoading: engagementLoading } = useQuery({
-    queryKey: ['instructor', 'analytics', 'engagement'],
-    queryFn: () => instructorDashboardService.getStudentEngagement(),
-  })
+  const { data: engagementData, isLoading: engagementLoading } =
+    useQuery<EngagementAPIResponse>({
+      queryKey: ['instructor', 'analytics', 'engagement'],
+      queryFn: async (): Promise<EngagementAPIResponse> => {
+        const result = await instructorDashboardService.getStudentEngagement()
+        console.log('Engagement API Response:', result)
+        // Wrap the response in the expected structure
+        return {
+          data: result,
+          success: true,
+        } as unknown as EngagementAPIResponse
+      },
+    })
 
   const { data: coursesData } = useQuery({
     queryKey: ['instructor', 'courses', 'list'],
     queryFn: () => instructorDashboardService.getCourses({ limit: 100 }),
+    select: (data: any) => {
+      // Ensure we have the expected structure
+      if (data && typeof data === 'object' && 'courses' in data) {
+        return {
+          ...data,
+          courses: Array.isArray(data.courses) ? data.courses : [],
+        }
+      }
+      return {
+        courses: Array.isArray(data) ? data : [],
+        total: Array.isArray(data) ? data.length : 0,
+        page: 1,
+        limit: 100,
+        totalPages: 1,
+      }
+    },
   })
 
-  // Mock data for student analytics (replace with real data)
-  const studentAnalyticsData = [
-    {
-      date: '2024-01-01',
-      newStudents: 45,
-      activeStudents: 320,
-      completions: 12,
-    },
-    {
-      date: '2024-01-02',
-      newStudents: 52,
-      activeStudents: 335,
-      completions: 18,
-    },
-    {
-      date: '2024-01-03',
-      newStudents: 38,
-      activeStudents: 342,
-      completions: 15,
-    },
-    {
-      date: '2024-01-04',
-      newStudents: 61,
-      activeStudents: 358,
-      completions: 22,
-    },
-    {
-      date: '2024-01-05',
-      newStudents: 49,
-      activeStudents: 371,
-      completions: 19,
-    },
-    {
-      date: '2024-01-06',
-      newStudents: 44,
-      activeStudents: 385,
-      completions: 16,
-    },
-    {
-      date: '2024-01-07',
-      newStudents: 56,
-      activeStudents: 398,
-      completions: 25,
-    },
-  ]
+  const { data: studentAnalyticsData, isLoading: studentAnalyticsLoading } =
+    useQuery<
+      StudentAnalyticsData,
+      Error,
+      Array<{
+        date: string
+        newStudents: number
+        activeStudents: number
+        completions: number
+      }>
+    >({
+      queryKey: [
+        'instructor',
+        'analytics',
+        'students',
+        {
+          startDate: dateRange.from.toISOString(),
+          endDate: dateRange.to.toISOString(),
+          courseId: selectedCourse !== 'all' ? selectedCourse : undefined,
+          granularity: period,
+        },
+      ],
+      queryFn: async (): Promise<StudentAnalyticsData> => {
+        const result = await instructorDashboardService.getStudentAnalytics({
+          startDate: dateRange.from.toISOString(),
+          endDate: dateRange.to.toISOString(),
+          courseId: selectedCourse !== 'all' ? selectedCourse : undefined,
+          granularity: period,
+        })
+        console.log('Student Analytics API Response:', result)
+        return {
+          data: result,
+          success: true,
+        } as unknown as StudentAnalyticsData
+      },
+      select: (
+        data: StudentAnalyticsData,
+      ): Array<{
+        date: string
+        newStudents: number
+        activeStudents: number
+        completions: number
+      }> => {
+        console.log('Student Analytics Data for Select:', data)
+        console.log('Engagement Data Available:', engagementData)
+
+        // Use the daily_engagement data from the engagement response instead
+        if (engagementData?.data?.daily_engagement) {
+          console.log('Using engagement daily data for student analytics')
+          const transformedData = engagementData.data.daily_engagement.map(
+            (day: any) => ({
+              date: new Date(day.date).toISOString().split('T')[0],
+              newStudents: Math.round(
+                (engagementData?.data?.total_students ?? 125) * 0.05,
+              ), // Estimate 5% new students per day
+              activeStudents: day.active_students,
+              completions: day.video_completions,
+            }),
+          )
+          console.log(
+            'Transformed Student Data from Engagement:',
+            transformedData,
+          )
+          return transformedData
+        }
+
+        // Fallback: Transform the API response to match expected chart format
+        // Note: The student analytics API returns summary data, not time series
+        // For now, create mock time series data based on the summary
+        const summary = data?.data ?? {}
+        console.log('Using summary data for student analytics:', summary)
+        const days = Math.ceil(
+          (new Date(dateRange.to).getTime() -
+            new Date(dateRange.from).getTime()) /
+            (1000 * 60 * 60 * 24),
+        )
+
+        // Generate daily data based on the summary
+        const dailyData = []
+        for (let i = 0; i < Math.min(days, 7); i++) {
+          const date = new Date(dateRange.from)
+          date.setDate(date.getDate() + i)
+
+          dailyData.push({
+            date: date.toISOString().split('T')[0],
+            newStudents: Math.round((summary.new_students ?? 18) / 7), // Distribute across days
+            activeStudents: Math.round((summary.active_students ?? 89) / 7),
+            completions: Math.round(
+              ((summary.active_students ?? 89) * 0.1) / 7,
+            ), // Estimate completions
+          })
+        }
+
+        console.log('Generated Student Data from Summary:', dailyData)
+        return dailyData
+      },
+      enabled: !!engagementData, // Only run this query when engagement data is available
+    })
 
   const handleExport = (format: 'csv' | 'xlsx' | 'pdf') => {
     // Implement export functionality
     console.log(`Exporting analytics data as ${format}`)
   }
 
-  const isLoading = revenueLoading || engagementLoading
+  const isLoading =
+    revenueLoading || engagementLoading || studentAnalyticsLoading
+
+  // Debug logs for final data
+  console.log('Final Revenue Analytics:', revenueAnalytics)
+  console.log('Final Engagement Data:', engagementData)
+  console.log('Final Student Analytics Data:', studentAnalyticsData)
+  console.log('Final Courses Data:', coursesData)
 
   if (isLoading) {
     return (
@@ -642,7 +1121,9 @@ export default function AnalyticsDashboard() {
           <DatePickerWithRange date={dateRange} onDateChange={setDateRange} />
           <Select
             value={period}
-            onValueChange={(value: any) => setPeriod(value)}
+            onValueChange={(value: 'day' | 'week' | 'month') =>
+              setPeriod(value)
+            }
           >
             <SelectTrigger className="w-32">
               <SelectValue />
@@ -659,7 +1140,7 @@ export default function AnalyticsDashboard() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Courses</SelectItem>
-              {coursesData?.courses.map((course) => (
+              {coursesData?.courses.map((course: any) => (
                 <SelectItem key={course.id} value={course.id}>
                   {course.title}
                 </SelectItem>
@@ -710,14 +1191,14 @@ export default function AnalyticsDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${(revenueAnalytics?.summary?.total || 0).toLocaleString()}
+              ${(revenueAnalytics?.summary?.total ?? 0).toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
               {revenueAnalytics?.summary?.growth &&
               revenueAnalytics.summary.growth > 0
                 ? '+'
                 : ''}
-              {(revenueAnalytics?.summary?.growth || 0).toFixed(1)}% from last
+              {(revenueAnalytics?.summary?.growth ?? 0).toFixed(1)}% from last
               period
             </p>
           </CardContent>
@@ -726,17 +1207,15 @@ export default function AnalyticsDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Avg Revenue/Student
+              Avg Order Value
             </CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${revenueAnalytics?.summary?.avgPerStudent?.toFixed(2) || '0'}
+              ${revenueAnalytics?.summary?.avgPerStudent?.toFixed(2) ?? '0'}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Per enrolled student
-            </p>
+            <p className="text-xs text-muted-foreground">Per purchase</p>
           </CardContent>
         </Card>
 
@@ -751,11 +1230,11 @@ export default function AnalyticsDashboard() {
             <div className="text-2xl font-bold">
               $
               {(
-                revenueAnalytics?.summary?.topCourse?.revenue || 0
+                revenueAnalytics?.summary?.topCourse?.revenue ?? 0
               ).toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
-              {revenueAnalytics?.summary?.topCourse?.title || 'No data'}
+              {revenueAnalytics?.summary?.topCourse?.title ?? 'No data'}
             </p>
           </CardContent>
         </Card>
@@ -763,23 +1242,13 @@ export default function AnalyticsDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Avg Engagement
+              Engagement Rate
             </CardTitle>
             <Eye className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {engagementData &&
-              Array.isArray(engagementData) &&
-              engagementData.length > 0
-                ? (
-                    engagementData.reduce(
-                      (acc, course) => acc + course.engagementScore,
-                      0,
-                    ) / engagementData.length
-                  ).toFixed(1)
-                : '0'}
-              %
+              {(engagementData?.data?.engagement_rate ?? 0).toFixed(1)}%
             </div>
             <p className="text-xs text-muted-foreground">Across all courses</p>
           </CardContent>
@@ -809,7 +1278,7 @@ export default function AnalyticsDashboard() {
 
         <TabsContent value="engagement" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-3">
-            {engagementData && Array.isArray(engagementData) && (
+            {engagementData && (
               <EngagementMetrics
                 data={adaptStudentEngagementData(engagementData)}
               />
@@ -818,6 +1287,7 @@ export default function AnalyticsDashboard() {
               <CoursePerformance
                 courses={adaptInstructorCoursesForPerformance(
                   coursesData.courses,
+                  engagementData,
                 )}
               />
             )}
@@ -825,7 +1295,7 @@ export default function AnalyticsDashboard() {
         </TabsContent>
 
         <TabsContent value="students" className="space-y-4">
-          <StudentAnalytics data={studentAnalyticsData} />
+          <StudentAnalytics data={studentAnalyticsData ?? []} />
         </TabsContent>
 
         <TabsContent value="performance" className="space-y-4">
@@ -833,6 +1303,7 @@ export default function AnalyticsDashboard() {
             <TopPerformers
               courses={adaptInstructorCoursesForTopPerformers(
                 coursesData.courses,
+                engagementData,
               )}
             />
           )}

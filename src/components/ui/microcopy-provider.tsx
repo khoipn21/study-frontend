@@ -7,21 +7,23 @@
  */
 
 import { createContext, useContext } from 'react'
-import { microcopy } from '../../lib/microcopy'
+
+import {
+  getAccessibilityText,
+  getAnnouncement,
+  screenReaderUtils,
+} from '../../lib/accessibility-text'
 import { getErrorMessage } from '../../lib/error-messages'
 import {
   getFunLoadingMessage,
   getRandomLoadingMessage,
   getSequentialLoadingMessages,
 } from '../../lib/loading-states'
-import {
-  getAccessibilityText,
-  getAnnouncement,
-  screenReaderUtils,
-} from '../../lib/accessibility-text'
+import { microcopy } from '../../lib/microcopy'
+
+import type { AccessibilityText } from '../../lib/accessibility-text'
 import type { ErrorMessage } from '../../lib/error-messages'
 import type { LoadingCategory, LoadingState } from '../../lib/loading-states'
-import type { AccessibilityText } from '../../lib/accessibility-text'
 import type { ReactNode } from 'react'
 
 interface MicrocopyContextType {

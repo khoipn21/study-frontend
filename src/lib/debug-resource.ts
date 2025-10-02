@@ -1,5 +1,8 @@
 // Debug utility for resource download/preview issues
-export async function debugResourceUrl(url: string, type: 'download' | 'preview') {
+export async function debugResourceUrl(
+  url: string,
+  type: 'download' | 'preview',
+) {
   console.log(`🔍 Debugging ${type} URL:`, url)
 
   // Check if URL is properly formatted
@@ -8,7 +11,7 @@ export async function debugResourceUrl(url: string, type: 'download' | 'preview'
     console.log('✅ URL is valid:', {
       hostname: urlObj.hostname,
       pathname: urlObj.pathname,
-      searchParams: Object.fromEntries(urlObj.searchParams.entries())
+      searchParams: Object.fromEntries(urlObj.searchParams.entries()),
     })
   } catch (error) {
     console.error('❌ Invalid URL:', error)
@@ -21,17 +24,20 @@ export async function debugResourceUrl(url: string, type: 'download' | 'preview'
     const response = await fetch(url, {
       method: 'HEAD', // Use HEAD to test without downloading full content
       mode: 'cors',
-      credentials: 'omit'
+      credentials: 'omit',
     })
 
     console.log('📡 Response status:', response.status, response.statusText)
-    console.log('📋 Response headers:', Object.fromEntries(response.headers.entries()))
+    console.log(
+      '📋 Response headers:',
+      Object.fromEntries(response.headers.entries()),
+    )
 
     if (!response.ok) {
       return {
         success: false,
         error: `HTTP ${response.status}: ${response.statusText}`,
-        headers: Object.fromEntries(response.headers.entries())
+        headers: Object.fromEntries(response.headers.entries()),
       }
     }
 
@@ -39,7 +45,7 @@ export async function debugResourceUrl(url: string, type: 'download' | 'preview'
       success: true,
       headers: Object.fromEntries(response.headers.entries()),
       contentType: response.headers.get('content-type'),
-      contentLength: response.headers.get('content-length')
+      contentLength: response.headers.get('content-length'),
     }
   } catch (error) {
     console.error('❌ Fetch failed:', error)
@@ -48,13 +54,13 @@ export async function debugResourceUrl(url: string, type: 'download' | 'preview'
       return {
         success: false,
         error: 'CORS error - S3 bucket CORS configuration issue',
-        suggestion: 'Check S3 bucket CORS policy'
+        suggestion: 'Check S3 bucket CORS policy',
       }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown fetch error'
+      error: error instanceof Error ? error.message : 'Unknown fetch error',
     }
   }
 }
@@ -67,11 +73,13 @@ export async function testResourceDownload(url: string, filename: string) {
     const response = await fetch(url, {
       method: 'GET',
       mode: 'cors',
-      credentials: 'omit'
+      credentials: 'omit',
     })
 
     if (!response.ok) {
-      throw new Error(`Download failed: HTTP ${response.status} ${response.statusText}`)
+      throw new Error(
+        `Download failed: HTTP ${response.status} ${response.statusText}`,
+      )
     }
 
     const contentType = response.headers.get('content-type')
@@ -79,13 +87,13 @@ export async function testResourceDownload(url: string, filename: string) {
 
     console.log('📦 Content info:', {
       type: contentType,
-      size: contentLength ? `${contentLength} bytes` : 'unknown'
+      size: contentLength ? `${contentLength} bytes` : 'unknown',
     })
 
     const blob = await response.blob()
     console.log('✅ Blob created:', {
       size: blob.size,
-      type: blob.type
+      type: blob.type,
     })
 
     // Verify blob is not empty or corrupted
@@ -102,7 +110,7 @@ export async function testResourceDownload(url: string, filename: string) {
         img.onload = () => {
           console.log('✅ Image is valid:', {
             width: img.width,
-            height: img.height
+            height: img.height,
           })
           URL.revokeObjectURL(objectUrl)
           resolve({ success: true, blob, isValid: true })
@@ -110,7 +118,12 @@ export async function testResourceDownload(url: string, filename: string) {
         img.onerror = () => {
           console.error('❌ Image is corrupted')
           URL.revokeObjectURL(objectUrl)
-          resolve({ success: true, blob, isValid: false, error: 'Image corrupted' })
+          resolve({
+            success: true,
+            blob,
+            isValid: false,
+            error: 'Image corrupted',
+          })
         }
         img.src = objectUrl
       })
@@ -121,7 +134,7 @@ export async function testResourceDownload(url: string, filename: string) {
     console.error('❌ Download test failed:', error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     }
   }
 }
@@ -134,7 +147,10 @@ export function checkUrlExpiry(url: string) {
     const dateParam = urlObj.searchParams.get('X-Amz-Date')
 
     if (!dateParam || !expiresParam) {
-      return { expired: false, reason: 'Not a signed URL or missing expiry info' }
+      return {
+        expired: false,
+        reason: 'Not a signed URL or missing expiry info',
+      }
     }
 
     // Parse the date from X-Amz-Date (format: YYYYMMDDTHHMMSSZ)
@@ -145,22 +161,26 @@ export function checkUrlExpiry(url: string) {
     const minute = parseInt(dateParam.substring(11, 13))
     const second = parseInt(dateParam.substring(13, 15))
 
-    const signedTime = new Date(Date.UTC(year, month, day, hour, minute, second))
-    const expiryTime = new Date(signedTime.getTime() + parseInt(expiresParam) * 1000)
+    const signedTime = new Date(
+      Date.UTC(year, month, day, hour, minute, second),
+    )
+    const expiryTime = new Date(
+      signedTime.getTime() + parseInt(expiresParam) * 1000,
+    )
     const now = new Date()
 
     console.log('⏰ URL timing:', {
       signedAt: signedTime.toISOString(),
       expiresAt: expiryTime.toISOString(),
       currentTime: now.toISOString(),
-      expired: now > expiryTime
+      expired: now > expiryTime,
     })
 
     return {
       expired: now > expiryTime,
       signedAt: signedTime,
       expiresAt: expiryTime,
-      timeLeft: expiryTime.getTime() - now.getTime()
+      timeLeft: expiryTime.getTime() - now.getTime(),
     }
   } catch (error) {
     console.error('❌ Error checking URL expiry:', error)

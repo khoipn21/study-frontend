@@ -1,0 +1,109 @@
+/* CKEditor 5 custom styles to match app theme */
+
+.ck-editor-wrapper .ck-editor__editable {
+  min-height: 100px;
+  padding: 16px;
+}
+
+.ck-editor-wrapper .ck-content {
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+
+.ck-editor-wrapper .ck-content h1,
+.ck-editor-wrapper .ck-content h2,
+.ck-editor-wrapper .ck-content h3 {
+  font-weight: 600;
+  margin: 1em 0 0.5em;
+}
+
+.ck-editor-wrapper .ck-content h1 {
+  font-size: 2em;
+}
+
+.ck-editor-wrapper .ck-content h2 {
+  font-size: 1.5em;
+}
+
+.ck-editor-wrapper .ck-content h3 {
+  font-size: 1.25em;
+}
+
+.ck-editor-wrapper .ck-content p {
+  margin: 0.5em 0;
+}
+
+.ck-editor-wrapper .ck-content blockquote {
+  border-left: 4px solid hsl(var(--primary));
+  padding-left: 1em;
+  margin: 1em 0;
+  color: hsl(var(--muted-foreground));
+  font-style: italic;
+}
+
+.ck-editor-wrapper .ck-content code {
+  background-color: hsl(var(--muted));
+  padding: 0.125em 0.25em;
+  border-radius: 0.25em;
+  font-size: 0.875em;
+}
+
+.ck-editor-wrapper .ck-content ul,
+.ck-editor-wrapper .ck-content ol {
+  margin: 0.5em 0;
+  padding-left: 2em;
+}
+
+.ck-editor-wrapper .ck-content li {
+  margin: 0.25em 0;
+}
+
+.ck-editor-wrapper .ck-content a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+}
+
+.ck-editor-wrapper .ck-content a:hover {
+  color: hsl(var(--primary) / 0.8);
+}
+
+.ck.ck-toolbar {
+  background-color: hsl(var(--muted) / 0.3);
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.ck.ck-button:hover:not(.ck-disabled) {
+  background-color: hsl(var(--accent));
+}
+
+.ck.ck-button.ck-on {
+  background-color: hsl(var(--accent));
+}
+
+/* Dark mode support */
+.dark .ck.ck-toolbar {
+  background-color: hsl(var(--muted) / 0.5);
+}
+
+.dark .ck-editor__editable {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+.dark .ck.ck-button:hover:not(.ck-disabled) {
+  background-color: hsl(var(--accent));
+}
+
+/* Mention styling */
+.ck-content .mention {
+  background-color: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+  padding: 0.125em 0.25em;
+  border-radius: 0.25em;
+  font-weight: 500;
+}
+
+/* Additional mention styles for better visibility */
+.ck-content .mention:hover {
+  background-color: hsl(var(--primary) / 0.2);
+}

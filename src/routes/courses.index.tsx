@@ -1,17 +1,19 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { createFileRoute } from '@tanstack/react-router'
 import { Filter, Grid, List, Search } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { useEffect, useState } from 'react'
+
 import { CourseCard } from '@/components/CourseCard'
 import { CourseFilters } from '@/components/CourseFilters'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { api } from '@/lib/api-client'
+import { useAuth } from '@/lib/auth-context'
 import {
   CourseMarketplaceProvider,
   useCourseMarketplace,
 } from '@/lib/course-marketplace-context'
-import { api } from '@/lib/api-client'
-import { useAuth } from '@/lib/auth-context'
+
 import type { Course, CourseAccess } from '@/lib/types'
 
 export const Route = createFileRoute('/courses/')({

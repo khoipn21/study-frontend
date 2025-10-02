@@ -17,13 +17,15 @@ import {
   Subtitles,
   Users,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+
+import { CompactCoursePaymentButton } from '@/components/payment/CoursePaymentButton'
 import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 import { useCourseAccess } from '@/lib/course-marketplace-context'
 import { formatCoursePrice, formatVietnameseDuration } from '@/lib/currency'
+import { cn } from '@/lib/utils'
 import { vietnameseTranslations } from '@/lib/vietnamese-locale'
-import { CompactCoursePaymentButton } from '@/components/payment/CoursePaymentButton'
+
 import type { Course } from '@/lib/types'
 
 interface CourseCardProps {

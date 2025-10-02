@@ -1,23 +1,26 @@
-import { useEffect, useMemo, useState } from 'react'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from '@tanstack/react-router'
+import { useEffect, useMemo, useState } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
-import { api } from '@/lib/api-client'
-import { useAuth } from '@/lib/auth-context'
+import { z } from 'zod'
 
-// UI Components
-import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { VideoUploadStep } from './wizard-steps/VideoUploadStep'
-import { LectureManagementStep } from './wizard-steps/LectureManagementStep'
-import { CourseSettingsStep } from './wizard-steps/CourseSettingsStep'
-import { CourseDetailsStep } from './wizard-steps/CourseDetailsStep'
+import { Progress } from '@/components/ui/progress'
+import { api } from '@/lib/api-client'
+import { useAuth } from '@/lib/auth-context'
+import { cn } from '@/lib/utils'
+
+// UI Components
+
 import { BasicInfoStep } from './wizard-steps/BasicInfoStep'
+import { CourseDetailsStep } from './wizard-steps/CourseDetailsStep'
+import { CourseSettingsStep } from './wizard-steps/CourseSettingsStep'
+import { LectureManagementStep } from './wizard-steps/LectureManagementStep'
+import { VideoUploadStep } from './wizard-steps/VideoUploadStep'
+
 import type {
   CourseCreationData,
   CourseResource,

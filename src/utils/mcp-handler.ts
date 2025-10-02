@@ -1,5 +1,6 @@
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import { getEvent } from '@tanstack/react-start/server'
+
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 
 export async function handleMcpRequest(request: Request, server: McpServer) {

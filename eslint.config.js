@@ -1,24 +1,25 @@
+// eslint.config.js
 //  @ts-check
 
 import { tanstackConfig } from '@tanstack/eslint-config'
-import reactHooks from 'eslint-plugin-react-hooks'
-import importX from 'eslint-plugin-import-x'
-import react from 'eslint-plugin-react'
-import prettier from 'eslint-plugin-prettier'
 import prettierConfig from 'eslint-config-prettier'
+import importX from 'eslint-plugin-import-x'
+import prettier from 'eslint-plugin-prettier'
+import react from 'eslint-plugin-react'
+import reactHooks from 'eslint-plugin-react-hooks'
 
 export default [
   ...tanstackConfig,
-  prettierConfig, // Disables ESLint rules that conflict with Prettier
+  prettierConfig,
   {
     plugins: {
       'react-hooks': reactHooks,
       'import-x': importX,
-      react: react,
-      prettier: prettier,
+      react,
+      prettier,
     },
     rules: {
-      // Prettier integration
+      // Prettier
       'prettier/prettier': [
         'error',
         {
@@ -28,17 +29,16 @@ export default [
         },
       ],
 
-      // React Hooks rules
+      // React
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
-
-      // React-specific rules for better component validation
       'react/jsx-no-undef': 'error',
-      'react/jsx-uses-react': 'off', // Not needed in React 17+
+      'react/jsx-uses-react': 'off',
       'react/jsx-uses-vars': 'error',
       'react/no-unescaped-entities': 'warn',
       'react/no-unknown-property': 'error',
-      // Import resolution rules
+
+      // Import rules
       'import-x/no-unresolved': 'error',
       'import-x/named': 'error',
       'import-x/default': 'error',
@@ -48,16 +48,38 @@ export default [
       'import-x/no-self-import': 'warn',
       'import-x/no-cycle': 'warn',
       'import-x/no-useless-path-segments': 'error',
-      'import/order': 'warn',
-      // TypeScript rules for catching runtime errors
-      '@typescript-eslint/no-unsafe-call': 'error',
-      '@typescript-eslint/no-unsafe-member-access': 'error',
-      '@typescript-eslint/no-unsafe-assignment': 'warn',
-      '@typescript-eslint/no-unsafe-return': 'warn',
-      '@typescript-eslint/prefer-nullish-coalescing': 'warn',
-      '@typescript-eslint/prefer-optional-chain': 'warn',
-      '@typescript-eslint/no-non-null-assertion': 'warn',
-      '@typescript-eslint/no-explicit-any': 'warn',
+
+      // 🔑 Auto-fixable import order
+      'import/order': [
+        'error',
+        {
+          groups: [
+            'builtin',
+            'external',
+            'internal',
+            ['parent', 'sibling', 'index'],
+            'object',
+            'type',
+          ],
+          pathGroupsExcludedImportTypes: ['builtin'],
+          alphabetize: {
+            order: 'asc',
+            caseInsensitive: true,
+          },
+        },
+      ],
+
+      'import/consistent-type-specifier-style': 'warn',
+
+      // TS runtime safety
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      '@typescript-eslint/prefer-optional-chain': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/no-unnecessary-condition': 'off',
     },

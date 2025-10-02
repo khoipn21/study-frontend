@@ -4,6 +4,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react'
+
 import {
   BREAKPOINTS,
   PERFORMANCE_BUDGETS,
@@ -13,6 +14,7 @@ import {
   getNavigationType,
   shouldShowSidebar,
 } from '@/lib/responsive-design'
+
 import type { DeviceType } from '@/lib/responsive-design'
 
 /**

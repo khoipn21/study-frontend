@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import {
   Award,
@@ -11,6 +10,9 @@ import {
   Star,
   Users,
 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -19,9 +21,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
+
 import type { Course, CoursePurchase } from '@/lib/types'
 
 interface PaymentSuccessProps {

@@ -1,5 +1,7 @@
 import { createRouter as createTanstackRouter } from '@tanstack/react-router'
 import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query'
+
+import NotFound from './components/NotFound'
 import * as TanstackQuery from './integrations/tanstack-query/root-provider'
 import { AuthProvider } from './lib/auth-context'
 
@@ -14,6 +16,7 @@ export const createRouter = () => {
     routeTree,
     context: { ...rqContext },
     defaultPreload: 'intent',
+    defaultNotFoundComponent: NotFound,
     Wrap: (props: { children: React.ReactNode }) => (
       <TanstackQuery.Provider {...rqContext}>
         <AuthProvider>{props.children}</AuthProvider>

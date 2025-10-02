@@ -9,7 +9,9 @@ import {
   Play,
   TrendingUp,
 } from 'lucide-react'
+
 import { formatDistanceToNow } from '@/lib/utils'
+
 import type { RecentActivity } from '@/lib/dashboard'
 
 interface ActivityFeedProps {

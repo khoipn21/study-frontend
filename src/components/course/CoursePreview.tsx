@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from 'react'
 import {
   AlertTriangle,
   Clock,
@@ -15,16 +14,19 @@ import {
   VolumeX,
   X,
 } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { useCourseAccess } from '@/lib/course-marketplace-context'
+
 import type { Course } from '@/lib/types'
 
 interface CoursePreviewProps {

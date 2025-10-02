@@ -1,6 +1,14 @@
 import { Controller, useFormContext } from 'react-hook-form'
 
 // UI Components
+import { Badge } from '@/components/ui/badge'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import {
   FormControl,
   FormDescription,
@@ -9,7 +17,6 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -17,15 +24,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
+
 import { ThumbnailUpload } from '../ThumbnailUpload'
+
 import type { CourseCreationData } from '@/lib/course-management-types'
 
 // Types

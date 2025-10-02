@@ -4,7 +4,6 @@ import {
   useRouter,
   useSearch,
 } from '@tanstack/react-router'
-import { useEffect } from 'react'
 import {
   Award,
   BookOpen,
@@ -13,7 +12,9 @@ import {
   TrendingUp,
   Users,
 } from 'lucide-react'
-import { useAuth } from '@/lib/auth-context'
+import { useEffect } from 'react'
+
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -21,8 +22,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
+import { useAuth } from '@/lib/auth-context'
 
 type SearchParams = {
   token?: string

@@ -9,8 +9,12 @@ import {
   HelpCircle,
   Settings,
 } from 'lucide-react'
+
 import InstructorDashboardLayout from '@/components/instructor/InstructorDashboardLayout'
 import VideoUpload from '@/components/instructor/VideoUpload'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -18,10 +22,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export const Route = createFileRoute('/dashboard/instructor/upload/')({
   component: RouteComponent,

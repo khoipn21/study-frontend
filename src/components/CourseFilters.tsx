@@ -1,4 +1,3 @@
-import React, { useState } from 'react'
 import {
   Award,
   ChevronDown,
@@ -12,9 +11,14 @@ import {
   X,
   Zap,
 } from 'lucide-react'
-import { PRICE_RANGES, formatVND } from '@/lib/currency'
-import { formatVietnameseCount } from '@/lib/vietnamese-locale'
+import React, { useState } from 'react'
+
 import { Button } from '@/components/ui/button'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -24,14 +28,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
+import { PRICE_RANGES, formatVND } from '@/lib/currency'
 import { cn } from '@/lib/utils'
+import { formatVietnameseCount } from '@/lib/vietnamese-locale'
 
 export interface CourseFilters {
   search: string

@@ -1,19 +1,19 @@
+import { TanstackDevtools } from '@tanstack/react-devtools'
 import {
   HeadContent,
   Scripts,
   createRootRouteWithContext,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
-import { TanstackDevtools } from '@tanstack/react-devtools'
 
 import { config } from '@/lib/config'
-import Header from '../components/Header'
-import { ThemeProvider } from '../lib/theme-context'
-import { StripeProvider } from '../lib/stripe-context'
+
 import { GlobalErrorBoundary } from '../components/GlobalErrorBoundary'
-
+import Header from '../components/Header'
+import NotFound from '../components/NotFound'
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
-
+import { StripeProvider } from '../lib/stripe-context'
+import { ThemeProvider } from '../lib/theme-context'
 import appCss from '../styles.css?url'
 
 import type { QueryClient } from '@tanstack/react-query'
@@ -52,6 +52,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
     ],
   }),
 
+  notFoundComponent: NotFound,
   shellComponent: RootDocument,
 })
 

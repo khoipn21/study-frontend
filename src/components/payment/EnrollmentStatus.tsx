@@ -12,6 +12,7 @@ import {
   RefreshCw,
   TrendingUp,
 } from 'lucide-react'
+
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -21,11 +22,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Progress } from '@/components/ui/progress'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/lib/auth-context'
 import { stripeApiClient } from '@/lib/stripe-api'
 import { cn } from '@/lib/utils'
+
 import type {
   CourseEnrollment,
   EnrollmentStatusProps,

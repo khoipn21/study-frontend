@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import {
   AlertCircle,
   CheckCircle,
@@ -7,11 +6,15 @@ import {
   ShoppingCart,
   Zap,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { useState } from 'react'
+
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { useAuthenticatedApi } from '@/lib/auth-context'
 import { cn } from '@/lib/utils'
+
 import { StripePaymentModal } from './StripePaymentModal'
+
 import type {
   CoursePaymentButtonProps,
   StripePaymentIntent,

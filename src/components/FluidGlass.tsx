@@ -1,6 +1,3 @@
-import * as THREE from 'three'
-import { memo, useCallback, useEffect, useRef, useState } from 'react'
-import { Canvas, createPortal, useFrame, useThree } from '@react-three/fiber'
 import {
   Image,
   MeshTransmissionMaterial,
@@ -12,7 +9,11 @@ import {
   useGLTF,
   useScroll,
 } from '@react-three/drei'
+import { Canvas, createPortal, useFrame, useThree } from '@react-three/fiber'
 import { easing } from 'maath'
+import { memo, useCallback, useEffect, useRef, useState } from 'react'
+import * as THREE from 'three'
+
 import type { ThreeElements } from '@react-three/fiber'
 import type { ReactNode } from 'react'
 

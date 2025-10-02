@@ -1,9 +1,10 @@
-import { useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { toast } from 'sonner'
 import { AlertCircle, Image, Upload, X } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { toast } from 'sonner'
 
 // UI Components
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -13,7 +14,6 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 
 // Hooks and utils
 import { api } from '@/lib/api-client'

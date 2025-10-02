@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useReducer } from 'react'
-import type { ReactNode } from 'react'
+
 import type {
   Course,
   CourseAccess,
@@ -7,6 +7,7 @@ import type {
   CoursePurchase,
   CourseSearchResult,
 } from '@/lib/types'
+import type { ReactNode } from 'react'
 
 // State interface
 interface CourseMarketplaceState {

@@ -1,4 +1,3 @@
-import { useCallback, useState } from 'react'
 import {
   Award,
   BookOpen,
@@ -11,11 +10,13 @@ import {
   Star,
   X,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { useCallback, useState } from 'react'
+
 import { Badge } from '@/components/ui/badge'
-import { Slider } from '@/components/ui/slider'
+import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -23,8 +24,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible'
+import { Slider } from '@/components/ui/slider'
 import { cn } from '@/lib/utils'
+
 import type { CourseFilter } from '@/lib/types'
 
 interface CourseFiltersProps {

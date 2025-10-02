@@ -1,3 +1,4 @@
+import { gsap } from 'gsap'
 import React, {
   useEffect,
   useLayoutEffect,
@@ -5,7 +6,6 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import { gsap } from 'gsap'
 
 const useMedia = (
   queries: Array<string>,

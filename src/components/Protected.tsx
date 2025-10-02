@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+
 import { useAuth } from '@/lib/auth-context'
 
 export function Protected({ children }: { children: React.ReactNode }) {

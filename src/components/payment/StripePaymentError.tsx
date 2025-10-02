@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import {
   AlertCircle,
@@ -10,6 +9,8 @@ import {
   Phone,
   RefreshCw,
 } from 'lucide-react'
+import { useState } from 'react'
+
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -20,6 +21,7 @@ import {
 } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
+
 import type { PaymentError } from '@/lib/stripe-types'
 
 interface PaymentErrorPageProps {

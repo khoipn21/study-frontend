@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+
 import { api } from './api-client'
 import { useAuth } from './auth-context'
 
@@ -120,7 +121,10 @@ export class ResourceService {
       // Check if response has download_url
       if (!response.download_url) {
         console.error('❌ No download_url in API response:', response)
-        throw new ResourceError('Download URL not provided by server', 'NO_DOWNLOAD_URL')
+        throw new ResourceError(
+          'Download URL not provided by server',
+          'NO_DOWNLOAD_URL',
+        )
       }
 
       // Cache the URL
@@ -166,7 +170,10 @@ export class ResourceService {
       // Check if response has preview_url
       if (!response.preview_url) {
         console.error('❌ No preview_url in API response:', response)
-        throw new ResourceError('Preview URL not provided by server', 'NO_PREVIEW_URL')
+        throw new ResourceError(
+          'Preview URL not provided by server',
+          'NO_PREVIEW_URL',
+        )
       }
 
       // Cache the URL
@@ -270,9 +277,18 @@ export class ResourceService {
     // Images
     if (type === 'image' || mimeType.startsWith('image/')) {
       return (
-        ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'bmp', 'ico', 'tiff', 'tif'].includes(
-          extension,
-        ) ||
+        [
+          'jpg',
+          'jpeg',
+          'png',
+          'gif',
+          'svg',
+          'webp',
+          'bmp',
+          'ico',
+          'tiff',
+          'tif',
+        ].includes(extension) ||
         [
           'image/jpeg',
           'image/png',
@@ -306,7 +322,28 @@ export class ResourceService {
 
     // Code files
     if (
-      ['js', 'ts', 'jsx', 'tsx', 'html', 'css', 'scss', 'sass', 'less', 'py', 'java', 'cpp', 'c', 'cs', 'php', 'rb', 'go', 'rs', 'vue', 'svelte'].includes(extension)
+      [
+        'js',
+        'ts',
+        'jsx',
+        'tsx',
+        'html',
+        'css',
+        'scss',
+        'sass',
+        'less',
+        'py',
+        'java',
+        'cpp',
+        'c',
+        'cs',
+        'php',
+        'rb',
+        'go',
+        'rs',
+        'vue',
+        'svelte',
+      ].includes(extension)
     ) {
       return true
     }

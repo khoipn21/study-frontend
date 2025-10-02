@@ -1,7 +1,8 @@
-import React, { Children, useLayoutEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import type { HTMLAttributes, ReactNode } from 'react'
+import React, { Children, useLayoutEffect, useRef, useState } from 'react'
+
 import type { Variants } from 'motion/react'
+import type { HTMLAttributes, ReactNode } from 'react'
 
 interface StepperProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode

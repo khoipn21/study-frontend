@@ -6,8 +6,10 @@ import {
   ThumbsUp,
   User,
 } from 'lucide-react'
+
 import { Button } from '@/components/ui/button'
 import { cn, formatDistanceToNow } from '@/lib/utils'
+
 import type { ChatMessage as ChatMessageType } from '@/lib/ai-chat'
 
 interface ChatMessageProps {

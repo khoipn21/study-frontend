@@ -1,6 +1,6 @@
+import { gsap } from 'gsap'
 import React, { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { gsap } from 'gsap'
 
 export type PillNavItem = {
   label: string

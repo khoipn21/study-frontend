@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import {
   Calendar,
   CheckCircle,
@@ -8,8 +7,9 @@ import {
   Trash2,
   TrendingUp,
 } from 'lucide-react'
+import { useState } from 'react'
+
 import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
 import {
   Dialog,
   DialogContent,
@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
+import { Progress } from '@/components/ui/progress'
 import {
   Select,
   SelectContent,
@@ -29,7 +29,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
+
 import type { StudyGoal } from '@/lib/dashboard'
 
 interface StudyGoalsProps {

@@ -1,5 +1,7 @@
-import React, { Component } from 'react'
 import { AlertTriangle, Home, Mail, RefreshCw } from 'lucide-react'
+import React, { Component } from 'react'
+
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -8,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+
 import type { ErrorInfo, ReactNode } from 'react'
 
 interface Props {

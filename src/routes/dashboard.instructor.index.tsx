@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
-import InstructorDashboardLayout from '@/components/instructor/InstructorDashboardLayout'
+
 import DashboardOverview from '@/components/instructor/DashboardOverview'
+import InstructorDashboardLayout from '@/components/instructor/InstructorDashboardLayout'
 import { requireInstructorRole } from '@/lib/auth-guards'
 
 export const Route = createFileRoute('/dashboard/instructor/')({

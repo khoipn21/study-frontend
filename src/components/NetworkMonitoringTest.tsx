@@ -7,14 +7,17 @@
  */
 
 import { useState } from 'react'
+
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Separator } from '@/components/ui/separator'
-import { videoService } from '@/lib/video-service'
 import { NetworkPerformanceMonitor } from '@/lib/network-detection'
+import { videoService } from '@/lib/video-service'
+
 import { AdaptiveVideoPlayer } from './AdaptiveVideoPlayer'
+
 import type { NetworkMetrics, VideoQuality } from '@/types/video-network'
 
 export function NetworkMonitoringTest() {
