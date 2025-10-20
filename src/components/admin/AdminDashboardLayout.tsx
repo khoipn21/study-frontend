@@ -53,7 +53,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 const navigationItems = [
   {
     title: 'Overview',
-    url: '/dashboard/admin',
+    url: '/dashboard/admin/analytics',
     icon: Home,
     isActive: true,
   },

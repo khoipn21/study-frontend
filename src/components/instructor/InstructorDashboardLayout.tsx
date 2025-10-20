@@ -91,10 +91,6 @@ const navigationItems = [
         title: 'Create Course',
         url: '/dashboard/instructor/courses/new',
       },
-      {
-        title: 'Bulk Operations',
-        url: '/dashboard/instructor/courses/bulk',
-      },
     ],
   },
   {
@@ -103,59 +99,54 @@ const navigationItems = [
     items: [
       {
         title: 'Revenue',
-        url: '/dashboard/instructor/analytics/revenue',
+        url: '/dashboard/instructor/analytics/analytics',
       },
       {
         title: 'Student Engagement',
-        url: '/dashboard/instructor/analytics/engagement',
+        url: '/dashboard/instructor/analytics/analytics',
       },
       {
         title: 'Course Performance',
-        url: '/dashboard/instructor/analytics/courses',
+        url: '/dashboard/instructor/analytics/analytics',
       },
     ],
   },
-  {
-    title: 'Students',
-    url: '/dashboard/instructor/students',
-    icon: Users,
-  },
-  {
-    title: 'Communications',
-    icon: MessageSquare,
-    items: [
-      {
-        title: 'Messages',
-        url: '/dashboard/instructor/messages',
-      },
-      {
-        title: 'Announcements',
-        url: '/dashboard/instructor/announcements',
-      },
-      {
-        title: 'Q&A',
-        url: '/dashboard/instructor/qa',
-      },
-    ],
-  },
-  {
-    title: 'Content',
-    icon: Video,
-    items: [
-      {
-        title: 'Video Library',
-        url: '/dashboard/instructor/videos',
-      },
-      {
-        title: 'Upload Video',
-        url: '/dashboard/instructor/upload',
-      },
-      {
-        title: 'Resources',
-        url: '/dashboard/instructor/resources',
-      },
-    ],
-  },
+  // {
+  //   title: 'Communications',
+  //   icon: MessageSquare,
+  //   items: [
+  //     {
+  //       title: 'Messages',
+  //       url: '/dashboard/instructor/messages',
+  //     },
+  //     {
+  //       title: 'Announcements',
+  //       url: '/dashboard/instructor/announcements',
+  //     },
+  //     {
+  //       title: 'Q&A',
+  //       url: '/dashboard/instructor/qa',
+  //     },
+  //   ],
+  // },
+  // {
+  //   title: 'Content',
+  //   icon: Video,
+  //   items: [
+  //     {
+  //       title: 'Video Library',
+  //       url: '/dashboard/instructor/videos',
+  //     },
+  //     {
+  //       title: 'Upload Video',
+  //       url: '/dashboard/instructor/upload',
+  //     },
+  //     {
+  //       title: 'Resources',
+  //       url: '/dashboard/instructor/resources',
+  //     },
+  //   ],
+  // },
 ]
 
 const toolsItems = [
@@ -164,21 +155,21 @@ const toolsItems = [
     url: '/dashboard/instructor/forum',
     icon: Shield,
   },
-  {
-    title: 'Reports',
-    url: '/dashboard/instructor/reports',
-    icon: FileText,
-  },
-  {
-    title: 'Calendar',
-    url: '/dashboard/instructor/calendar',
-    icon: Calendar,
-  },
-  {
-    title: 'Help Center',
-    url: '/dashboard/instructor/help',
-    icon: HelpCircle,
-  },
+  // {
+  //   title: 'Reports',
+  //   url: '/dashboard/instructor/reports',
+  //   icon: FileText,
+  // },
+  // {
+  //   title: 'Calendar',
+  //   url: '/dashboard/instructor/calendar',
+  //   icon: Calendar,
+  // },
+  // {
+  //   title: 'Help Center',
+  //   url: '/dashboard/instructor/help',
+  //   icon: HelpCircle,
+  // },
   {
     title: 'Settings',
     url: '/dashboard/instructor/settings',
