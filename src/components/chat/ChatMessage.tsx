@@ -9,6 +9,7 @@ import {
 
 import { Button } from '@/components/ui/button'
 import { cn, formatDistanceToNow } from '@/lib/utils'
+import { MarkdownRenderer } from './MarkdownRenderer'
 
 import type { ChatMessage as ChatMessageType } from '@/lib/ai-chat'
 
@@ -33,75 +34,6 @@ export function ChatMessage({
     navigator.clipboard.writeText(message.content)
     onCopy?.(message.content)
   }
-
-  const formatContent = (content: string) => {
-    // Simple markdown-like formatting for code blocks and links
-    return content
-      .split('\n')
-      .map((line, index) => {
-        // Code block detection
-        if (line.startsWith('```')) {
-          return null // Will be handled by code block component
-        }
-
-        // Bullet points
-        if (line.startsWith('• ')) {
-          return (
-            <li key={index} className="ml-4 list-disc">
-              {line.substring(2)}
-            </li>
-          )
-        }
-
-        // Bold text
-        if (line.includes('**')) {
-          const parts = line.split('**')
-          return (
-            <p key={index} className="mb-2">
-              {parts.map((part, partIndex) =>
-                partIndex % 2 === 1 ? (
-                  <strong key={partIndex}>{part}</strong>
-                ) : (
-                  part
-                ),
-              )}
-            </p>
-          )
-        }
-
-        // Regular paragraph
-        return line.trim() ? (
-          <p key={index} className="mb-2">
-            {line}
-          </p>
-        ) : (
-          <br key={index} />
-        )
-      })
-      .filter(Boolean)
-  }
-
-  const extractCodeBlocks = (content: string) => {
-    const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g
-    const codeBlocks: Array<{ language: string; code: string }> = []
-    let match
-
-    while ((match = codeBlockRegex.exec(content)) !== null) {
-      codeBlocks.push({
-        language: match[1] || 'text',
-        code: match[2].trim(),
-      })
-    }
-
-    return codeBlocks
-  }
-
-  const contentWithoutCodeBlocks = message.content.replace(
-    /```(\w+)?\n([\s\S]*?)```/g,
-    '[CODE_BLOCK]',
-  )
-  const codeBlocks = extractCodeBlocks(message.content)
-  let codeBlockIndex = 0
 
   if (isSystem) {
     return (
@@ -141,40 +73,13 @@ export function ChatMessage({
             isAssistant && 'bg-card border',
           )}
         >
-          <div className="max-w-none">
-            {formatContent(contentWithoutCodeBlocks).map((element, index) => {
-              if (
-                typeof element === 'string' &&
-                element === '[CODE_BLOCK]' &&
-                codeBlocks[codeBlockIndex]
-              ) {
-                const codeBlock = codeBlocks[codeBlockIndex++]
-                return (
-                  <div key={index} className="my-3">
-                    <div className="flex items-center justify-between bg-muted px-3 py-1 rounded-t-lg">
-                      <span className="text-xs font-medium text-muted-foreground">
-                        {codeBlock.language}
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() =>
-                          navigator.clipboard.writeText(codeBlock.code)
-                        }
-                        className="h-6 w-6 p-0"
-                      >
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <pre className="bg-muted/50 p-3 rounded-b-lg overflow-x-auto">
-                      <code className="text-sm">{codeBlock.code}</code>
-                    </pre>
-                  </div>
-                )
-              }
-              return element
-            })}
-          </div>
+          {isUser ? (
+            <div className="whitespace-pre-wrap break-words">
+              {message.content}
+            </div>
+          ) : (
+            <MarkdownRenderer content={message.content} />
+          )}
         </div>
 
         {/* Message Metadata */}

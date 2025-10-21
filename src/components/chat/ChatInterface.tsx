@@ -6,12 +6,15 @@ import {
   Play,
   Send,
   Sparkles,
+  Wifi,
+  WifiOff,
 } from 'lucide-react'
 import React, { useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { aiChatService } from '@/lib/ai-chat'
+import { aiChatWebSocket } from '@/lib/ai-chat-websocket'
 import { cn } from '@/lib/utils'
 
 import { ChatMessage } from './ChatMessage'
@@ -27,6 +30,8 @@ interface ChatInterfaceProps {
   className?: string
   embedded?: boolean
   height?: string
+  sessionId?: string
+  onSessionChange?: (sessionId: string) => void
 }
 
 export function ChatInterface({
@@ -34,18 +39,34 @@ export function ChatInterface({
   className,
   embedded = false,
   height = 'h-96',
+  sessionId: externalSessionId,
+  onSessionChange,
 }: ChatInterfaceProps) {
   const [currentSession, setCurrentSession] = useState<ChatSession | null>(null)
   const [messages, setMessages] = useState<Array<ChatMessageType>>([])
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [suggestions, setSuggestions] = useState<Array<string>>([])
+  const [isConnected, setIsConnected] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
-    initializeChat()
-  }, [context])
+    if (externalSessionId) {
+      loadSession(externalSessionId)
+    } else {
+      initializeChat()
+    }
+    connectWebSocket()
+
+    return () => {
+      aiChatWebSocket.disconnect()
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current)
+      }
+    }
+  }, [context, externalSessionId])
 
   useEffect(() => {
     scrollToBottom()
@@ -57,6 +78,72 @@ export function ChatInterface({
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  const connectWebSocket = async () => {
+    try {
+      await aiChatWebSocket.connect()
+      
+      // Check connection status every second
+      const statusInterval = setInterval(() => {
+        setIsConnected(aiChatWebSocket.isConnected())
+      }, 1000)
+
+      // Listen for messages
+      const unsubscribeMessage = aiChatWebSocket.onMessage((message) => {
+        setMessages((prev) => [...prev, message])
+        setIsLoading(false)
+      })
+
+      // Listen for errors
+      const unsubscribeError = aiChatWebSocket.onError((error) => {
+        console.error('WebSocket error:', error)
+        setIsConnected(false)
+        const errorMessage: ChatMessageType = {
+          id: `error_${Date.now()}`,
+          content: `Error: ${error}`,
+          role: 'assistant',
+          timestamp: new Date().toISOString(),
+        }
+        setMessages((prev) => [...prev, errorMessage])
+        setIsLoading(false)
+      })
+
+      // Listen for connection status
+      const unsubscribeConnect = aiChatWebSocket.onConnect(() => {
+        setIsConnected(true)
+      })
+
+      // Cleanup function
+      return () => {
+        clearInterval(statusInterval)
+        unsubscribeMessage()
+        unsubscribeError()
+        unsubscribeConnect()
+      }
+    } catch (error) {
+      console.error('Failed to connect WebSocket:', error)
+      setIsConnected(false)
+    }
+  }
+
+  const loadSession = async (sessionId: string) => {
+    setIsLoading(true)
+    try {
+      const loadedMessages = await aiChatService.getSessionMessages(sessionId)
+      setMessages(loadedMessages)
+      setCurrentSession({
+        id: sessionId,
+        title: 'Loaded Session',
+        messages: loadedMessages,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
+    } catch (error) {
+      console.error('Error loading session:', error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const initializeChat = async () => {
@@ -108,27 +195,60 @@ export function ChatInterface({
     setInputValue('')
     setIsLoading(true)
 
-    try {
-      const aiResponse = await aiChatService.sendMessage({
-        message: content,
-        context,
-        sessionId: currentSession.id,
-      })
+    // Send via WebSocket if connected, otherwise fall back to HTTP
+    if (isConnected && aiChatWebSocket.isConnected()) {
+      aiChatWebSocket.sendMessage(content, currentSession.id)
+    } else {
+      // Fallback to HTTP
+      try {
+        const aiResponse = await aiChatService.sendMessage({
+          message: content,
+          context,
+          sessionId: currentSession.id,
+        })
 
-      setMessages((prev) => [...prev, aiResponse])
-    } catch (error) {
-      console.error('Error sending message:', error)
+        setMessages((prev) => [...prev, aiResponse])
 
-      const errorMessage: ChatMessageType = {
-        id: `msg_${Date.now()}_error`,
-        content: 'Sorry, I encountered an error. Please try again.',
-        role: 'assistant',
-        timestamp: new Date().toISOString(),
+        // Update session ID if this is a new session
+        if (aiResponse.id && onSessionChange && !externalSessionId) {
+          onSessionChange(currentSession.id)
+        }
+
+        setIsLoading(false)
+      } catch (error) {
+        console.error('Error sending message:', error)
+
+        const errorMessage: ChatMessageType = {
+          id: `msg_${Date.now()}_error`,
+          content: 'Sorry, I encountered an error. Please try again.',
+          role: 'assistant',
+          timestamp: new Date().toISOString(),
+        }
+
+        setMessages((prev) => [...prev, errorMessage])
+        setIsLoading(false)
+      }
+    }
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value
+    setInputValue(value)
+
+    // Debounced typing indicator - only send once every 2 seconds
+    if (isConnected && currentSession) {
+      if (!typingTimeoutRef.current) {
+        aiChatWebSocket.sendTypingIndicator(true, currentSession.id)
+      }
+      
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current)
       }
 
-      setMessages((prev) => [...prev, errorMessage])
-    } finally {
-      setIsLoading(false)
+      typingTimeoutRef.current = setTimeout(() => {
+        aiChatWebSocket.sendTypingIndicator(false, currentSession.id)
+        typingTimeoutRef.current = null
+      }, 2000)
     }
   }
 
@@ -201,8 +321,17 @@ export function ChatInterface({
           </div>
 
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
-            <span className="text-xs text-muted-foreground">Online</span>
+            {isConnected ? (
+              <>
+                <Wifi className="w-3 h-3 text-success" />
+                <span className="text-xs text-success">Connected</span>
+              </>
+            ) : (
+              <>
+                <WifiOff className="w-3 h-3 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Offline</span>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -307,7 +436,7 @@ export function ChatInterface({
               ref={inputRef}
               placeholder="Ask me anything about your studies..."
               value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
+              onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               rows={1}
               className="min-h-[40px] max-h-32 resize-none pr-12"

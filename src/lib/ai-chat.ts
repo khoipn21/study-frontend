@@ -30,6 +30,15 @@ export interface ChatSession {
   lectureId?: string
 }
 
+export interface ChatSessionInfo {
+  session_id: string
+  title: string
+  last_message: string
+  message_count: number
+  created_at: string
+  updated_at: string
+}
+
 export interface ChatContext {
   courseId?: string
   lectureId?: string
@@ -46,6 +55,7 @@ export interface SendMessageRequest {
 
 export class AIChatService {
   private static instance: AIChatService
+  private baseUrl = import.meta.env.VITE_API_BASE_URL
 
   public static getInstance(): AIChatService {
     if (AIChatService.instance === undefined) {
@@ -56,105 +66,201 @@ export class AIChatService {
 
   private constructor() {}
 
+  private getAuthToken(): string | null {
+    try {
+      const storage = localStorage.getItem('study.auth')
+      if (!storage) return null
+      const parsed = JSON.parse(storage) as { token: string | null }
+      return parsed.token
+    } catch {
+      return null
+    }
+  }
+
   async sendMessage(request: SendMessageRequest): Promise<ChatMessage> {
     try {
-      const response = await fetch('/api/v1/ai-chat/send', {
+      const token = this.getAuthToken()
+      if (!token) {
+        throw new Error('Authentication required')
+      }
+
+      const response = await fetch(`${this.baseUrl}/chat/message`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(request),
+        body: JSON.stringify({
+          message: request.message,
+          session_id: request.sessionId,
+          course_id: request.context?.courseId,
+        }),
       })
 
-      if (!response.ok) throw new Error('Failed to send message')
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}))
+        throw new Error(
+          (error as { error?: string }).error || 'Failed to send message',
+        )
+      }
 
-      const data = (await response.json()) as { message: string }
+      const data = (await response.json()) as {
+        session_id: string
+        message_id: string
+        content: string
+        role: 'assistant'
+        tokens_used: number
+        created_at: string
+      }
+
       return {
-        id: Math.random().toString(36).substring(7),
-        content: data.message,
-        role: 'assistant',
-        timestamp: new Date().toISOString(),
+        id: data.message_id,
+        content: data.content,
+        role: data.role,
+        timestamp: data.created_at,
         courseId: request.context?.courseId,
         lectureId: request.context?.lectureId,
       }
     } catch (error) {
       console.error('Error sending message:', error)
-      return this.getMockResponse(request.message, request.context)
+      throw error
     }
   }
 
-  async getSessions(courseId?: string): Promise<Array<ChatSession>> {
+  async getRateLimit(): Promise<{
+    limit: number
+    usage: number
+    remaining: number
+  }> {
     try {
-      const queryParams = new URLSearchParams()
-      if (courseId) queryParams.append('courseId', courseId)
+      const token = this.getAuthToken()
+      if (!token) {
+        throw new Error('Authentication required')
+      }
 
-      const response = await fetch(`/api/v1/ai-chat/sessions?${queryParams}`)
-      if (!response.ok) throw new Error('Failed to fetch sessions')
-
-      return await response.json()
-    } catch (error) {
-      console.error('Error fetching sessions:', error)
-      return this.getMockSessions(courseId)
-    }
-  }
-
-  async getSession(sessionId: string): Promise<ChatSession | null> {
-    try {
-      const response = await fetch(`/api/v1/ai-chat/sessions/${sessionId}`)
-      if (!response.ok) throw new Error('Failed to fetch session')
-
-      return await response.json()
-    } catch (error) {
-      console.error('Error fetching session:', error)
-      return this.getMockSession(sessionId)
-    }
-  }
-
-  async createSession(context?: ChatContext): Promise<ChatSession> {
-    try {
-      const response = await fetch('/api/v1/ai-chat/sessions', {
-        method: 'POST',
+      const response = await fetch(`${this.baseUrl}/rate-limit`, {
         headers: {
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ context }),
       })
 
-      if (!response.ok) throw new Error('Failed to create session')
+      if (!response.ok) throw new Error('Failed to fetch rate limit')
 
       return await response.json()
     } catch (error) {
-      console.error('Error creating session:', error)
-      return this.createMockSession(context)
+      console.error('Error fetching rate limit:', error)
+      return { limit: 10, usage: 0, remaining: 10 }
     }
   }
 
-  async deleteSession(sessionId: string): Promise<void> {
+  async getChatHistory(): Promise<Array<ChatSessionInfo>> {
     try {
-      const response = await fetch(`/api/v1/ai-chat/sessions/${sessionId}`, {
-        method: 'DELETE',
+      const token = this.getAuthToken()
+      if (!token) {
+        throw new Error('Authentication required')
+      }
+
+      const response = await fetch(`${this.baseUrl}/chat/history`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       })
+
+      if (!response.ok) throw new Error('Failed to fetch chat history')
+
+      const data = (await response.json()) as {
+        sessions: Array<ChatSessionInfo>
+      }
+      return data.sessions || []
+    } catch (error) {
+      console.error('Error fetching chat history:', error)
+      return []
+    }
+  }
+
+  async getSessionMessages(sessionId: string): Promise<Array<ChatMessage>> {
+    try {
+      const token = this.getAuthToken()
+      if (!token) {
+        throw new Error('Authentication required')
+      }
+
+      const response = await fetch(
+        `${this.baseUrl}/chat/history/${sessionId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
+
+      if (!response.ok) throw new Error('Failed to fetch session messages')
+
+      const data = (await response.json()) as {
+        messages: Array<{
+          id: string
+          session_id: string
+          role: 'user' | 'assistant'
+          content: string
+          tokens_used: number
+          created_at: string
+        }>
+      }
+
+      return (data.messages || []).map((msg) => ({
+        id: msg.id,
+        content: msg.content,
+        role: msg.role,
+        timestamp: msg.created_at,
+      }))
+    } catch (error) {
+      console.error('Error fetching session messages:', error)
+      return []
+    }
+  }
+
+  async deleteSessionHistory(sessionId: string): Promise<void> {
+    try {
+      const token = this.getAuthToken()
+      if (!token) {
+        throw new Error('Authentication required')
+      }
+
+      const response = await fetch(
+        `${this.baseUrl}/chat/history/${sessionId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
 
       if (!response.ok) throw new Error('Failed to delete session')
     } catch (error) {
       console.error('Error deleting session:', error)
+      throw error
     }
   }
 
-  async updateSessionTitle(sessionId: string, title: string): Promise<void> {
-    try {
-      const response = await fetch(`/api/v1/ai-chat/sessions/${sessionId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ title }),
-      })
+  async getSessions(_courseId?: string): Promise<Array<ChatSession>> {
+    return this.getMockSessions(_courseId)
+  }
 
-      if (!response.ok) throw new Error('Failed to update session title')
-    } catch (error) {
-      console.error('Error updating session title:', error)
-    }
+  async getSession(sessionId: string): Promise<ChatSession | null> {
+    return this.getMockSession(sessionId)
+  }
+
+  async createSession(context?: ChatContext): Promise<ChatSession> {
+    return this.createMockSession(context)
+  }
+
+  async deleteSession(_sessionId: string): Promise<void> {
+    console.log('Delete session not implemented yet')
+  }
+
+  async updateSessionTitle(_sessionId: string, _title: string): Promise<void> {
+    console.log('Update session title not implemented yet')
   }
 
   async getCourseSuggestions(courseId: string): Promise<Array<string>> {
@@ -187,88 +293,7 @@ export class AIChatService {
     }
   }
 
-  // Mock methods for development/fallback
-  private getMockResponse(
-    userMessage: string,
-    context?: ChatContext,
-  ): ChatMessage {
-    const responses = [
-      "I understand you're asking about this topic. Let me help break it down for you.",
-      "That's a great question! Here's what I can tell you about this concept:",
-      "Based on your current course progress, here's some additional context that might help:",
-      'Let me provide some examples to illustrate this point better:',
-      "I see you're working through this challenge. Here are some approaches you could try:",
-    ]
-
-    const mockSources = context?.courseId
-      ? [
-          {
-            title: 'Course Lecture 3: Key Concepts',
-            url: `/courses/${context.courseId}/lectures/3`,
-            type: 'lecture' as const,
-          },
-          {
-            title: 'Related Forum Discussion',
-            url: '/forum/posts/123',
-            type: 'forum' as const,
-          },
-        ]
-      : []
-
-    const mockSuggestions = [
-      'Can you explain this concept with more examples?',
-      'What are the common pitfalls to avoid here?',
-      'How does this relate to other topics in the course?',
-    ]
-
-    return {
-      id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      content: `${responses[Math.floor(Math.random() * responses.length)]}\n\n${this.generateContextualResponse(userMessage, context)}`,
-      role: 'assistant',
-      timestamp: new Date().toISOString(),
-      courseId: context?.courseId,
-      lectureId: context?.lectureId,
-      metadata: {
-        sources: mockSources,
-        confidence: 0.85 + Math.random() * 0.15,
-        suggestions: mockSuggestions,
-      },
-    }
-  }
-
-  private generateContextualResponse(
-    userMessage: string,
-    _context?: ChatContext,
-  ): string {
-    const message = userMessage.toLowerCase()
-
-    if (message.includes('explain') || message.includes('what is')) {
-      return "This concept is fundamental to understanding the broader topic. Here are the key points:\n\n• **Definition**: The core principle involves...\n• **Application**: You'll typically use this when...\n• **Best Practices**: Remember to always..."
-    }
-
-    if (message.includes('example') || message.includes('show me')) {
-      return "Here's a practical example:\n\n```javascript\nfunction example() {\n  // This demonstrates the concept\n  return 'Hello, World!'\n}\n```\n\nThis example shows how to..."
-    }
-
-    if (
-      message.includes('error') ||
-      message.includes('problem') ||
-      message.includes('bug')
-    ) {
-      return "Let's troubleshoot this step by step:\n\n1. **Check the basics**: Ensure you have...\n2. **Common causes**: This issue often happens when...\n3. **Solution**: Try this approach...\n\nIf you're still having issues, can you share your code?"
-    }
-
-    if (
-      message.includes('difference') ||
-      message.includes('vs') ||
-      message.includes('compare')
-    ) {
-      return "Great question! Here's a comparison:\n\n**Option A**:\n• Pros: Fast, simple, widely supported\n• Cons: Limited flexibility\n• Use when: You need quick results\n\n**Option B**:\n• Pros: More flexible, powerful features\n• Cons: Steeper learning curve\n• Use when: You need advanced functionality"
-    }
-
-    return "I'd be happy to help you understand this better. Could you provide more specific details about what you'd like to know?"
-  }
-
+  // Mock methods for session management (backend doesn't have these endpoints yet)
   private getMockSessions(courseId?: string): Array<ChatSession> {
     const baseSessions = [
       {
@@ -348,8 +373,19 @@ export class AIChatService {
     }
   }
 
+  private generateUUID(): string {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(
+      /[xy]/g,
+      function (c) {
+        const r = (Math.random() * 16) | 0
+        const v = c === 'x' ? r : (r & 0x3) | 0x8
+        return v.toString(16)
+      },
+    )
+  }
+
   private createMockSession(context?: ChatContext): ChatSession {
-    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    const sessionId = this.generateUUID()
     const now = new Date().toISOString()
 
     return {
@@ -357,7 +393,7 @@ export class AIChatService {
       title: 'New Chat Session',
       messages: [
         {
-          id: `msg_${Date.now()}`,
+          id: this.generateUUID(),
           content: context?.courseId
             ? "Hello! I'm here to help you with your course. What would you like to know?"
             : "Hello! I'm your AI tutor. How can I assist you today?",
