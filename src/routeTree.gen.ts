@@ -42,6 +42,7 @@ import { Route as DemoFormSimpleRouteImport } from './routes/demo.form.simple'
 import { Route as DemoFormAddressRouteImport } from './routes/demo.form.address'
 import { Route as DashboardInstructorForumRouteImport } from './routes/dashboard.instructor.forum'
 import { Route as DashboardAdminForumRouteImport } from './routes/dashboard.admin.forum'
+import { Route as AuthOauthCallbackRouteImport } from './routes/auth.oauth.callback'
 import { Route as DashboardInstructorUploadIndexRouteImport } from './routes/dashboard.instructor.upload.index'
 import { Route as DashboardInstructorStudentsIndexRouteImport } from './routes/dashboard.instructor.students.index'
 import { Route as DashboardInstructorMessagesIndexRouteImport } from './routes/dashboard.instructor.messages.index'
@@ -219,6 +220,11 @@ const DashboardAdminForumRoute = DashboardAdminForumRouteImport.update({
   path: '/dashboard/admin/forum',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthOauthCallbackRoute = AuthOauthCallbackRouteImport.update({
+  id: '/auth/oauth/callback',
+  path: '/auth/oauth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardInstructorUploadIndexRoute =
   DashboardInstructorUploadIndexRouteImport.update({
     id: '/dashboard/instructor/upload/',
@@ -297,6 +303,7 @@ export interface FileRoutesByFullPath {
   '/courses': typeof CoursesIndexRoute
   '/files': typeof FilesIndexRoute
   '/forum': typeof ForumIndexRoute
+  '/auth/oauth/callback': typeof AuthOauthCallbackRoute
   '/dashboard/admin/forum': typeof DashboardAdminForumRoute
   '/dashboard/instructor/forum': typeof DashboardInstructorForumRoute
   '/demo/form/address': typeof DemoFormAddressRoute
@@ -341,6 +348,7 @@ export interface FileRoutesByTo {
   '/courses': typeof CoursesIndexRoute
   '/files': typeof FilesIndexRoute
   '/forum': typeof ForumIndexRoute
+  '/auth/oauth/callback': typeof AuthOauthCallbackRoute
   '/dashboard/admin/forum': typeof DashboardAdminForumRoute
   '/dashboard/instructor/forum': typeof DashboardInstructorForumRoute
   '/demo/form/address': typeof DemoFormAddressRoute
@@ -386,6 +394,7 @@ export interface FileRoutesById {
   '/courses/': typeof CoursesIndexRoute
   '/files/': typeof FilesIndexRoute
   '/forum/': typeof ForumIndexRoute
+  '/auth/oauth/callback': typeof AuthOauthCallbackRoute
   '/dashboard/admin/forum': typeof DashboardAdminForumRoute
   '/dashboard/instructor/forum': typeof DashboardInstructorForumRoute
   '/demo/form/address': typeof DemoFormAddressRoute
@@ -432,6 +441,7 @@ export interface FileRouteTypes {
     | '/courses'
     | '/files'
     | '/forum'
+    | '/auth/oauth/callback'
     | '/dashboard/admin/forum'
     | '/dashboard/instructor/forum'
     | '/demo/form/address'
@@ -476,6 +486,7 @@ export interface FileRouteTypes {
     | '/courses'
     | '/files'
     | '/forum'
+    | '/auth/oauth/callback'
     | '/dashboard/admin/forum'
     | '/dashboard/instructor/forum'
     | '/demo/form/address'
@@ -520,6 +531,7 @@ export interface FileRouteTypes {
     | '/courses/'
     | '/files/'
     | '/forum/'
+    | '/auth/oauth/callback'
     | '/dashboard/admin/forum'
     | '/dashboard/instructor/forum'
     | '/demo/form/address'
@@ -565,6 +577,7 @@ export interface RootRouteChildren {
   CoursesIndexRoute: typeof CoursesIndexRoute
   FilesIndexRoute: typeof FilesIndexRoute
   ForumIndexRoute: typeof ForumIndexRoute
+  AuthOauthCallbackRoute: typeof AuthOauthCallbackRoute
   DashboardAdminForumRoute: typeof DashboardAdminForumRoute
   DashboardInstructorForumRoute: typeof DashboardInstructorForumRoute
   DemoFormAddressRoute: typeof DemoFormAddressRoute
@@ -820,6 +833,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAdminForumRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/oauth/callback': {
+      id: '/auth/oauth/callback'
+      path: '/auth/oauth/callback'
+      fullPath: '/auth/oauth/callback'
+      preLoaderRoute: typeof AuthOauthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/instructor/upload/': {
       id: '/dashboard/instructor/upload/'
       path: '/dashboard/instructor/upload'
@@ -909,6 +929,7 @@ const rootRouteChildren: RootRouteChildren = {
   CoursesIndexRoute: CoursesIndexRoute,
   FilesIndexRoute: FilesIndexRoute,
   ForumIndexRoute: ForumIndexRoute,
+  AuthOauthCallbackRoute: AuthOauthCallbackRoute,
   DashboardAdminForumRoute: DashboardAdminForumRoute,
   DashboardInstructorForumRoute: DashboardInstructorForumRoute,
   DemoFormAddressRoute: DemoFormAddressRoute,

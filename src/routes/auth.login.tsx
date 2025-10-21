@@ -5,7 +5,6 @@ import {
   Chrome,
   Eye,
   EyeOff,
-  Github,
   Loader2,
   Lock,
   Mail,
@@ -115,9 +114,28 @@ function LoginPage() {
     loginMutation.mutate({ email, password })
   }
 
-  const handleSocialLogin = (provider: string) => {
-    // Implementation for OAuth login
-    window.location.href = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/api/v1/auth/${provider}`
+  const handleSocialLogin = async (provider: string) => {
+    try {
+      // Fetch OAuth URL from backend
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1'
+      const response = await fetch(`${apiBaseUrl}/auth/oauth/${provider}/url?state=oauth-${Date.now()}`)
+      
+      if (!response.ok) {
+        throw new Error('Failed to get OAuth URL')
+      }
+      
+      const data = await response.json()
+      
+      if (data.success && data.data?.url) {
+        // Redirect to Google OAuth page
+        window.location.href = data.data.url
+      } else {
+        throw new Error('Invalid OAuth URL response')
+      }
+    } catch (err) {
+      console.error('OAuth error:', err)
+      setError('Không thể kết nối với Google. Vui lòng thử lại.')
+    }
   }
 
   // Show loading placeholder during hydration
@@ -165,29 +183,17 @@ function LoginPage() {
               </Alert>
             )}
 
-            {/* Social Login */}
-            <div className="space-y-3">
-              <Button
-                variant="outline"
-                className="w-full h-11 border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-colors"
-                type="button"
-                onClick={() => handleSocialLogin('google')}
-                disabled={loginMutation.isPending}
-              >
-                <Chrome className="h-4 w-4 mr-2" />
-                Đăng nhập với Google
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full h-11 border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-colors"
-                type="button"
-                onClick={() => handleSocialLogin('github')}
-                disabled={loginMutation.isPending}
-              >
-                <Github className="h-4 w-4 mr-2" />
-                Đăng nhập với GitHub
-              </Button>
-            </div>
+            {/* Google OAuth Login */}
+            <Button
+              variant="outline"
+              className="w-full h-11 border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-colors"
+              type="button"
+              onClick={() => handleSocialLogin('google')}
+              disabled={loginMutation.isPending}
+            >
+              <Chrome className="h-4 w-4 mr-2" />
+              Đăng nhập với Google
+            </Button>
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
