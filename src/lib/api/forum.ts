@@ -1,5 +1,5 @@
 // Forum API client for connecting to the backend
-const API_BASE_URL = 'http://localhost:8080/api/v1/forum'
+const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/api/v1/forum`
 
 export interface Topic {
   id: string
