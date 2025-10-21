@@ -1,6 +1,13 @@
 // Forum API client for connecting to the backend
 const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1'}/forum`
 
+export interface UserInfo {
+  id: string
+  username: string
+  avatar?: string | null
+  role: string
+}
+
 export interface Topic {
   id: string
   title: string
@@ -9,8 +16,11 @@ export interface Topic {
   category: string
   courseId?: string
   course_id?: string // Backend snake_case
-  created_by_id?: string // Backend field
+  created_by_id: string
+  created_by?: UserInfo // New user info from API
+  last_post_by?: UserInfo // New user info from API
   author?: {
+    // Legacy - for backwards compatibility
     id: string
     name: string
     avatar?: string
@@ -20,7 +30,7 @@ export interface Topic {
   created_at?: string // Backend snake_case
   updatedAt: string
   updated_at?: string // Backend snake_case
-  status: 'pending' | 'approved' | 'rejected'
+  status: string
   viewCount: number
   view_count?: number // Backend snake_case
   postCount: number
@@ -32,6 +42,7 @@ export interface Topic {
   pinOrder?: number
   pin_order?: number // Backend snake_case
   tags: Array<string>
+  is_subscribed?: boolean
   lastReply?: {
     authorName: string
     timestamp: string
@@ -40,23 +51,30 @@ export interface Topic {
 
 export interface Post {
   id: string
-  topicId: string
+  topic_id?: string
+  topicId?: string
+  author_id?: string
   content: string
-  author: {
-    id: string
-    name?: string
-    username: string
-    avatar?: string | null
-    role: string
-  }
-  createdAt: string
-  updatedAt: string
-  status: 'pending' | 'approved' | 'rejected'
-  isAnswer: boolean
-  isPinned: boolean
+  author?: UserInfo // New user info from API
+  created_at?: string
+  createdAt?: string
+  updated_at?: string
+  updatedAt?: string
+  status: string
+  is_answer?: boolean
+  isAnswer?: boolean
+  is_pinned?: boolean
+  isPinned?: boolean
+  pin_order?: number
   pinOrder?: number
-  voteCount: number
+  up_votes?: number
+  down_votes?: number
+  vote_total?: number
+  voteCount?: number // Computed from up_votes - down_votes
+  user_vote?: 'up' | 'down' | null
   userVote?: 'up' | 'down' | null
+  is_edited?: boolean
+  edited_at?: string
 }
 
 export interface CreateTopicRequest {

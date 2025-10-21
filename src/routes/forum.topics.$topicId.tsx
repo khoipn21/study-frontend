@@ -1,4 +1,5 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowDown,
   ArrowUp,
@@ -8,6 +9,7 @@ import {
   Clock,
   Edit,
   Eye,
+  Loader2,
   Lock,
   MessageCircle,
   MessageSquare,
@@ -17,6 +19,7 @@ import {
   Star,
   Tag,
   Users,
+  AlertCircle,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -26,7 +29,10 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { cn } from '@/lib/utils'
+import { forumApi, type Topic, type Post } from '@/lib/api/forum'
+import { useAuth } from '@/lib/auth-context'
 
 export const Route = createFileRoute('/forum/topics/$topicId')({
   component: RouteComponent,
@@ -35,157 +41,64 @@ export const Route = createFileRoute('/forum/topics/$topicId')({
 function RouteComponent() {
   const { topicId } = Route.useParams()
   const [replyOpen, setReplyOpen] = useState(false)
+  const queryClient = useQueryClient()
+  const { user, token } = useAuth()
+
   const [currentUser] = useState({
     id: '1',
     name: 'Current User',
     role: 'student' as const,
   })
 
-  // Mock topic data - replace with actual API call
-  const topic = {
-    id: topicId,
-    title: 'Làm thế nào để học React hiệu quả cho người mới bắt đầu?',
-    content: `
-      <p>Chào mọi người!</p>
-      <p>Mình mới bắt đầu học React và cảm thấy khá khó khăn với những khái niệm như:</p>
-      <ul>
-        <li>Components và Props</li>
-        <li>State và Lifecycle</li>
-        <li>Hooks (useState, useEffect)</li>
-      </ul>
-      <p>Có ai có kinh nghiệm và lời khuyên để học React hiệu quả không? Mình đang tự học qua documentation và một số tutorial online nhưng vẫn cảm thấy chưa thực sự hiểu sâu.</p>
-      <p>Cảm ơn mọi người! 🙏</p>
-    `,
-    category: 'Lập trình',
-    courseId: undefined,
-    author: {
-      id: '2',
-      name: 'Nguyễn Văn A',
-      avatar: '/api/placeholder/40/40',
-      role: 'student' as const,
+  // Fetch topic data
+  const {
+    data: topicData,
+    isLoading: topicLoading,
+    error: topicError,
+  } = useQuery<Topic>({
+    queryKey: ['topic', topicId],
+    queryFn: () => forumApi.getTopic(topicId),
+  })
+
+  // Fetch posts data
+  const {
+    data: postsData,
+    isLoading: postsLoading,
+    error: postsError,
+    refetch: refetchPosts,
+  } = useQuery<{ posts: Post[]; total: number }>({
+    queryKey: ['posts', topicId],
+    queryFn: () => forumApi.getPosts(topicId, { limit: 100 }),
+  })
+
+  // Vote mutation
+  const voteMutation = useMutation({
+    mutationFn: ({
+      postId,
+      voteType,
+    }: {
+      postId: string
+      voteType: 'up' | 'down'
+    }) => {
+      if (!token) {
+        throw new Error('Bạn cần đăng nhập để vote')
+      }
+      return forumApi.votePost(postId, voteType, token)
     },
-    createdAt: '2024-01-20T10:30:00Z',
-    updatedAt: '2024-01-20T14:15:00Z',
-    status: 'approved' as const,
-    viewCount: 256,
-    postCount: 3,
-    isPinned: true,
-    isLocked: false,
-    pinOrder: 1,
-    tags: ['react', 'javascript', 'beginner'],
-    lastReply: {
-      authorName: 'Trần Thị B',
-      timestamp: '2 giờ trước',
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts', topicId] })
     },
-  }
-
-  // Mock posts data - replace with actual API call
-  const posts = [
-    {
-      id: '1',
-      content: `
-        <p>Chào bạn! Mình đã học React được 2 năm và có một số gợi ý:</p>
-        <ol>
-          <li><strong>Nắm vững JavaScript ES6+</strong> trước khi học React</li>
-          <li>Bắt đầu với <strong>functional components</strong> và hooks thay vì class components</li>
-          <li>Làm nhiều project nhỏ để thực hành</li>
-        </ol>
-        <p>Bạn có thể tham khảo khóa học React trên trang này, khá hay đấy! Chúc bạn học tốt!</p>
-      `,
-      author: {
-        id: '3',
-        name: 'Trần Thị B',
-        avatar: '/api/placeholder/40/40',
-        role: 'instructor' as const,
-      },
-      createdAt: '2024-01-20T11:15:00Z',
-      updatedAt: '2024-01-20T11:15:00Z',
-      status: 'approved' as const,
-      isAnswer: false,
-      isPinned: false,
-      pinOrder: null,
-      voteCount: 5,
-      userVote: null, // 'up' | 'down' | null
+    onError: (error) => {
+      console.error('Vote error:', error)
+      alert(
+        error instanceof Error
+          ? error.message
+          : 'Không thể vote. Vui lòng đăng nhập và thử lại.',
+      )
     },
-    {
-      id: '2',
-      content: `
-        <p>Cảm ơn <span class="mention">@Trần Thị B</span> đã chia sẻ!</p>
-        <p>Mình cũng muốn bổ sung thêm:</p>
-        <ul>
-          <li>Đọc kỹ React documentation - nó viết rất chi tiết và dễ hiểu</li>
-          <li>Tham gia các group Facebook về React để hỏi đáp</li>
-          <li>Code mỗi ngày, dù chỉ 30 phút</li>
-        </ul>
-        <blockquote>
-          <p>"Practice makes perfect" - Thực hành nhiều sẽ giúp bạn hiểu sâu hơn!</p>
-        </blockquote>
-      `,
-      author: {
-        id: '4',
-        name: 'Lê Văn C',
-        avatar: '/api/placeholder/40/40',
-        role: 'student' as const,
-      },
-      createdAt: '2024-01-20T12:30:00Z',
-      updatedAt: '2024-01-20T12:30:00Z',
-      status: 'approved' as const,
-      isAnswer: false,
-      isPinned: false,
-      pinOrder: null,
-      voteCount: 2,
-      userVote: 'up',
-    },
-    {
-      id: '3',
-      content: `
-        <p>Rất cảm ơn mọi người đã chia sẻ! 🎉</p>
-        <p>Mình sẽ làm theo lời khuyên và sẽ update tiến độ học tập sau nhé.</p>
-        <p><strong>Câu trả lời này đã giải quyết được thắc mắc của mình.</strong></p>
-      `,
-      author: {
-        id: '2',
-        name: 'Nguyễn Văn A',
-        avatar: '/api/placeholder/40/40',
-        role: 'student' as const,
-      },
-      createdAt: '2024-01-20T14:15:00Z',
-      updatedAt: '2024-01-20T14:15:00Z',
-      status: 'approved' as const,
-      isAnswer: true, // Marked as accepted answer
-      isPinned: false,
-      pinOrder: null,
-      voteCount: 8,
-      userVote: null,
-    },
-  ]
+  })
 
-  const handleReplySubmit = async (data: { content: string }) => {
-    try {
-      // TODO: Replace with actual API call
-      console.log('Submitting reply:', data)
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      alert('Bài trả lời đã được gửi và chờ duyệt!')
-      setReplyOpen(false)
-
-      // Refresh posts
-      // refetchPosts()
-    } catch (error) {
-      throw new Error('Không thể gửi bài trả lời. Vui lòng thử lại.')
-    }
-  }
-
-  const handleVote = async (postId: string, voteType: 'up' | 'down') => {
-    try {
-      // TODO: Replace with actual API call
-      console.log('Voting on post:', postId, voteType)
-      await new Promise((resolve) => setTimeout(resolve, 500))
-    } catch (error) {
-      console.error('Failed to vote:', error)
-    }
-  }
-
+  // Helper function
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString)
     const now = new Date()
@@ -196,6 +109,117 @@ function RouteComponent() {
     if (diffInHours < 1) return 'Vừa xong'
     if (diffInHours < 24) return `${diffInHours} giờ trước`
     return `${Math.floor(diffInHours / 24)} ngày trước`
+  }
+
+  // Transform API data to component format
+  const topic = topicData
+    ? {
+        id: topicData.id,
+        title: topicData.title,
+        content: topicData.description || topicData.content || '',
+        category: topicData.category,
+        courseId: topicData.course_id || topicData.courseId,
+        author: topicData.created_by
+          ? {
+              id: topicData.created_by.id,
+              name: topicData.created_by.username,
+              avatar: topicData.created_by.avatar || undefined,
+              role: topicData.created_by.role as
+                | 'student'
+                | 'instructor'
+                | 'admin',
+            }
+          : {
+              id: topicData.created_by_id,
+              name: 'Unknown User',
+              avatar: undefined,
+              role: 'student' as const,
+            },
+        createdAt: topicData.created_at || topicData.createdAt,
+        updatedAt: topicData.updated_at || topicData.updatedAt,
+        status: topicData.status as 'pending' | 'approved' | 'rejected',
+        viewCount: topicData.view_count || topicData.viewCount,
+        postCount: topicData.post_count || topicData.postCount,
+        isPinned: topicData.is_sticky || topicData.isPinned,
+        isLocked: topicData.is_locked || topicData.isLocked,
+        pinOrder: topicData.pin_order || topicData.pinOrder,
+        tags: topicData.tags || [],
+        lastReply: topicData.last_post_by
+          ? {
+              authorName: topicData.last_post_by.username,
+              timestamp: formatTimeAgo(
+                topicData.updated_at || topicData.updatedAt,
+              ),
+            }
+          : undefined,
+      }
+    : null
+
+  const posts = postsData?.posts
+    ? postsData.posts.map((post) => ({
+        id: post.id,
+        content: post.content,
+        author: post.author
+          ? {
+              id: post.author.id,
+              name: post.author.username,
+              avatar: post.author.avatar || undefined,
+              role: post.author.role as 'student' | 'instructor' | 'admin',
+            }
+          : {
+              id: post.author_id || 'unknown',
+              name: 'Unknown User',
+              avatar: undefined,
+              role: 'student' as const,
+            },
+        createdAt:
+          post.created_at || post.createdAt || new Date().toISOString(),
+        updatedAt:
+          post.updated_at || post.updatedAt || new Date().toISOString(),
+        status: post.status as 'pending' | 'approved' | 'rejected',
+        isAnswer: post.is_answer || post.isAnswer || false,
+        isPinned: post.is_pinned || post.isPinned || false,
+        pinOrder: post.pin_order || post.pinOrder || null,
+        voteCount: post.vote_total || post.voteCount || 0,
+        userVote: post.user_vote || post.userVote || null,
+      }))
+    : []
+
+  const handleReplySubmit = async (data: { content: string }) => {
+    try {
+      if (!token) {
+        throw new Error('Bạn cần đăng nhập để trả lời')
+      }
+
+      await forumApi.createPostNew(
+        {
+          topicId,
+          content: data.content,
+        },
+        token,
+      )
+
+      alert('Bài trả lời đã được gửi và chờ duyệt!')
+      setReplyOpen(false)
+
+      // Refresh posts
+      refetchPosts()
+    } catch (error) {
+      console.error('Failed to create post:', error)
+      throw new Error(
+        error instanceof Error
+          ? error.message
+          : 'Không thể gửi bài trả lời. Vui lòng thử lại.',
+      )
+    }
+  }
+
+  const handleVote = async (postId: string, voteType: 'up' | 'down') => {
+    try {
+      await voteMutation.mutateAsync({ postId, voteType })
+    } catch (error) {
+      console.error('Failed to vote:', error)
+    }
   }
 
   const getRoleIcon = (role: string) => {
@@ -218,7 +242,7 @@ function RouteComponent() {
             className="text-xs bg-yellow-100 text-yellow-800"
           >
             <Star className="h-3 w-3 mr-1" />
-            Gi강ng viên
+            Giảng viên
           </Badge>
         )
       case 'admin':
@@ -239,6 +263,44 @@ function RouteComponent() {
           </Badge>
         )
     }
+  }
+
+  // Loading state
+  if (topicLoading || postsLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container py-8 max-w-4xl">
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (topicError || postsError || !topic) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container py-8 max-w-4xl">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              {topicError
+                ? `Không thể tải chủ đề: ${topicError instanceof Error ? topicError.message : 'Unknown error'}`
+                : postsError
+                  ? `Không thể tải bài trả lời: ${postsError instanceof Error ? postsError.message : 'Unknown error'}`
+                  : 'Không tìm thấy chủ đề'}
+            </AlertDescription>
+          </Alert>
+          <div className="mt-4">
+            <Button variant="outline" asChild>
+              <Link to="/forum">Quay lại diễn đàn</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

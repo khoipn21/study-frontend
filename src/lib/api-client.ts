@@ -840,12 +840,25 @@ export const api = {
   },
 
   // Users for mentions
-  getUsers: (token?: string) =>
-    requestGateway<{
+  getUsers: (params?: { q?: string; limit?: number; token?: string }) => {
+    const { q, limit, token } = params || {}
+    const queryParams = new URLSearchParams()
+    if (q !== undefined && q !== null) queryParams.append('q', q)
+    if (limit) queryParams.append('limit', limit.toString())
+    
+    const queryString = queryParams.toString()
+    const url = `/users${queryString ? `?${queryString}` : ''}`
+    
+    console.log('[API] getUsers called with params:', { q, limit })
+    console.log('[API] getUsers URL:', url)
+    
+    return requestGateway<{
       users: Array<{ id: string; username: string; role: string }>
-    }>('/users', {
-      token,
-    }).then((response) => response.data?.users || []),
+    }>(url, { token }).then((response) => {
+      console.log('[API] getUsers response:', response.data?.users?.length || 0, 'users')
+      return response.data?.users || []
+    })
+  },
 }
 
 // Enhanced API client with automatic token injection and better error handling

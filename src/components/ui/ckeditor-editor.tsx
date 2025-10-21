@@ -157,36 +157,83 @@ export function RichTextEditor(
         // Check if text ends with @ followed by word characters
         const mentionMatch = textBeforeCursor.match(/@(\w*)$/)
 
+        console.log('[Mention] Match result:', mentionMatch)
+
         if (mentionMatch) {
           const query = mentionMatch[1]
 
-          // Only trigger if query has at least 1 character
-          if (query.length > 0) {
-            const cursorPosition = getCursorPosition(editorInstance)
-            handleMentionTrigger(query, cursorPosition)
-          }
+          // Trigger on @ even with empty query for better UX
+          const cursorPosition = getCursorPosition(editorInstance)
+          handleMentionTrigger(query, cursorPosition)
         } else {
+          console.log('[Mention] No match, closing dropdown')
           closeMentionDropdown()
         }
       }
     })
   }
 
-  // Helper function to get text before cursor - simplified approach
-  const getTextBeforeCursor = (editorInstance: any, _range: any) => {
+  // Helper function to get text before cursor
+  const getTextBeforeCursor = (editorInstance: any, range: any) => {
     try {
-      // Get the current editor content as plain text
-      const editorData = editorInstance.getData()
+      const model = editorInstance.model
+      const position = range.end
+      const block = position.parent
 
-      // Create a temporary element to parse the HTML
-      const tempDiv = document.createElement('div')
-      tempDiv.innerHTML = editorData
-      const fullText = tempDiv.textContent || tempDiv.innerText || ''
+      // Get all text content from start of block to cursor position
+      let textBeforeCursor = ''
+      
+      // Iterate through all children before cursor
+      for (const child of block.getChildren()) {
+        if (child.is('$text')) {
+          const childEndOffset = block.getChildIndex(child) + child.data.length
+          const cursorOffset = position.offset
+          
+          if (childEndOffset <= cursorOffset) {
+            // This text node is completely before cursor
+            textBeforeCursor += child.data
+          } else if (block.getChildIndex(child) < cursorOffset) {
+            // Cursor is in the middle of this text node
+            const textLength = cursorOffset - block.getChildIndex(child)
+            textBeforeCursor += child.data.substring(0, textLength)
+            break
+          } else {
+            break
+          }
+        }
+      }
 
-      return fullText
+      // Fallback: get text from root to current position
+      if (!textBeforeCursor) {
+        const root = model.document.getRoot()
+        const walker = range.getWalker({ 
+          startPosition: model.createPositionAt(root, 0),
+          endPosition: position,
+          singleCharacters: true 
+        })
+
+        for (const step of walker) {
+          if (step.type === 'text') {
+            textBeforeCursor += step.item.data
+          }
+        }
+      }
+
+      console.log('[Mention] Text before cursor:', textBeforeCursor)
+      return textBeforeCursor
     } catch (error) {
       console.error('Error getting text before cursor:', error)
-      return ''
+      
+      // Final fallback - get last 50 characters of editor content
+      try {
+        const editorData = editorInstance.getData()
+        const tempDiv = document.createElement('div')
+        tempDiv.innerHTML = editorData
+        const fullText = tempDiv.textContent || tempDiv.innerText || ''
+        return fullText.slice(-50) // Last 50 chars
+      } catch {
+        return ''
+      }
     }
   }
 
@@ -198,17 +245,56 @@ export function RichTextEditor(
       const range = selection.getFirstRange()
 
       if (range) {
-        const rect = view.domConverter.viewRangeToDomRect(range)
-        return {
-          x: rect.left,
-          y: rect.bottom + 5,
+        // Get the DOM rect of the current selection
+        const domRange = view.domConverter.viewRangeToDom(range)
+        const rect = domRange.getBoundingClientRect()
+        
+        // Position relative to viewport (fixed positioning)
+        let x = rect.left
+        let y = rect.bottom + 5 // 5px offset below cursor
+        
+        // Ensure dropdown stays within viewport
+        const dropdownWidth = 200
+        const dropdownHeight = 240 // max-h-60 = 240px
+        
+        // Check if dropdown would go off right edge
+        if (x + dropdownWidth > window.innerWidth) {
+          x = window.innerWidth - dropdownWidth - 10
         }
+        
+        // Check if dropdown would go off bottom edge
+        if (y + dropdownHeight > window.innerHeight) {
+          // Position above cursor instead
+          y = rect.top - dropdownHeight - 5
+        }
+        
+        // Ensure minimum position
+        x = Math.max(10, x)
+        y = Math.max(10, y)
+        
+        console.log('[Mention] Cursor position:', { x, y, rect })
+        
+        return { x, y }
       }
     } catch (error) {
       console.error('Failed to get cursor position:', error)
+      
+      // Fallback: try to get editor container position
+      try {
+        const editorElement = editorInstance.ui.view.editable.element
+        if (editorElement) {
+          const rect = editorElement.getBoundingClientRect()
+          return {
+            x: rect.left + 20,
+            y: rect.top + 40,
+          }
+        }
+      } catch (fallbackError) {
+        console.error('Fallback position failed:', fallbackError)
+      }
     }
 
-    return { x: 0, y: 0 }
+    return { x: 100, y: 100 }
   }
 
   // Handle mention trigger
@@ -216,24 +302,20 @@ export function RichTextEditor(
     query: string,
     cursorPosition: { x: number; y: number },
   ) => {
-    if (query.length < 1) {
-      closeMentionDropdown()
-      return
-    }
-
     try {
-      const response = await api.getUsers()
+      // Pass query and limit as parameters to the API
+      // If query is empty, show all users (up to limit)
+      console.log('[Mention] Searching users with query:', query)
+      const response = await api.getUsers({ 
+        q: query, 
+        limit: 10 
+      })
+      console.log('[Mention] Found users:', response?.length || 0)
       const users = response || []
-
-      const filteredUsers = users
-        .filter((user: any) =>
-          user.username?.toLowerCase().includes(query.toLowerCase()),
-        )
-        .slice(0, 5)
 
       setMentionState({
         isOpen: true,
-        mentions: filteredUsers,
+        mentions: users,
         selectedIndex: 0,
         position: cursorPosition,
         query,
@@ -271,25 +353,37 @@ export function RichTextEditor(
     const range = selection.getFirstRange()
 
     if (range) {
-      const textBeforeCursor = getTextBeforeCursor(model, range)
+      const textBeforeCursor = getTextBeforeCursor(editor, range)
       const mentionMatch = textBeforeCursor.match(/@(\w*)$/)
 
       if (mentionMatch) {
-        const mentionText = `@${user.username}`
-        const startOffset = range.start.offset - mentionMatch[0].length
+        const mentionText = `@${user.username} `
+        const matchLength = mentionMatch[0].length
+        const position = range.end
 
         model.change((writer: any) => {
-          const mentionRange = model.createRange(
-            model.createPositionAt(range.start.parent, startOffset),
-            range.start,
+          // Calculate the start position by going back from current position
+          const parent = position.parent
+          const offset = position.offset
+          const startOffset = Math.max(0, offset - matchLength)
+          
+          const startPosition = writer.createPositionAt(parent, startOffset)
+          const endPosition = position
+          
+          const deleteRange = writer.createRange(startPosition, endPosition)
+          
+          // Remove the @query text
+          writer.remove(deleteRange)
+          
+          // Insert the full mention
+          writer.insertText(mentionText, startPosition)
+          
+          // Move cursor after the mention
+          const newPosition = writer.createPositionAt(
+            parent,
+            startOffset + mentionText.length
           )
-
-          writer.remove(mentionRange)
-          writer.insertText(
-            mentionText,
-            { mention: mentionText },
-            model.createPositionAt(range.start.parent, startOffset),
-          )
+          writer.setSelection(newPosition)
         })
       }
     }

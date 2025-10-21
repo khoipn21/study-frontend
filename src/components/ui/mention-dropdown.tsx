@@ -61,10 +61,11 @@ export function MentionDropdown({
   return (
     <div
       ref={dropdownRef}
-      className="fixed z-50 bg-popover border border-border rounded-md shadow-lg p-1 min-w-[200px] max-h-60 overflow-auto"
+      className="fixed z-[9999] bg-popover border border-border rounded-md shadow-lg p-1 min-w-[200px] max-h-60 overflow-auto"
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
+        pointerEvents: 'auto',
       }}
     >
       {users.map((user, index) => (
