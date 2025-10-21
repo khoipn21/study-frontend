@@ -70,18 +70,20 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                 <Header />
                 <main className="relative">{children}</main>
               </div>
-              <TanstackDevtools
-                config={{
-                  position: 'bottom-left',
-                }}
-                plugins={[
-                  {
-                    name: 'Tanstack Router',
-                    render: <TanStackRouterDevtoolsPanel />,
-                  },
-                  TanStackQueryDevtools,
-                ]}
-              />
+              {import.meta.env.DEV && (
+                <TanstackDevtools
+                  config={{
+                    position: 'bottom-left',
+                  }}
+                  plugins={[
+                    {
+                      name: 'Tanstack Router',
+                      render: <TanStackRouterDevtoolsPanel />,
+                    },
+                    TanStackQueryDevtools,
+                  ]}
+                />
+              )}
             </StripeProvider>
           </ThemeProvider>
         </GlobalErrorBoundary>
