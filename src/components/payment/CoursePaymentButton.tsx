@@ -304,7 +304,7 @@ export function CompactCoursePaymentButton({
   return (
     <>
       <div className="flex items-center justify-between">
-        <div className="flex flex-col">
+        {/* <div className="flex flex-col">
           {hasDiscount ? (
             <div className="flex items-center gap-2">
               <span className="text-lg font-bold text-primary">
@@ -325,7 +325,7 @@ export function CompactCoursePaymentButton({
               {formatPrice(currentPrice, currency)}
             </span>
           )}
-        </div>
+        </div> */}
 
         <Button
           size="sm"

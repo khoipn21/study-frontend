@@ -49,7 +49,7 @@ export function CourseCard({
   showProgress = false,
   progress = 0,
   showAccessStatus = true,
-  showPricing = true,
+  showPricing = false,
   onPreview,
   onPurchase,
   onAddToWishlist,
