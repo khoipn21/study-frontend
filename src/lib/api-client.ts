@@ -257,6 +257,79 @@ export const api = {
   profile: (token: string) =>
     request<{ id: string; roles: Array<string> }>('/auth/profile', { token }),
 
+  // User Profile Management
+  getCurrentUser: (token: string) =>
+    requestGateway<{
+      id: string
+      username: string
+      email: string
+      role: string
+      avatar_url?: string
+      created_at: { seconds: number; nanos: number }
+      updated_at: { seconds: number; nanos: number }
+    }>('/auth/me', { token }),
+
+  updateProfile: (
+    token: string,
+    payload: {
+      username?: string
+      email?: string
+      avatar_url?: string
+    },
+  ) =>
+    requestGateway<{
+      id: string
+      username: string
+      email: string
+      role: string
+      avatar_url?: string
+      created_at: { seconds: number; nanos: number }
+      updated_at: { seconds: number; nanos: number }
+    }>('/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+      token,
+    }),
+
+  changePassword: (
+    token: string,
+    payload: {
+      current_password: string
+      new_password: string
+    },
+  ) =>
+    requestGateway<{ success: boolean }>('/auth/password', {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+      token,
+    }),
+
+  uploadAvatar: async (token: string, file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await fetch(`${config.apiBaseUrl}/auth/avatar`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to upload avatar')
+    }
+
+    const result: GatewayResponse<{ avatar_url: string; message: string }> =
+      await response.json()
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to upload avatar')
+    }
+
+    return result
+  },
+
   // Courses
   listCourses: (
     params: { page?: number; page_size?: number; q?: string } = {},

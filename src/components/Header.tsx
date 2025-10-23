@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -167,11 +168,17 @@ export default function Header() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="h-9 px-2">
                       <div className="flex items-center space-x-2">
-                        <div className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-semibold">
-                          {user.username?.charAt(0)?.toUpperCase() ??
-                            user.email?.charAt(0)?.toUpperCase() ??
-                            'U'}
-                        </div>
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage
+                            src={user.avatar_url || undefined}
+                            alt={user.username || user.email || 'User'}
+                          />
+                          <AvatarFallback className="text-xs font-semibold">
+                            {user.username?.charAt(0)?.toUpperCase() ??
+                              user.email?.charAt(0)?.toUpperCase() ??
+                              'U'}
+                          </AvatarFallback>
+                        </Avatar>
                         <span className="hidden sm:inline-block text-sm font-medium">
                           {user.username ?? user.email ?? 'User'}
                         </span>
@@ -225,6 +232,15 @@ export default function Header() {
                       >
                         <FolderOpen className="h-4 w-4" />
                         <span>Files</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link
+                        to="/settings"
+                        className="flex items-center space-x-2 w-full"
+                      >
+                        <Settings className="h-4 w-4" />
+                        <span>Settings</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />

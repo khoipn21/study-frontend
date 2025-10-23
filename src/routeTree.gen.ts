@@ -13,6 +13,7 @@ import { Route as PaymentSuccessRouteImport } from './routes/payment-success'
 import { Route as PaymentErrorRouteImport } from './routes/payment-error'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SettingsIndexRouteImport } from './routes/settings.index'
 import { Route as ForumIndexRouteImport } from './routes/forum.index'
 import { Route as FilesIndexRouteImport } from './routes/files.index'
 import { Route as CoursesIndexRouteImport } from './routes/courses.index'
@@ -71,6 +72,11 @@ const McpRoute = McpRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsIndexRoute = SettingsIndexRouteImport.update({
+  id: '/settings/',
+  path: '/settings/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForumIndexRoute = ForumIndexRouteImport.update({
@@ -303,6 +309,7 @@ export interface FileRoutesByFullPath {
   '/courses': typeof CoursesIndexRoute
   '/files': typeof FilesIndexRoute
   '/forum': typeof ForumIndexRoute
+  '/settings': typeof SettingsIndexRoute
   '/auth/oauth/callback': typeof AuthOauthCallbackRoute
   '/dashboard/admin/forum': typeof DashboardAdminForumRoute
   '/dashboard/instructor/forum': typeof DashboardInstructorForumRoute
@@ -348,6 +355,7 @@ export interface FileRoutesByTo {
   '/courses': typeof CoursesIndexRoute
   '/files': typeof FilesIndexRoute
   '/forum': typeof ForumIndexRoute
+  '/settings': typeof SettingsIndexRoute
   '/auth/oauth/callback': typeof AuthOauthCallbackRoute
   '/dashboard/admin/forum': typeof DashboardAdminForumRoute
   '/dashboard/instructor/forum': typeof DashboardInstructorForumRoute
@@ -394,6 +402,7 @@ export interface FileRoutesById {
   '/courses/': typeof CoursesIndexRoute
   '/files/': typeof FilesIndexRoute
   '/forum/': typeof ForumIndexRoute
+  '/settings/': typeof SettingsIndexRoute
   '/auth/oauth/callback': typeof AuthOauthCallbackRoute
   '/dashboard/admin/forum': typeof DashboardAdminForumRoute
   '/dashboard/instructor/forum': typeof DashboardInstructorForumRoute
@@ -441,6 +450,7 @@ export interface FileRouteTypes {
     | '/courses'
     | '/files'
     | '/forum'
+    | '/settings'
     | '/auth/oauth/callback'
     | '/dashboard/admin/forum'
     | '/dashboard/instructor/forum'
@@ -486,6 +496,7 @@ export interface FileRouteTypes {
     | '/courses'
     | '/files'
     | '/forum'
+    | '/settings'
     | '/auth/oauth/callback'
     | '/dashboard/admin/forum'
     | '/dashboard/instructor/forum'
@@ -531,6 +542,7 @@ export interface FileRouteTypes {
     | '/courses/'
     | '/files/'
     | '/forum/'
+    | '/settings/'
     | '/auth/oauth/callback'
     | '/dashboard/admin/forum'
     | '/dashboard/instructor/forum'
@@ -577,6 +589,7 @@ export interface RootRouteChildren {
   CoursesIndexRoute: typeof CoursesIndexRoute
   FilesIndexRoute: typeof FilesIndexRoute
   ForumIndexRoute: typeof ForumIndexRoute
+  SettingsIndexRoute: typeof SettingsIndexRoute
   AuthOauthCallbackRoute: typeof AuthOauthCallbackRoute
   DashboardAdminForumRoute: typeof DashboardAdminForumRoute
   DashboardInstructorForumRoute: typeof DashboardInstructorForumRoute
@@ -628,6 +641,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/': {
+      id: '/settings/'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forum/': {
@@ -929,6 +949,7 @@ const rootRouteChildren: RootRouteChildren = {
   CoursesIndexRoute: CoursesIndexRoute,
   FilesIndexRoute: FilesIndexRoute,
   ForumIndexRoute: ForumIndexRoute,
+  SettingsIndexRoute: SettingsIndexRoute,
   AuthOauthCallbackRoute: AuthOauthCallbackRoute,
   DashboardAdminForumRoute: DashboardAdminForumRoute,
   DashboardInstructorForumRoute: DashboardInstructorForumRoute,

@@ -11,6 +11,7 @@ import { config } from '@/lib/config'
 import { GlobalErrorBoundary } from '../components/GlobalErrorBoundary'
 import Header from '../components/Header'
 import NotFound from '../components/NotFound'
+import { MicrocopyProvider } from '../components/ui/microcopy-provider'
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
 import { StripeProvider } from '../lib/stripe-context'
 import { ThemeProvider } from '../lib/theme-context'
@@ -65,11 +66,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body>
         <GlobalErrorBoundary>
           <ThemeProvider>
-            <StripeProvider>
-              <div className="min-h-screen bg-background font-sans antialiased">
-                <Header />
-                <main className="relative">{children}</main>
-              </div>
+            <MicrocopyProvider>
+              <StripeProvider>
+                <div className="min-h-screen bg-background font-sans antialiased">
+                  <Header />
+                  <main className="relative">{children}</main>
+                </div>
               {import.meta.env.DEV && (
                 <TanstackDevtools
                   config={{
@@ -84,7 +86,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                   ]}
                 />
               )}
-            </StripeProvider>
+              </StripeProvider>
+            </MicrocopyProvider>
           </ThemeProvider>
         </GlobalErrorBoundary>
         <Scripts />

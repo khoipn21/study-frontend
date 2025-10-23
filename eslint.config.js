@@ -50,24 +50,7 @@ export default [
       'import-x/no-useless-path-segments': 'error',
 
       // 🔑 Auto-fixable import order
-      'import/order': [
-        'error',
-        {
-          groups: [
-            'builtin',
-            'external',
-            'internal',
-            ['parent', 'sibling', 'index'],
-            'object',
-            'type',
-          ],
-          pathGroupsExcludedImportTypes: ['builtin'],
-          alphabetize: {
-            order: 'asc',
-            caseInsensitive: true,
-          },
-        },
-      ],
+      'import/order': 'off',
 
       'import/consistent-type-specifier-style': 'warn',
 
