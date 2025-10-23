@@ -81,13 +81,20 @@ function LoginPage() {
     onError: (error: unknown) => {
       console.error('Login error:', error)
       const errorObj = error as {
-        response?: { data?: { message?: string } }
+        response?: { data?: { message?: string; error?: string } }
         message?: string
       }
+      
+      const errorMessage = errorObj?.response?.data?.error || errorObj?.response?.data?.message || errorObj?.message || ''
+      
+      // Check for email not verified error
+      if (errorMessage.includes('email_not_verified') || errorMessage.includes('verify your email')) {
+        setError('Email của bạn chưa được xác thực. Vui lòng kiểm tra email hoặc yêu cầu gửi lại mã xác thực.')
+        return
+      }
+      
       setError(
-        errorObj?.response?.data?.message ||
-          errorObj?.message ||
-          'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin đăng nhập.',
+        errorMessage || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin đăng nhập.',
       )
     },
   })

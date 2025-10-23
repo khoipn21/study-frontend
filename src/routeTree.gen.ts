@@ -27,6 +27,7 @@ import { Route as CoursesCourseIdRouteImport } from './routes/courses.$courseId'
 import { Route as BillingTransactionsRouteImport } from './routes/billing.transactions'
 import { Route as BillingSubscriptionsRouteImport } from './routes/billing.subscriptions'
 import { Route as BillingMethodsRouteImport } from './routes/billing.methods'
+import { Route as AuthVerifyEmailRouteImport } from './routes/auth.verify-email'
 import { Route as AuthRegisterRouteImport } from './routes/auth.register'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
 import { Route as ApiMcpTodosRouteImport } from './routes/api.mcp-todos'
@@ -142,6 +143,11 @@ const BillingSubscriptionsRoute = BillingSubscriptionsRouteImport.update({
 const BillingMethodsRoute = BillingMethodsRouteImport.update({
   id: '/billing/methods',
   path: '/billing/methods',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
+  id: '/auth/verify-email',
+  path: '/auth/verify-email',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
@@ -296,6 +302,7 @@ export interface FileRoutesByFullPath {
   '/api/mcp-todos': typeof ApiMcpTodosRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/auth/verify-email': typeof AuthVerifyEmailRoute
   '/billing/methods': typeof BillingMethodsRoute
   '/billing/subscriptions': typeof BillingSubscriptionsRoute
   '/billing/transactions': typeof BillingTransactionsRoute
@@ -342,6 +349,7 @@ export interface FileRoutesByTo {
   '/api/mcp-todos': typeof ApiMcpTodosRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/auth/verify-email': typeof AuthVerifyEmailRoute
   '/billing/methods': typeof BillingMethodsRoute
   '/billing/subscriptions': typeof BillingSubscriptionsRoute
   '/billing/transactions': typeof BillingTransactionsRoute
@@ -389,6 +397,7 @@ export interface FileRoutesById {
   '/api/mcp-todos': typeof ApiMcpTodosRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/auth/verify-email': typeof AuthVerifyEmailRoute
   '/billing/methods': typeof BillingMethodsRoute
   '/billing/subscriptions': typeof BillingSubscriptionsRoute
   '/billing/transactions': typeof BillingTransactionsRoute
@@ -437,6 +446,7 @@ export interface FileRouteTypes {
     | '/api/mcp-todos'
     | '/auth/login'
     | '/auth/register'
+    | '/auth/verify-email'
     | '/billing/methods'
     | '/billing/subscriptions'
     | '/billing/transactions'
@@ -483,6 +493,7 @@ export interface FileRouteTypes {
     | '/api/mcp-todos'
     | '/auth/login'
     | '/auth/register'
+    | '/auth/verify-email'
     | '/billing/methods'
     | '/billing/subscriptions'
     | '/billing/transactions'
@@ -529,6 +540,7 @@ export interface FileRouteTypes {
     | '/api/mcp-todos'
     | '/auth/login'
     | '/auth/register'
+    | '/auth/verify-email'
     | '/billing/methods'
     | '/billing/subscriptions'
     | '/billing/transactions'
@@ -576,6 +588,7 @@ export interface RootRouteChildren {
   ApiMcpTodosRoute: typeof ApiMcpTodosRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
+  AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
   BillingMethodsRoute: typeof BillingMethodsRoute
   BillingSubscriptionsRoute: typeof BillingSubscriptionsRoute
   BillingTransactionsRoute: typeof BillingTransactionsRoute
@@ -739,6 +752,13 @@ declare module '@tanstack/react-router' {
       path: '/billing/methods'
       fullPath: '/billing/methods'
       preLoaderRoute: typeof BillingMethodsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/verify-email': {
+      id: '/auth/verify-email'
+      path: '/auth/verify-email'
+      fullPath: '/auth/verify-email'
+      preLoaderRoute: typeof AuthVerifyEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/register': {
@@ -936,6 +956,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMcpTodosRoute: ApiMcpTodosRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,
+  AuthVerifyEmailRoute: AuthVerifyEmailRoute,
   BillingMethodsRoute: BillingMethodsRoute,
   BillingSubscriptionsRoute: BillingSubscriptionsRoute,
   BillingTransactionsRoute: BillingTransactionsRoute,

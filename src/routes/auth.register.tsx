@@ -32,21 +32,6 @@ import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { api } from '@/lib/api-client'
-import { useAuth } from '@/lib/auth-context'
-
-import type { Role } from '@/lib/types'
-
-// Helper function to determine redirect URL based on user role
-function getRedirectUrlByRole(role: Role): string {
-  switch (role) {
-    case 'instructor':
-    case 'admin':
-      return '/dashboard/instructor/analytics'
-    case 'student':
-    default:
-      return '/me/dashboard'
-  }
-}
 
 export const Route = createFileRoute('/auth/register')({
   component: RegisterPage,
@@ -54,7 +39,6 @@ export const Route = createFileRoute('/auth/register')({
 
 function RegisterPage() {
   const router = useRouter()
-  const { login } = useAuth()
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -77,12 +61,13 @@ function RegisterPage() {
       return response.data
     },
     onSuccess: (data) => {
-      if (data?.token && data?.user) {
-        login(data.user, data.token)
-
-        // Redirect based on user role
-        const redirectTo = getRedirectUrlByRole(data.user.role)
-        router.history.push(redirectTo)
+      if (data?.user) {
+        // Store user info for verification page
+        localStorage.setItem('pendingVerificationUserId', data.user.id)
+        localStorage.setItem('pendingVerificationEmail', data.user.email)
+        
+        // Redirect to verification page
+        router.history.push('/auth/verify-email')
       } else {
         setError('Đăng ký thành công nhưng không nhận được dữ liệu người dùng')
       }

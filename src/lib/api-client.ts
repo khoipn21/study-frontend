@@ -253,6 +253,20 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
+  verifyEmail: (payload: { user_id: string; otp: string }) =>
+    requestGateway<void>('/auth/verify-email', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  resendVerification: (payload: { email: string }) =>
+    requestGateway<void>('/auth/resend-verification', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  verifyEmailToken: (token: string) =>
+    requestGateway<void>(`/auth/verify/${token}`, {
+      method: 'GET',
+    }),
 
   profile: (token: string) =>
     request<{ id: string; roles: Array<string> }>('/auth/profile', { token }),
