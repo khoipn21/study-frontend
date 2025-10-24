@@ -84,17 +84,27 @@ function LoginPage() {
         response?: { data?: { message?: string; error?: string } }
         message?: string
       }
-      
-      const errorMessage = errorObj?.response?.data?.error || errorObj?.response?.data?.message || errorObj?.message || ''
-      
+
+      const errorMessage =
+        errorObj?.response?.data?.error ||
+        errorObj?.response?.data?.message ||
+        errorObj?.message ||
+        ''
+
       // Check for email not verified error
-      if (errorMessage.includes('email_not_verified') || errorMessage.includes('verify your email')) {
-        setError('Email của bạn chưa được xác thực. Vui lòng kiểm tra email hoặc yêu cầu gửi lại mã xác thực.')
+      if (
+        errorMessage.includes('email_not_verified') ||
+        errorMessage.includes('verify your email')
+      ) {
+        setError(
+          'Email của bạn chưa được xác thực. Vui lòng kiểm tra email hoặc yêu cầu gửi lại mã xác thực.',
+        )
         return
       }
-      
+
       setError(
-        errorMessage || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin đăng nhập.',
+        errorMessage ||
+          'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin đăng nhập.',
       )
     },
   })
@@ -124,15 +134,18 @@ function LoginPage() {
   const handleSocialLogin = async (provider: string) => {
     try {
       // Fetch OAuth URL from backend
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1'
-      const response = await fetch(`${apiBaseUrl}/auth/oauth/${provider}/url?state=oauth-${Date.now()}`)
-      
+      const apiBaseUrl =
+        import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1'
+      const response = await fetch(
+        `${apiBaseUrl}/auth/oauth/${provider}/url?state=oauth-${Date.now()}`,
+      )
+
       if (!response.ok) {
         throw new Error('Failed to get OAuth URL')
       }
-      
+
       const data = await response.json()
-      
+
       if (data.success && data.data?.url) {
         // Redirect to Google OAuth page
         window.location.href = data.data.url
